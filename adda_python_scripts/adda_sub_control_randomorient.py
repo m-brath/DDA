@@ -1,0 +1,256 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#==============================================================================
+# import modules
+#==============================================================================
+
+
+import os
+import sys
+import numpy as np
+import glob
+import shutil
+
+import zipfile
+try:
+#    import zlib
+    compression = zipfile.ZIP_DEFLATED
+except:
+    compression = zipfile.ZIP_STORED
+
+modes = { zipfile.ZIP_DEFLATED: 'deflated',
+          zipfile.ZIP_STORED:   'stored'}
+
+#import pdb
+
+
+#pdb.set_trace()
+
+import adda_control_functions as acf
+
+
+#==============================================================================
+# Get strings from sys.argv (debug)
+#==============================================================================
+
+##Configuration file
+#adda_config='adda_config_ExampleAggregates_RndOrient'
+#
+#
+##start index
+#idx_s=0
+#
+##end index
+#idx_e=-999
+#
+#
+##from adda_config import *
+#print(adda_config)
+#
+##index = raw_input('input something!: ')
+#
+#exec('from '+adda_config+' import *')
+
+
+
+#==============================================================================
+# Get strings from sys.argv
+#==============================================================================
+
+#Configuration file
+adda_config=sys.argv[1]
+
+#start index
+idx_s=int(sys.argv[2])
+
+#end index
+idx_e=int(sys.argv[3])
+
+
+#from adda_config import *
+print(adda_config)
+
+#index = raw_input('input something!: ')
+
+exec('from '+adda_config+' import *')
+
+
+
+#==============================================================================
+#  constants/paths
+#==============================================================================
+
+#adda command
+main_command=['mpiexec','-n',str(ncores),'adda_mpi']
+
+
+#temp directory for not putting all the trash in my controlfile folder
+temporary_folder=os.path.join(prefix,'adda_results','temp')
+
+
+
+#==============================================================================
+# start computation
+#==============================================================================
+
+
+#change directory for not putting all the trash in my controlfile folder
+os.chdir(temporary_folder)
+
+if idx_e != -999:
+
+    indices=range(idx_s,idx_e+1)
+
+else:
+    indices=chunks[idx_s]
+
+if np.size(indices) ==1 and np.isscalar(indices):
+    indices=[indices]
+
+#filename = 'test-{:05.0f}-{:05.0f}K'.format
+filename=(shape_name+'_deq{DEQ:05.0f}um_freq{FRQ:05.1f}GHz_T{TEMPERATURE:04.0f}K').format
+
+
+for idx in indices:
+
+    if np.size(shape_str)==0:
+        
+        read_shape_str=['-shape','read',shape_path+liste[6,idx][0]]
+
+        static_clo_temp=read_shape_str+static_clo
+
+
+
+
+
+
+    #Wavelength in micrometer
+    lamb_temp=liste[5,idx]
+    lamb=lamb_temp[0,0]*1e6 #[1e-6 m]
+
+
+
+    #refractive Index
+    m_imag=liste[4,idx]
+    m_real=liste[3,idx]
+    m=m_real[0,0]+m_imag[0,0]*1j
+
+    #radius eq. vol.
+    req=liste[1,idx]
+    req=req[0,0]*1e6 #[1e-6 m]
+
+    #batch time
+    batch_time=liste[7,idx]
+    batch_time=batch_time[0,0]
+
+
+    #precision
+    eps=liste[2,idx]
+    eps=eps[0,0]
+
+    #Temperature
+    temperature=idx
+
+
+    #create storage folder
+    #For the output, I would prefer if the folders containing the adda output has the following name format (using matlab format):
+    #
+    #
+    #    '%s_deq%05.0fum_freq%05.1fGHz_T%03.0fK'
+    #
+#    shape, d_max, frequency, temperature
+
+    strings={'DEQ':req, 'FRQ':(c0/(lamb)*1e-3),'TEMPERATURE':temperature }
+
+
+
+    storage_path=os.path.join(main_path+subpath,filename(**strings))
+
+    if not os.path.exists(storage_path):
+        os.makedirs(storage_path)
+
+
+
+
+    #define input_data dictionary
+    input_data={}
+
+    #wavelength
+    input_data['lambda']=lamb
+
+    #Particle Size
+    input_data['radius']=req
+
+    #refractive Index
+    input_data['refractive_index']=m
+
+    #precision
+    input_data['eps']=eps
+
+    #ramdrive
+    input_data['main_path']=storage_path
+
+    #main command for adda
+    input_data['main_command']=main_command
+
+    #Adda's static command line options
+    input_data['static_clo']=static_clo_temp
+
+    #how to calculate
+    input_data['calc_type']=calc_type
+
+    #maximum time for batch jobs
+    input_data['batch_time']=batch_time
+
+
+
+    print('   ')
+    print('===============================================================')
+    print('Index = '+str(idx))
+    print('Frequency = '+str(c0/(lamb)*1e-3)+' GHz')
+    print('Radius = '+str(req)+' µm')
+    print('x = '+str(2*np.pi/(lamb)*req))
+    print('===============================================================')
+    print('   ')
+
+    #Call Adda inclusive integration over alpha and gamma angles
+    acf.adda_call_randomorient(input_data)
+
+
+    #==============================================================================
+    #   store results as one zip-file
+    #==============================================================================
+    filelist = glob.glob(storage_path+'/*')
+
+
+
+    #Name of zipfile
+    zipname=storage_path+".zip"
+
+
+    with  zipfile.ZipFile(zipname,'w') as zf:
+        for file in filelist:
+            zf.write(file, os.path.basename(file), compress_type=compression)
+        print('closing')
+
+    shutil.rmtree(storage_path)
+    print(storage_path+": deleted")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
