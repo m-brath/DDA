@@ -11,8 +11,59 @@ Created on Fri Feb  6 15:27:45 2015
 
 
 import numpy as np
-#import scipy as sp
+import socket
 
+
+#where am I?
+hereiam=socket.gethostname()
+
+
+if hereiam[0:6]=='mlogin' or hereiam[0:7]=='mistral' or hereiam[0:2]=='m2': #we are on mistral
+
+    prefix='/work/um0878/users/mbrath/'
+    prefix_data='/work/um0878/user_data/mbrath/'
+
+    calc_type='mistral'
+    
+    ncores=36
+    Partition='compute2'
+
+else:
+    prefix='/scratch/uni/u237/users/mbrath/'
+    prefix_data='/scratch/uni/u237/user_data/mbrath/'
+    
+    calc_type='thunder'
+    
+    #number of cores
+    ncores=32
+
+#==============================================================================
+# Names/paths
+#==============================================================================
+
+force_new=True
+##Basename of simulation run
+#simbasename='sphere_test'
+
+
+#scat_params_path
+scat_param_path=prefix+'/adda/adda_python_scripts/scat_params.dat'
+
+#alldir_params_path
+alldir_param_path=prefix+'/adda/adda_python_scripts/alldir_params.dat'
+
+#main path
+main_path=prefix_data+'/adda_results/'
+
+#subfolder
+subpath='ellipsoid_spehere_ansatz/rawdata/'
+
+
+#ramdrive
+if calc_type=='mistral':
+    ramdrive="/dev/shm/"
+else:
+    ramdrive="/dev/shm/u242031/"
 
 
 #==============================================================================
@@ -40,7 +91,7 @@ lamb=c0/frequencies
 temperatures=np.array([253.])#np.linspace(180.,273.15,num=5)
 
 #scale factors
-x=np.array([0.05])#np.linspace(0.1,10,)
+x=np.array([0.1,1,5])#np.linspace(0.1,10,)
 
 #particle aspect ratio
 part_ar=2
@@ -66,37 +117,15 @@ delta=0.01
 #limit refinement for spherical approach
 limit_sph=4
 
-
 #precision of adda
 eps=3
+
+#precision of spherical harmonics expansion
+eps_sphexp=0.005
 
 #save all adda output
 ZIPPING=False
 
-#==============================================================================
-# Names/paths
-#==============================================================================
-
-
-##Basename of simulation run
-#simbasename='sphere_test'
-
-
-#scat_params_path
-scat_param_path='/scratch/uni/u237/users/mbrath/adda/adda_python_scripts/scat_params.dat'
-
-#alldir_params_path
-alldir_param_path='/scratch/uni/u237/users/mbrath/adda/adda_python_scripts/alldir_params.dat'
-
-#main path
-main_path='/scratch/uni/u237/user_data/mbrath/adda_results/'
-
-#subfolder
-subpath='ellipsoid_spehere_ansatz/rawdata/'
-
-
-#ramdrive
-ramdrive="/dev/shm/u242031/"
 
 #==============================================================================
 # Particle definition

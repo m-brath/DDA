@@ -9,8 +9,11 @@ Created on Tue Feb  3 10:58:25 2015
 # import modules
 #==============================================================================
 
-#import subprocess as sub
+#print("Hello World")
+
+import subprocess as sub
 import glob
+import functools
 import os
 #import scipy as sp
 import numpy as np
@@ -18,59 +21,42 @@ import scipy.io as sio
 import sys
 import itertools
 import typhon as ty
-import zipfile
+#import zipfile
 
 #pdb.set_trace()
 #from adda_config import *
 import adda_control_functions as acf
 import icosphere_grid as ico
-import adda_orientational_sph_avg_functions as aoa
+#import adda_orientational_sph_avg_functions as aoa
+import adda_orientational_avg_spharmonics_functions as aoa
 import spherical_harmonics_for_adda as spha
-from netCDF4 import Dataset
+#from netCDF4 import Dataset
+from memory import memstring
 
 import copy
+
+from posix_spawn import spawn_command
+
+
+# Force flush, otherwise output can disappear from slurm log file
+print = functools.partial(print, flush=True)
 
 ##==============================================================================
 ## Get strings from sys.argv (debug)
 ##==============================================================================
 #
-#Temperature index
-Tindex=0
-
-#Frequency index
-findex=0
-
-#Size index
-Dindex=0
-
-#Configuration file
-adda_config='adda_config_ellipsoid_prolate'
-#adda_config='adda_config_LiuThickPlateTEST'
-
-#from adda_config import *
-print(adda_config)
-
-#index = raw_input('input something!: ')
-
-exec('from '+adda_config+' import *')
-
-
-
-#==============================================================================
-# Get strings from sys.argv
-#==============================================================================
-
 ##Temperature index
-#Tindex=int(sys.argv[1])
+#Tindex=0
 #
 ##Frequency index
-#findex=int(sys.argv[2])
+#findex=0
 #
 ##Size index
-#Dindex=int(sys.argv[3])
+#Dindex=0
 #
 ##Configuration file
-#adda_config=sys.argv[4]
+##adda_config='adda_config_HexPlaAggCrystal_Id20'
+#adda_config='adda_config_LiuSectorSnowflake_Id3'
 #
 ##from adda_config import *
 #print(adda_config)
@@ -79,14 +65,52 @@ exec('from '+adda_config+' import *')
 #
 #exec('from '+adda_config+' import *')
 
+
+print("Starting job")
+#==============================================================================
+# Get strings from sys.argv
+#==============================================================================
+
+#Temperature index
+Tindex=int(sys.argv[1])
+
+#Frequency index
+findex=int(sys.argv[2])
+
+#Size index
+Dindex=int(sys.argv[3])
+
+#Configuration file
+adda_config=sys.argv[4]
+
+#from adda_config import *
+print(adda_config)
+#raise RuntimeError("Alles doof")
+
+#index = raw_input('input something!: ')
+
+exec('from '+adda_config+' import *')
+
 #==============================================================================
 #  constants/paths
 #==============================================================================
 
 
+if 'calc_type' in locals()==False:
 
-#adda command
-main_command=['mpiexec','-n',str(ncores),'adda_mpi']
+    calc_type='thunder'
+
+
+if calc_type=='mistral':
+
+    #adda command
+    main_command=['srun','-n',str(ncores),prefix+'/adda/adda_1.2/src/mpi/adda_mpi']
+
+
+else:
+
+    #adda command
+    main_command=['mpiexec','-n',str(ncores),'adda_mpi']
 
 
 
@@ -98,7 +122,7 @@ main_command=['mpiexec','-n',str(ncores),'adda_mpi']
 
 
 #only beta, the number of alpha and gamma angles will be set according to
-# refinement level 
+# refinement level
 p_orientation_beta=np.linspace(0.,180.,num=number_of_betas)
 
 
@@ -178,37 +202,39 @@ triangles_old=np.ones((0,3))
 #prepare
 zipname_vid=('vertex_X{XV:07.0f}_Y{YV:07.0f}_Z{ZV:07.0f}').format
 zip_fid='_temp.zip'
-             
-netcdf_name=os.path.join(storage_path,shape_name+'_temp_data.nc')
 
-while (ref_lev<=limit_sph and converged==False) or ref_lev<1 :
-    
-    
-    
+#netcdf_tempname=os.path.join(storage_path,shape_name+'_temp_data.nc')
+netcdf_tempname=os.path.join(storage_path,shape_name+'_temp_data_')
+print(f"NetCDF path: {netcdf_tempname}")
+
+filenum=0
+while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
+
+
+
     #define/refine grid
     if ref_lev==0:
         [vertices, triangles]=ico.make_icosahedric_grid()
     else:
         [vertices, triangles]=ico.refine_icosahedric_grid(vertices, triangles, 1)
-    
-            
+
+
     vpol=aoa.create_vpol_vector(vertices)
-        
- 
+
+
     allocate_flag=False
 
     for point_i in range(0,np.size(vertices,axis=0)):
-        
-    
+
         ##Name of zipfile
         zipstrings={'XV':(vertices[point_i,0]*1e5), 'YV':(vertices[point_i,1]*1e5),
                     'ZV':(vertices[point_i,2]*1e5) }
 
-#        zipname=os.path.join(storage_path,shape+'_'+zipname_vid(**zipstrings)+zip_fid)
-        zipname=os.path.join(storage_path,shape+zip_fid)
-    
-        particle_id=zipname_vid(**zipstrings)    
-    
+        zipname=os.path.join(storage_path,shape+'_'+zipname_vid(**zipstrings)+zip_fid)
+#        zipname=os.path.join(storage_path,shape+zip_fid)
+
+        particle_id=zipname_vid(**zipstrings)
+
         #define input_data dictionary
         input_data={}
 
@@ -250,183 +276,217 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<1 :
         input_data['zipname']=zipname
 
         input_data['zipping']=ZIPPING
-        
 
 
-        #Use symmetry if existent 
-        if ((vertices[point_i,2]<0-1e-10  and  sym_XYobj==True) or 
+
+        #Use symmetry if existent
+        if ((vertices[point_i,2]<0-1e-10  and  sym_XYobj==True) or
             (vertices[point_i,1]<0-1e-10  and  sym_XZobj==True) or
             (vertices[point_i,0]<0-1e-10  and  sym_YZobj==True)):
-            
+
 #            print('symmetry used')
-            
+
             continue
 #        else:
 #            print('symmetry not used')
-            
-        
+
+
+        filenum+=1
+        print(f"Particle number {filenum}, {memstring()}")
+
         if ref_lev==0:
-            
+
 
             #Check if vertex was already simulated
             #if yes, read from netcdf
             #if not, run adda
-            
+
             with ty.utils.Timer():
-                output_data = acf.read_data_from_netcdf(netcdf_name, particle_id)
-            
+                print(f"Checking cached data")
+                output_data = acf.read_data_from_separate_netcdf(netcdf_tempname, particle_id)
+
+
+
             if output_data is None:
-            
+
                 #Call Adda
-                output_data=acf.adda_call(input_data)
-                
-                acf.append_data_to_netcdf(netcdf_name, particle_id, 
-                                          output_data['thetas_grid'], 
-                                          output_data['phis_grid'], 
-                                          output_data['mueller_array'],
-                                      output_data['ext_matrix'])
-            
-                print(f"Appended {particle_id} to file {netcdf_name}")
-            
+                print("Running adda")
+                spawn_command('free -m')
+                with ty.utils.Timer():
+                    output_data=acf.adda_call(input_data)
 
-            #Expand Mueller matrix to spherical harmonics
-            with ty.utils.Timer():
-                [mueller_matrix_sph,rel_error, max_len_coeffs, max_ntrunc]=spha.expand_mueller_2_spharmonics(
-                    output_data,eps_sphexp,diagnostics=False)
+                #Expand Mueller matrix to spherical harmonics
+                print("Expanding mueller to spharmonics")
+                with ty.utils.Timer():
+                    [mueller_matrix_sph,rel_error, max_len_coeffs, max_ntrunc]=spha.expand_mueller_2_spharmonics(
+                        output_data,eps_sphexp,diagnostics=False)
 
 
 
-        
+                acf.write_data_to_separate_netcdf(netcdf_tempname, particle_id,
+                                          mueller_matrix_sph,
+                                          rel_error, max_len_coeffs, max_ntrunc,
+                                          output_data['ext_matrix'])
+
+            else:
+                mueller_matrix_sph=output_data['mueller_sph']
+                rel_error=output_data['relerror']
+                max_len_coeffs=output_data['max_len_coeffs']
+                max_ntrunc=output_data['max_ntrunc']
+
+
+
+
+
+
             #Allocate extinction matrix array
             if allocate_flag==False:
 
                 q=np.shape(output_data['ext_matrix'])
 #                qm=np.shape(output_data['mueller_array'])
-                
+
                 ext_mat_array=np.empty((np.size(vertices,axis=0),q[0],q[1]))
                 ext_mat_array[:] = np.NAN
                 ext_mat_array_old=ext_mat_array.copy()
-                                                   
+
                 mueller_array = [None] * np.size(vertices,axis=0)
                 mueller_array_old = copy.deepcopy(mueller_array)
-                
+
                 #relative error of sph expansion
-                rel_err_array = [None] * np.size(vertices,axis=0)
-                rel_err_array_old = copy.deepcopy(rel_err_array)
-                
+                rel_err_array = np.zeros((np.size(vertices,axis=0),16))
+                rel_err_array_old = rel_err_array.copy()
+
                 #max number coefficients
                 max_len_array=np.zeros((np.size(vertices,axis=0)))
                 max_len_array_old=max_len_array.copy()
 
                 #max number of truncation
                 max_ntrunc_array=np.zeros((np.size(vertices,axis=0)))
-                max_ntrunc_array_old=max_ntrunc_array.copy()                
-                
+                max_ntrunc_array_old=max_ntrunc_array.copy()
+
                 allocate_flag=True
-                
-            ext_mat_array[point_i,:,:]=output_data['ext_matrix']    
+
+            ext_mat_array[point_i,:,:]=output_data['ext_matrix']
             mueller_array[point_i]=mueller_matrix_sph
-            
+
             #relative error of sph expansion
-            rel_err_array[point_i]=rel_error
-            
+            rel_err_array[point_i,:]=rel_error
+
             #max number coefficients
             max_len_array[point_i]=max_len_coeffs
-            
+
             #max number of truncation
             max_ntrunc_array[point_i]=max_ntrunc
-            
+
 #            phis_grid=output_data['phis_grid']
 #            thetas_grid=output_data['thetas_grid']
-    
+
         else:
-            
+
             #Allocate extinction matrix array
             if allocate_flag==False:
 
                 q=np.shape(output_data['ext_matrix'])
 #                qm=np.shape(output_data['mueller_array'])
-                
+
                 ext_mat_array=np.empty((np.size(vertices,axis=0),q[0],q[1]))
                 ext_mat_array[:] = np.NAN
 
                 mueller_array=[None] * np.size(vertices,axis=0)
-                
+
                 #relative error of sph expansion
-                rel_err_array = [None] * np.size(vertices,axis=0)
-                
+                rel_err_array = np.zeros((np.size(vertices,axis=0),16))
+
                 #max number coefficients
                 max_len_array=np.zeros((np.size(vertices,axis=0)))
-                
+
                 #max number of truncation
                 max_ntrunc_array=np.zeros((np.size(vertices,axis=0)))
-                
+
                 allocate_flag=True
-            
-            
+
+
             #check if values already exist
             logic_temp=vertices[point_i]==vertices_old
             logic=np.sum(logic_temp,axis=1)==np.size(vertices_old,axis=1)
-            
+
             if sum(logic)==1:
                 ext_mat_array[point_i,:,:]=ext_mat_array_old[logic,:,:]
-                
+
                 mueller_array[point_i]=next(itertools.compress(mueller_array_old, logic))
-                
+
                 #relative error of sph expansion
-                rel_err_array[point_i]=next(itertools.compress(rel_err_array_old, logic))
-                
+                rel_err_array[point_i,:]=rel_err_array_old[logic,:]
+
                 #max number coefficients
                 max_len_array[point_i]=max_len_array_old[logic]
-                
+
                 #max number of truncation
                 max_ntrunc_array[point_i]=max_ntrunc_array_old[logic]
             else:
-                
+
                 #Check if vertex was already simulated
                 #if yes, read from netcdf
                 #if not, run adda
-                output_data = acf.read_data_from_netcdf(netcdf_name, particle_id)
-                
-                if output_data is None:
-                
-                    #Call Adda
-                    output_data=acf.adda_call(input_data)
-                    
-                    acf.append_data_to_netcdf(netcdf_name, particle_id, 
-                                              output_data['thetas_grid'], 
-                                              output_data['phis_grid'], 
-                                              output_data['mueller_array'],
-                                          output_data['ext_matrix'])
-                
-                    print(f"Appended {particle_id} to file {netcdf_name}")
 
-                #Expand Mueller matrix to spherical harmonics
-                [mueller_matrix_sph,rel_error, max_len_coeffs,max_ntrunc]=spha.expand_mueller_2_spharmonics(
-                    output_data,eps_sphexp,diagnostics=False)
-                
+                with ty.utils.Timer():
+                    print(f"Checking cached data")
+                    output_data = acf.read_data_from_separate_netcdf(netcdf_tempname, particle_id)
+
+
+
+                if output_data is None:
+
+                    #Call Adda
+                    print("Running adda")
+                    spawn_command('free -m')
+                    print(f'Before adda: {memstring()}')
+                    with ty.utils.Timer():
+                        output_data=acf.adda_call(input_data)
+
+                    #Expand Mueller matrix to spherical harmonics
+                    print(f'Before spharmonics: {memstring()}')
+                    #print("Expanding mueller to spharmonics")
+                    with ty.utils.Timer():
+                        [mueller_matrix_sph,rel_error, max_len_coeffs, max_ntrunc]=spha.expand_mueller_2_spharmonics(
+                            output_data,eps_sphexp,diagnostics=False)
+
+
+                    print(f'Before writing cache data: {memstring()}')
+                    #print("Writing cached data")
+                    with ty.utils.Timer():
+                        acf.write_data_to_separate_netcdf(netcdf_tempname, particle_id,
+                                                  mueller_matrix_sph,
+                                                  rel_error, max_len_coeffs, max_ntrunc,
+                                                  output_data['ext_matrix'])
+                else:
+                    mueller_matrix_sph=output_data['mueller_sph']
+                    rel_error=output_data['relerror']
+                    max_len_coeffs=output_data['max_len_coeffs']
+                    max_ntrunc=output_data['max_ntrunc']
+
 
                 ext_mat_array[point_i,:,:]=output_data['ext_matrix']
                 mueller_array[point_i]=mueller_matrix_sph
-                
+
                 #relative error of sph expansion
-                rel_err_array[point_i]=rel_error
-                
+                rel_err_array[point_i,:]=rel_error
+
                 #max number coefficients
                 max_len_array[point_i]=max_len_coeffs
-                
+
                 #max number of truncation
                 max_ntrunc_array[point_i]=max_ntrunc
 
     q_ext=ext_mat_array.shape
 
-        
 
-    
+
+
 
 #==============================================================================
 #       ###do the averaging
-#==============================================================================    
+#==============================================================================
 
 
 
@@ -464,7 +524,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<1 :
             #counter alpha
             n_alpha=-1
 
-            
+
             for a_i in range(0,len(p_orientation_alpha)):
 
                 n_alpha=n_alpha+1
@@ -484,111 +544,111 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<1 :
 
                     #rotate and interpolate adda sphere
                     vertices_rot=ico.rotate_vertices(vertices,alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)
-                    
+
                     ext_mat_array_temp=ext_mat_array.copy()
- 
+
                     [w_int,idx]=ico.interpolation_weights_icosahedric_grid(vertices_rot,inc_dir)
-                    
+
                     #create lab vertical polarization vectors
                     vpol_lab=aoa.create_vpol_vector(inc_dir)
                     vpol_lab=np.matlib.repmat(vpol_lab,len(idx),1)
-                    
+
                     #======================================================
                     # Exploit symmetry
-                    
+
                     idx_sym=idx.copy()
-                    
+
                     N_sym=np.zeros(len(idx))
                     V_sym=np.ones((len(idx),3))
 
-                    
-                    
+
+
                     #find symmetries
                     if sym_XYobj==True or sym_XZobj==True or sym_YZobj==True:
-                    
+
                         for i in range(0,len(idx)):
-                            
+
                             vt=np.copy(vertices[idx[i],:])
                             vt.flatten(1)
-                            
+
                             #Number of symmetries
         #                    N_sym=0
-                            
+
                             if sym_XYobj==True and vt[2]<0:
                                 vt[2]=-vt[2]
 #                                N_sym[i]=N_sym[i]+1
                                 V_sym[i,2]=-V_sym[i,2]
-                                
+
                             if sym_XZobj==True and vt[1]<0:
                                 vt[1]=-vt[1]
 #                                N_sym[i]=N_sym[i]+1
                                 V_sym[i,1]=-V_sym[i,1]
-                                
+
                             if sym_YZobj==True and vt[0]<0:
                                 vt[0]=-vt[0]
-#                                N_sym[i]=N_sym[i]+1                    
+#                                N_sym[i]=N_sym[i]+1
                                 V_sym[i,0]=-V_sym[i,0]
 
-                            
+
                             [idx_sym[i],bla]=ico.find_nearest_Nvertices(vertices,vt,N=1)
-                            
+
                     logic=(idx_sym!=idx)
                     use_symmetry=int(np.ceil(np.sum(logic)/len(logic)))
-                    
-                    
-                    
+
+
+
                     if use_symmetry==1:
-                        
+
                         #construct mueller and extinction by symmetry
                         [mueller_mat_sym,ext_mat_sym]=aoa.construct_by_symmetry(
                                 np.empty(0),
                                 ext_mat_array_temp[idx_sym,:,:],
                                 V_sym)
-                        
+
                         #rotate original vpol
-                        vpol_rot=ico.rotate_vertices(vpol[idx,:],alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180) 
-                        
+                        vpol_rot=ico.rotate_vertices(vpol[idx,:],alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)
+
                         #map to new laboratory vpol
                         [mueller_mat_rot,ext_mat_rot]=aoa.pol_changer(vertices_rot[idx,:], vpol_rot,
-                                vpol_lab ,np.empty(0),ext_mat_sym)
-        
-        
+                                vpol_lab ,np.empty(0),ext_mat_sym,np.empty(0))
+
+
                         #interpolated value
                         EXTTEMP=np.zeros((q_ext[1],q_ext[2]))
 
-                        
+
                         for i in range(0,len(idx)):
-        
+
                             Ksym=ext_mat_rot[i,:,:];
-                                    
+
                             EXTTEMP=w_int[i]*Ksym+EXTTEMP
-                                  
-                        
-                    
+
+
+
                     # end of symmetry exploitation
                     #======================================================
-                    else:            
-                            
+                    else:
+
                         #rotate original vpol
-                        vpol_rot=ico.rotate_vertices(vpol[idx,:],alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)   
-                        
+                        vpol_rot=ico.rotate_vertices(vpol[idx,:],alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)
+
                         #map to new laboratory vpol
                         [_,ext_mat_rot]=aoa.pol_changer(vertices_rot[idx,:], vpol_rot,
-                                vpol_lab ,np.empty(0),ext_mat_array_temp[idx,:,:])
-                        
+                                vpol_lab ,np.empty(0),ext_mat_array_temp[idx,:,:],np.empty(0))
+
                         #interpolated value
                         EXTTEMP=np.zeros((q_ext[1],q_ext[2]))
-                        
-                                    
+
+
                         for i in range(0,len(idx)):
-                                        
+
                             EXTTEMP=w_int[i]*ext_mat_rot[i,:,:]+EXTTEMP
 
                     #do the gamma summation
                     ext_mat_gamma_temp=EXTTEMP*gauss_weights[g_i]/2+ext_mat_gamma_temp
 
 
-                    
+
                 #copy
                 ext_mat_gamma=ext_mat_gamma_temp
 
@@ -603,35 +663,36 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<1 :
             if ref_lev<1 and flag==False:
                 ext_mat_horiz_avg_new=(np.ones((len(p_orientation_beta),
                                          len(incidence_angles),4,4))*np.NaN)
-                
+
                 flag=True
-                
+
 
             ext_mat_horiz_avg_new[n_beta,n_theta,:,:]=ext_mat_alpha
 
-    
+
     #check convergence
     epsilon_temp=(np.abs(ext_mat_horiz_avg_new[:,:,0:2,0:2]-ext_mat_horiz_avg_old[:,:,0:2,0:2])**2)
-        
+
     epsilon_temp=np.mean(np.mean(epsilon_temp,axis=0),axis=0)
-    
-    old_value_temp=np.mean(np.mean(ext_mat_horiz_avg_old[:,:,0:2,0:2]**2,axis=0),axis=0)    
-    
+
+    old_value_temp=np.mean(np.mean(ext_mat_horiz_avg_old[:,:,0:2,0:2]**2,axis=0),axis=0)
+
 #    epsilon=np.sqrt(np.max(epsilon_temp.flatten()))
     epsilon=np.sqrt(np.mean(epsilon_temp.flatten()))
     old_value=np.sqrt(np.mean(old_value_temp.flatten()))
 
-    
-    
-    if ref_lev>0:        
 
+
+    if ref_lev>0:
+
+        print(f'Convergence epsilon: {epsilon} <= delta*old_value: {delta*old_value}')
         converged=epsilon<=delta*old_value
-        
+
         eps_mat[ref_lev]=epsilon/old_value
 
     else:
         converged==False
-        
+
 
 
     #prepare next round
@@ -643,18 +704,18 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<1 :
     rel_err_array_old=copy.deepcopy(rel_err_array)
     max_len_array_old=max_len_array.copy()
     max_ntrunc_array_old=max_ntrunc_array.copy()
-    
+
     vertices_old=np.copy(vertices)
     triangles_old=np.copy(triangles)
-    
 
-    
+
+
     print('done')
 
 
 #prepare save names
 matfile_name=os.path.join(storage_path,shape_name+'_overview_data.mat')
-#netcdf_name=os.path.join(storage_path,shape_name+'_mueller_data.nc')
+netcdf_name=os.path.join(storage_path,shape_name+'_mueller_data.nc')
 xml_name=os.path.join(storage_path,shape_name+'_mueller_data.xml')
 
 #==============================================================================
@@ -682,13 +743,14 @@ output_data['limit_sph']=limit_sph
 output_data['numQuadraturePoints']=numQuadraturePoints
 output_data['vertices']=vertices
 output_data['triangles']=triangles
-output_data['mueller_matrix_filename']=shape_name+'_mueller_data.xml'
+output_data['mueller_matrix_filename']=shape_name+'_mueller_data'
 output_data['shape_name']=shape_name
 output_data['max_len_coeffs']=int(np.max(max_len_array))
 output_data['max_ntrunc']=int(np.max(max_ntrunc_array))
-           
-## save overview data          
-           
+
+## save overview data
+
+print(f'Saving overview data in {matfile_name}')
 sio.savemat(matfile_name, {'output_data':output_data}, appendmat=True, format='5', long_field_names=True)
 
 
@@ -697,12 +759,14 @@ sio.savemat(matfile_name, {'output_data':output_data}, appendmat=True, format='5
 #==============================================================================
 
 
+print(f'Saving mueller array in {xml_name}')
 ty.arts.xml.save(mueller_array,xml_name,format='binary')
+
 
 #==============================================================================
 #       ### info display
 #==============================================================================
-                   
+
 
 print('   ')
 print('===============================================================')
@@ -717,25 +781,8 @@ print('   ')
 # remove tempdata
 #==============================================================================
 
-os.remove(netcdf_name)
+#os.rename(netcdf_tempname,netcdf_name)
+#os.remove(netcdf_tempname)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+for ncfilename in glob.glob(netcdf_tempname + 'vertex_*.nc'):
+    os.remove(ncfilename)

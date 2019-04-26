@@ -13,7 +13,7 @@ Created on Tue Feb  3 10:58:25 2015
 import glob
 import os
 import numpy as np
-import numpy.matlib
+import numpy.matlib 
 import scipy.io as sio
 import adda_control_functions as acf
 import icosphere_grid as ico
@@ -21,15 +21,917 @@ from joblib import Parallel, delayed
 import multiprocessing
 #import typhon.plots 
 #from netCDF4 import Dataset
-import netCDF4
+#import netCDF4
 import matplotlib.pyplot as plt
-import itertools
+#import itertools
 import typhon as ty
 import spherical_harmonics_for_adda as spha
 import shtns
 import copy
+import scipy as sp
+from datetime import datetime
+from posix_spawn import spawn_command
+from memory import memstring
+
+import functools
+# Force flush, otherwise output can disappear from slurm log file
+print = functools.partial(print, flush=True)
+
+#==============================================================================
+# stoke rotation matrix
+#==============================================================================
+def rotater_mat(eta):
+    #Important eta has to be in rad!!
 
 
+    P=np.zeros((4,4))
+    P[0,0]=1
+    P[1,1]=np.cos(2*eta)
+    P[2,1]=np.sin(2*eta)
+    P[1,2]=-P[2,1]
+    P[2,2]=P[1,1]
+    P[3,3]=1
+
+    return P
+
+#==============================================================================
+#  calculate_rotation_angles for mueller to phase matrix transformation
+#==============================================================================
+
+def calculate_rotation_angles(theta_inc, theta_s, phi_s):
+    """calculates the rotation angles for the  mueller to phase matrix 
+        transformation"""
+        
+    
+    
+    ql=np.shape(phi_s)
+
+    #allocate
+    PHI1mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
+    PHI2mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
+    
+    print('calculating stokes rotation angles...')    
+    print('theta size = '+str(ql[0]))
+    print('phi size = '+str(ql[1]))
+    print('   ')
+    
+    #calculate transformation matrices
+    for m in range(0, np.size(theta_inc)):
+        
+        #Incidence direction (Laboratory system)
+        t_i=theta_inc[m]*np.pi/180
+        p_i=0*np.pi/180
+         
+        #Incidence vector and the corresponding vector of the vertical (parallel)
+        #polarization
+        k_i=np.array([np.sin(t_i)*np.cos(p_i),np.sin(t_i)*np.sin(p_i),np.cos(t_i)])
+        v_i=np.array([np.cos(t_i)*np.cos(p_i),np.cos(t_i)*np.sin(p_i),-np.sin(t_i)])
+        
+        print(str(m))
+        
+        #let's go through all scattering angles
+        for j in range(0,ql[0]): #theta / polar angle
+            
+            for i in range(0,ql[1]): #phi / azimuth angle
+        
+            
+                #scattering angle
+                t_s=theta_s[j,i]
+                p_s=phi_s[j,i]
+        
+        
+                #scattering vector and the corresponding vector of the vertical
+                #(parallel) polarization
+                k_s=np.array([np.sin(t_s)*np.cos(p_s),np.sin(t_s)*np.sin(p_s),np.cos(t_s)])
+                v_s=np.array([np.cos(t_s)*np.cos(p_s),np.cos(t_s)*np.sin(p_s),-np.sin(t_s)])
+        
+        
+                #scattering angle in the scattering plane
+                kk=np.cross(k_s,k_i)
+                sinTheta=np.sqrt(np.dot(kk,kk))
+    
+                #normal vector of the scattering plane
+                if sinTheta==0.:
+                    n=kk
+                else:
+                    n=kk/sinTheta
+                
+                #vector, that is parallel to scattering plane and normal to k_i
+                P_i=np.cross(n,k_i)
+                
+                #decide if rotate anti clockwise or clockwise
+                tester_i=np.dot(v_i,n)
+                
+                #catch numerical errors
+                acos_phi1=np.dot(v_i,P_i)
+                if acos_phi1>1:
+                    acos_phi1=1
+                elif acos_phi1<-1:
+                    acos_phi1=-1
+                
+                #get the rotation angle
+                if tester_i<=0:
+                    phi1=np.arccos(acos_phi1) 
+                elif tester_i>0:
+                    phi1=-np.arccos(acos_phi1)
+                else:
+                    phi1=0    
+                    
+                    
+                #vector, that is parallel to scattering plane and normal to k_s
+                P_s=np.cross(n,k_s);
+                
+                #decide if rotate anti clockwise or clockwise
+                tester_s=np.dot(v_s,n);
+    
+                #catch numerical errors                        
+                acos_phi2=np.dot(v_s,P_s)
+                if acos_phi2>1:
+                    acos_phi2=1
+                elif acos_phi2<-1:
+                    acos_phi2=-1
+                
+                #get the rotation angle
+                if tester_s<=0:
+                    phi2=np.arccos(acos_phi2) 
+                elif tester_s>0:
+                    phi2=-np.arccos(acos_phi2)
+                else:
+                    phi2=0
+                
+                
+                PHI1mat[m,j,i]=phi1;
+                PHI2mat[m,j,i]=phi2;
+                
+    return PHI1mat, PHI2mat  
+
+#==============================================================================
+#  calculate_rotation_angles for mueller to phase matrix transformation (parallel)
+#==============================================================================
+
+def core(t_i,p_i,theta_s, phi_s):
+        
+    #Incidence vector and the corresponding vector of the vertical (parallel)
+    #polarization
+    k_i=np.array([np.sin(t_i)*np.cos(p_i),np.sin(t_i)*np.sin(p_i),np.cos(t_i)])
+    v_i=np.array([np.cos(t_i)*np.cos(p_i),np.cos(t_i)*np.sin(p_i),-np.sin(t_i)])
+    
+    
+    ql=np.shape(phi_s)
+
+    #allocate
+    PHI1mat=np.zeros((ql[0],ql[1]))*np.NaN
+    PHI2mat=np.zeros((ql[0],ql[1]))*np.NaN
+    
+    
+    print('theta_inc = '+str(t_i*180/np.pi))
+    
+    #let's go through all scattering angles
+    for j in range(0,ql[0]): #theta / polar angle
+        
+        for i in range(0,ql[1]): #phi / azimuth angle
+    
+        
+            #scattering angle
+            t_s=theta_s[j,i]
+            p_s=phi_s[j,i]
+    
+    
+            #scattering vector and the corresponding vector of the vertical
+            #(parallel) polarization
+            k_s=np.array([np.sin(t_s)*np.cos(p_s),np.sin(t_s)*np.sin(p_s),np.cos(t_s)])
+            v_s=np.array([np.cos(t_s)*np.cos(p_s),np.cos(t_s)*np.sin(p_s),-np.sin(t_s)])
+    
+    
+            #scattering angle in the scattering plane
+            kk=np.cross(k_s,k_i)
+            sinTheta=np.sqrt(np.dot(kk,kk))
+
+            #normal vector of the scattering plane
+            if sinTheta==0.:
+                n=kk
+            else:
+                n=kk/sinTheta
+            
+            #vector, that is parallel to scattering plane and normal to k_i
+            P_i=np.cross(n,k_i)
+            
+            #decide if rotate anti clockwise or clockwise
+            tester_i=np.dot(v_i,n)
+            
+            #catch numerical errors
+            acos_phi1=np.dot(v_i,P_i)
+            if acos_phi1>1:
+                acos_phi1=1
+            elif acos_phi1<-1:
+                acos_phi1=-1
+            
+            #get the rotation angle
+            if tester_i<=0:
+                phi1=np.arccos(acos_phi1) 
+            elif tester_i>0:
+                phi1=-np.arccos(acos_phi1)
+            else:
+                phi1=0    
+                
+                
+            #vector, that is parallel to scattering plane and normal to k_s
+            P_s=np.cross(n,k_s);
+            
+            #decide if rotate anti clockwise or clockwise
+            tester_s=np.dot(v_s,n);
+
+            #catch numerical errors                        
+            acos_phi2=np.dot(v_s,P_s)
+            if acos_phi2>1:
+                acos_phi2=1
+            elif acos_phi2<-1:
+                acos_phi2=-1
+            
+            #get the rotation angle
+            if tester_s<=0:
+                phi2=np.arccos(acos_phi2) 
+            elif tester_s>0:
+                phi2=-np.arccos(acos_phi2)
+            else:
+                phi2=0
+            
+            
+            PHI1mat[j,i]=phi1;
+            PHI2mat[j,i]=phi2;
+            
+    return PHI1mat,PHI2mat
+
+
+def calculate_rotation_angles_parallel(theta_inc, theta_s, phi_s,core_limit=16):
+    """calculates the rotation angles for the  mueller to phase matrix 
+        transformation"""        
+          
+        
+    num_cores = multiprocessing.cpu_count()
+    
+    #uncomment if number of core should be limited
+    if num_cores>core_limit:
+        num_cores=core_limit    
+        
+    
+                
+    
+    ql=np.shape(phi_s)
+
+    #allocate
+    PHI1mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
+    PHI2mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
+    
+    print('calculating stokes rotation angles...')    
+    print('theta size = '+str(ql[0]))
+    print('phi size = '+str(ql[1]))
+    print('   ')
+    
+    #calculate transformation matrices
+#    for m in range(0, np.size(theta_inc)):
+#        
+#        #Incidence direction (Laboratory system)
+#        t_i=theta_inc[m]*np.pi/180
+#        p_i=0*np.pi/180
+#        
+#        
+#        [PHI1mat[m,:,:],PHI2mat[m,:,:]]=core(t_i,p_i,theta_s, phi_s)
+        
+    theta_i=theta_inc*np.pi/180
+    p_i=0*np.pi/180
+
+    results = Parallel(n_jobs=num_cores,max_nbytes=None)(delayed(core)
+                         (t_i,p_i,theta_s, phi_s) 
+                         for t_i in theta_i)
+             
+    for i in range(0,len(results)):
+        PHI1mat[i,:,:]=results[i][0]
+        PHI2mat[i,:,:]=results[i][1]
+
+                
+    return PHI1mat, PHI2mat  
+
+
+#==============================================================================
+#  mueller to phase matrix transformation
+#==============================================================================
+
+def mueller2phase(output_data):
+    """transforms the mueller matrices in spherical harmonics representation
+       to stokes phase matrix in spherical harmonics representation"""
+
+
+    #some basic definition
+    c0=299792458
+    
+    #wavelength
+    lamb=c0/output_data['Frequency']
+    
+    #incidence angle
+    theta_inc=output_data['theta_inc']
+    
+    #truncation number of spherical harmonics expansion
+    max_ntrunc=output_data['max_ntrunc']
+    
+    
+    
+    #create spherical object
+    if max_ntrunc % 2 ==0:
+        min_grid_size=max_ntrunc+2
+    else:
+        min_grid_size=max_ntrunc+1
+    
+    x = spha.Spharmt(min_grid_size*2+1,min_grid_size,max_ntrunc,1,gridtype='gaussian')
+    
+    #spatial grid
+    xlons,xlats = np.meshgrid(x.lons, x.lats)
+    
+    #get sizes
+    qm=np.shape(output_data['mue_mat_horiz_avg_sph'])
+    ql=np.shape(xlons)
+    
+    #calculate rotation angles      
+    [PHI1mat, PHI2mat]=calculate_rotation_angles(theta_inc, xlats, xlons)
+    
+    
+    #allocate
+    mueller_rot=np.zeros(qm,dtype=complex)*np.NaN
+    mueller_rot_spatial=np.zeros((qm[0],qm[1],qm[2],ql[0],ql[1]))*np.NaN
+    
+    phase_mat_spatial=np.zeros((qm[0],qm[1],qm[2],ql[0],ql[1]))*np.NaN
+    phase_mat=np.ones(qm,dtype=complex)*np.NaN
+    
+    
+    # do the transformation
+    for i in range(0,qm[0]):#loop over the beta angles
+            
+        for j in range(0,qm[1]):#loop over the incidence angles
+            
+            for k in range(0,qm[2]):# loop over the matrix elements
+                
+                #As the angular scattering grid of the mueller matrix from an adda
+                #simulation is always relative to the incidence vector, the scattering grid
+                #has to be transformed into the laboratory angualr scattering grid. For our
+                #adda calculations always holds that the incidence vector is always within
+                #the X-Z-plane. Therefore we only have to rotate along the Y-axis.
+
+            
+                #Rotate along Y-axis (phi_i=0), and then we got our scattering angle
+                #relative to the laboratory system
+                m_ijk=np.complex128(output_data['mue_mat_horiz_avg_sph'][i,j,k,:])
+                mueller_rot[i,j,k,:]=x.yrotate(m_ijk.copy(),np.pi*theta_inc[j]/180)
+                
+    
+                #transform mueller from spectral to spatial  
+                mueller_rot_spatial[i,j,k,:,:]=x.spectogrd(mueller_rot[i,j,k,:])
+                
+    
+            #do the polarization transformation
+            for u in range(0,ql[0]): #theta / polar angle
+            
+                for v in range(0,ql[1]): #phi / azimuth angle
+            
+                    m_uv=mueller_rot_spatial[i,j,:,u,v]
+                    
+                    m_uv=np.reshape(m_uv,(4,4))
+                    
+                    #rotate from the incidence plane to scattering plane
+                    rot1=rotater_mat(PHI1mat[j,u,v])
+                    rot2=rotater_mat(-PHI2mat[j,u,v])               
+                       
+                    #the actual transformation from mueller matrix to phase matrix
+                    stokes_mat=np.dot(np.dot(rot2,m_uv), rot1)
+                      
+                    phase_mat_spatial[i,j,:,u,v]=stokes_mat.flatten()*lamb**2/(4*np.pi**2)
+    
+    
+            #expand phase matrix into spherical harmonics        
+            for k in range(0,qm[2]):
+                phase_mat[i,j,k,:]=x.grdtospec(phase_mat_spatial[i,j,k,:,:])
+
+    return phase_mat
+
+
+
+#==============================================================================
+#    mueller2phase  core transformation, outsourced due to parallelization
+#==============================================================================
+
+def mueller2phase_core(j,m_i,theta_inc,lamb,PHI1mat,PHI2mat,eps,
+                       lat_new,lon_new,qm,min_grid_size,max_ntrunc,grid_size_theta):
+    
+    print('  ')
+    spawn_command('free -m')
+    print(f'Before transforming: {memstring()}')
+    print('now do transformation...')        
+    print('theta: '+str(theta_inc[j])+'deg')
+    print('   ')
+
+    
+    j=int(j)
+    
+    
+    x = spha.Spharmt(min_grid_size*2+1,min_grid_size,max_ntrunc,1,gridtype='gaussian')    
+    x_fine = spha.Spharmt(grid_size_theta*2+1,grid_size_theta,max_ntrunc,1,gridtype='gaussian')    
+    
+       
+    #spatial grids
+    xlons,xlats = np.meshgrid(x.lons, x.lats)
+    [xlons_fine,xlats_fine] = np.meshgrid(x_fine.lons, x_fine.lats)
+    
+    ql=np.shape(xlons_fine)
+    
+    
+    mueller_rot_spatial=np.zeros((qm[2],ql[0],ql[1]))*np.NaN
+    phase_mat_spatial=np.zeros((qm[2],ql[0],ql[1]))*np.NaN
+        
+    phase_mat_ijk=[None] * qm[2]
+    for k in range(0,qm[2]):# loop over the matrix elements
+        
+        #As the angular scattering grid of the mueller matrix from an adda
+        #simulation is always relative to the incidence vector, the scattering grid
+        #has to be transformed into the laboratory angualr scattering grid. For our
+        #adda calculations always holds that the incidence vector is always within
+        #the X-Z-plane. Therefore we only have to rotate along the Y-axis.
+
+    
+        #Rotate along Y-axis (phi_i=0), and then we got our scattering angle
+        #relative to the laboratory system
+#        m_ijk=np.complex128(output_data['mue_mat_horiz_avg_sph'][i,j,k,:])
+        m_ijk=np.complex128(m_i[j,k,:])
+        
+        
+        if k%5!=0:
+            
+            #transform to spatial
+            temp=x.spectogrd(m_ijk)
+            
+            #interpolate in theta direction                    
+            dlidx=2
+            qtemp=np.shape(temp)
+            
+            if qtemp[1]%2==0:
+                binshift=int(qtemp[1]/2)
+            elif qtemp[1]%2==1:
+                binshift=int((qtemp[1]-1)/2)
+            
+            m_mid=temp[dlidx:-dlidx:1,:]
+            m_up=np.roll(np.flipud(m_mid),binshift,axis=1)
+            m_dn=np.roll(np.flipud(m_mid),binshift,axis=1)                    
+            m_temp=np.vstack((m_up,m_mid))
+            m_temp=np.vstack((m_temp,m_dn))
+                               
+            
+            lat_mid=xlats[dlidx:-dlidx:1,:]
+            lat_dn=xlats[dlidx:-dlidx:1,:]+np.pi
+            lat_up=xlats[dlidx:-dlidx:1,:]-np.pi
+            lat_temp=np.vstack((lat_up,lat_mid))
+            lat_temp=np.vstack((lat_temp,lat_dn))
+            
+            fun=sp.interpolate.interp1d(lat_temp[:,0], m_temp,kind='linear',axis=0)
+            temp_int_lat=fun(lat_new[:,0])
+            
+            qtemp=np.shape(temp_int_lat)
+            temp_new=np.array([np.interp(lon_new[0,:],xlons[0,:], temp_int_lat[i,:],period=2*np.pi) for i in range(qtemp[0])])
+                                                 
+            
+            #transform in spherical harmonics
+            [sph_coeffs, x2, _,  __]=spha.sph_expansion(temp_new,lat_new[:,0],lon_new[0,:]) 
+            
+            #rotate mueller                    
+            mueller_rot=x2.yrotate(sph_coeffs,np.pi*theta_inc[j]/180)  
+                                
+            #transform mueller from spectral to spatial  
+            mueller_rot_spatial[k,:,:]=x2.spectogrd(mueller_rot)
+            
+        else:                                        
+            #rotate mueller                    
+            mueller_rot=x_fine.yrotate(m_ijk.copy(),np.pi*theta_inc[j]/180)                
+
+            #transform mueller from spectral to spatial  
+            mueller_rot_spatial[k,:,:]=x_fine.spectogrd(mueller_rot)
+            
+            #ensure that (1,1) or in python (0,0) is always >=0
+            if k==0:
+                dummy=mueller_rot_spatial[k,:,:]
+                logic0=dummy<0
+                dummy[logic0]=0
+                mueller_rot_spatial[k,:,:]=dummy
+        
+
+    #do the polarization transformation
+    for u in range(0,ql[0]): #theta / polar angle
+    
+        for v in range(0,ql[1]): #phi / azimuth angle
+    
+            m_uv=mueller_rot_spatial[:,u,v]
+            
+            m_uv=np.reshape(m_uv,(4,4))
+            
+            #rotate from the incidence plane to scattering plane
+            rot1=rotater_mat(PHI1mat[j,u,v])
+            rot2=rotater_mat(-PHI2mat[j,u,v])               
+               
+            #the actual transformation from mueller matrix to phase matrix
+            stokes_mat=np.dot(np.dot(rot2,m_uv), rot1)
+              
+            phase_mat_spatial[:,u,v]=stokes_mat.flatten()*lamb**2/(4*np.pi**2)
+
+    #ensure that (1,1) or in python (0,0) is always >=0
+    dummy=phase_mat_spatial[0,:,:]
+    logic0=dummy<0
+    dummy[logic0]=0
+    phase_mat_spatial[0,:,:]=dummy
+    
+
+    #expand phase matrix into spherical harmonics        
+    
+    temp=phase_mat_spatial[:,:,:]
+    
+    input_data={}
+    input_data['mueller_array']=np.moveaxis(temp, 0, -1)
+    input_data['phis_grid']=xlons_fine[0,:]*180/np.pi
+    input_data['thetas_grid']=xlats_fine[:,0]*180/np.pi
+    
+    [phase_mat_ijk,rel_error, max_len_coeffs_ij, max_ntrunc_ij
+         ]=spha.expand_mueller_2_spharmonics(input_data,eps,diagnostics=False)
+    
+    print()    
+    print('theta: '+str(theta_inc[j])+'deg')
+    print('Yeah, it is done!')
+    
+    return phase_mat_ijk,rel_error,max_len_coeffs_ij, max_ntrunc_ij
+ 
+
+#==============================================================================
+#  mueller to phase matrix transformation
+#==============================================================================
+
+
+def mueller2phase_reexpand(output_data,grid_size_theta=180,eps=0,parallel=False,core_limit=16):
+    """transforms the mueller matrices in spherical harmonics representation
+       to stokes phase matrix in spherical harmonics representation.
+       
+       This transformation first transforms the spectral representation to the
+       spatial representation and interpolate over the poles to reduce the error
+       in the forward direction (poles) to high resolution spatial grid. 
+       The mueller matrices on this HR grid are than expand to the full spectral       
+       representation and rotated.Than the mueller matrices are transformed back 
+       to the spatial representation and transformed to the phase matrix 
+       representation on the spatial grid, which are the transformed to a spectral
+       grid representation.
+       
+       grid_size_theta has to be even, otherwise it won't work
+       eps is the accuracy of the phase matrix expansion
+    """
+
+
+    #some basic definition
+    c0=299792458
+    
+    #wavelength
+    lamb=c0/output_data['Frequency']
+    
+    #incidence angle
+    theta_inc=output_data['theta_inc']
+    
+    #truncation number of spherical harmonics expansion
+    max_ntrunc=output_data['max_ntrunc']
+
+    if grid_size_theta % 2 != 0:
+        grid_size_theta = grid_size_theta + 1
+
+        print('Changed grid_size_theta to grid_size_theta+1')
+        print('because, shtns does not like odd grid sizes for gaussian grids')
+        print('grid_size_theta =',grid_size_theta)
+    
+    #create spherical object
+    if max_ntrunc % 2 ==0:
+        min_grid_size=max_ntrunc+2
+    else:
+        min_grid_size=max_ntrunc+1
+
+    if min_grid_size<16:
+        min_grid_size=16
+
+    if grid_size_theta<=min_grid_size:
+        grid_size_theta=min_grid_size
+
+
+        
+#    x = spha.Spharmt(min_grid_size*2+1,min_grid_size,max_ntrunc,1,gridtype='gaussian')    
+#    x_fine = spha.Spharmt(grid_size_theta*2+1,grid_size_theta,max_ntrunc,1,gridtype='gaussian')    
+#    
+#    #spatial grids
+#    xlons,xlats = np.meshgrid(x.lons, x.lats)
+#    [xlons_fine,xlats_fine] = np.meshgrid(x_fine.lons, x_fine.lats)
+    
+    #create grids
+    [lon_new,lat_new] = np.meshgrid(np.linspace(0,360,grid_size_theta*2+1)
+        *np.pi/180, np.linspace(0,180,grid_size_theta+1)*np.pi/180)
+    
+    
+    #get sizes
+    qm=np.shape(output_data['mue_mat_horiz_avg_sph'])
+    
+    
+    #calculate rotation angles      
+    if parallel==True:
+        [PHI1mat, PHI2mat]=calculate_rotation_angles_parallel(theta_inc, lat_new, lon_new, core_limit=16)
+    
+    elif parallel==False:
+        [PHI1mat, PHI2mat]=calculate_rotation_angles(theta_inc, lat_new, lon_new)
+    
+    #allocate
+    phase_mat=np.ones(qm,dtype=complex)*np.NaN
+    
+    phase_mat_i=[None] * qm[0]
+    
+    max_ntrunc_output=np.zeros((qm[0],qm[1]))
+    max_len_coeffs_output=np.zeros((qm[0],qm[1]))
+    
+#    parallel=False
+    
+    
+    # do the transformation
+    for i in range(0,qm[0]):#loop over the beta angles
+        
+        phase_mat_ij=[None] * qm[1]
+        
+        spawn_command('free -m')
+        print(f'Before parallel: {memstring()}')
+        print('now it\'s time parallize.../\/\\//\\/')
+        print('                           ||||||||||')
+        
+        
+        if parallel==True:
+            print('n_beta: '+str(i))
+            
+            num_cores = multiprocessing.cpu_count()
+    
+            #uncomment if number of core should be limited
+            if num_cores>core_limit:
+                num_cores=core_limit
+            
+            #get mueller matrix of i-th beta angle           
+            m_i=np.complex128(output_data['mue_mat_horiz_avg_sph'][i,:,:,:])   
+            
+            
+            j_range=np.arange(0,qm[1])
+                        
+            #the core transformation in parallel 
+            results = Parallel(n_jobs=num_cores,max_nbytes=None)(delayed(mueller2phase_core)
+                (j,m_i,theta_inc,lamb,PHI1mat,PHI2mat,eps,lat_new,
+                 lon_new,qm,min_grid_size,max_ntrunc,grid_size_theta) 
+                 for j in j_range)
+             
+
+            for j in range(0,len(results)):
+
+                phase_mat_ij[j]=results[j][0]
+                max_len_coeffs_output[i,j]=results[j][2]
+                max_ntrunc_output[i,j]=results[j][3]
+
+                
+        elif parallel==False:
+    
+            for j in range(0,qm[1]):#loop over the incidence angles
+                          
+            
+                #get mueller matrix of i-th beta angle           
+                m_i=np.complex128(output_data['mue_mat_horiz_avg_sph'][i,:,:,:])
+
+                #the core transformation
+                [phase_mat_ijk,rel_error, max_len_coeffs_ij, max_ntrunc_ij
+                    ]=mueller2phase_core(j,m_i,theta_inc,lamb,PHI1mat,PHI2mat,eps,lat_new,
+                     lon_new,qm,min_grid_size,max_ntrunc,grid_size_theta)
+
+                
+                phase_mat_ij[j]=phase_mat_ijk
+                max_len_coeffs_output[i,j]=max_len_coeffs_ij
+                max_ntrunc_output[i,j]=max_ntrunc_ij
+
+            
+        phase_mat_i[i]=phase_mat_ij        
+
+
+    phase_mat=phase_mat_i
+    return phase_mat, max_ntrunc_output, max_len_coeffs_output
+
+
+
+
+#==============================================================================
+# create phase matrix in spatial representation
+#==============================================================================
+
+# def create_regular_representation(output_data,grid_size_theta=90, gridtype='gaussian'):
+#    """create phase matrix in spatial grid representation"""
+#
+#
+#    #truncation number of spherical harmonics expansion
+#    max_ntrunc=output_data['max_ntrunc']
+#
+#    phase_mat_sph=output_data['phase_matrix_sph']
+#
+#
+#
+#    if gridtype=='gaussian':
+#
+#        if max_ntrunc % 2 ==0:
+#            min_grid_size=max_ntrunc+2
+#        else:
+#            min_grid_size=max_ntrunc+1
+#
+#        if min_grid_size<grid_size_theta:
+#            min_grid_size=grid_size_theta
+#        elif grid_size_theta<min_grid_size:
+#            grid_size_theta=min_grid_size
+#
+#        if min_grid_size % 2 == 1:
+#            min_grid_size=min_grid_size+1
+#
+#
+#        #create spherical harmonics object
+#        x = spha.Spharmt(min_grid_size*2+1,min_grid_size,max_ntrunc,1,gridtype='gaussian')
+#
+#    elif gridtype=='regular':
+#
+#        grid_size_theta=2*grid_size_theta
+#
+#        if max_ntrunc % 2 ==0:
+#            min_grid_size=2*max_ntrunc+2
+#        else:
+#            min_grid_size=2*(max_ntrunc+1)
+#
+#        if min_grid_size<grid_size_theta:
+#            min_grid_size=grid_size_theta
+#        elif grid_size_theta<min_grid_size:
+#            grid_size_theta=min_grid_size
+#
+#        if min_grid_size % 2 == 1:
+#            min_grid_size=min_grid_size+1
+#
+#
+#
+#        x = spha.Spharmt(min_grid_size*2+1,min_grid_size,max_ntrunc,1,gridtype='regular')
+#
+#
+#    #create spatial grid
+#    phi_s,theta_s = np.meshgrid(x.lons, x.lats)
+#    phi_s=phi_s*180/np.pi
+#    theta_s=theta_s*180/np.pi
+#
+#    qm=np.shape(output_data['phase_matrix_sph'])
+#    ql=np.shape(phi_s)
+#
+#    #allocate
+#    phase_matrix_reg=np.ones((qm[0],qm[1],qm[2],ql[0],ql[1]))
+#
+#    #transform to spatial grid
+#    for i in range(0,qm[0]):#loop over the beta angles
+#
+#        for j in range(0,qm[1]):#loop over the incidence angles
+#
+#            for k in range(0,qm[2]):# loop over the matrix elements
+#
+#                phase_matrix_reg[i,j,k,:,:]=x.spectogrd(phase_mat_sph[i,j,k,:])
+#
+#
+#
+#    if gridtype=='regular':
+#
+#          phase_matrix_reg=phase_matrix_reg[:,:,:,0::2,0::2]
+#          phi_s=phi_s[0::2,0::2]
+#          theta_s=theta_s[0::2,0::2]
+#
+#
+#    return phase_matrix_reg,theta_s,phi_s
+    
+def create_regular_representation(output_data, max_ntrunc,
+                                  grid_size_theta=90, gridtype='gaussian',full_phi=False):
+
+    phase_mat_sph=output_data['phase_matrix_sph']
+
+    if gridtype=='gaussian':
+
+        if max_ntrunc % 2 ==0:
+            min_grid_size=max_ntrunc+2
+        else:
+            min_grid_size=max_ntrunc+1
+
+        if min_grid_size<grid_size_theta:
+            min_grid_size=grid_size_theta
+        elif grid_size_theta<min_grid_size:
+            grid_size_theta=min_grid_size
+
+        if min_grid_size % 2 == 1:
+            min_grid_size=min_grid_size+1
+
+
+        #create spherical harmonics object
+        x = spha.Spharmt(min_grid_size*2,min_grid_size,max_ntrunc,1,gridtype='gaussian')
+
+    elif gridtype=='regular':
+
+        grid_size_theta_old=grid_size_theta
+
+        if max_ntrunc % 2 ==0:
+            min_grid_size=2*max_ntrunc+2
+        else:
+            min_grid_size=2*(max_ntrunc+1)
+
+        if min_grid_size<grid_size_theta:
+            min_grid_size=grid_size_theta
+        elif grid_size_theta<min_grid_size:
+            grid_size_theta=min_grid_size
+
+        if min_grid_size % 2 == 1:
+            min_grid_size=min_grid_size+1
+
+
+
+        x = spha.Spharmt(min_grid_size*2,min_grid_size,max_ntrunc,1,gridtype='regular')
+
+
+    #create spatial grid
+    #phi_s,theta_s = np.meshgrid(x.lons, x.lats)
+    phi_s=x.lons*180/np.pi
+    theta_s=x.lats*180/np.pi
+
+    qm=np.shape(phase_mat_sph)
+    #ql=np.shape(phi_s)
+
+    #allocate
+    phase_matrix_reg=np.ones((qm[0],qm[1],qm[2],len(theta_s),len(phi_s)))
+
+
+    #transform to spatial grid
+    for i in range(0,qm[0]):#loop over the beta angles
+
+        for j in range(0,qm[1]):#loop over the incidence angles
+
+            for k in range(0,qm[2]):# loop over the matrix elements
+
+                phase_matrix_reg[i,j,k,:,:]=x.spectogrd(np.complex128(phase_mat_sph[i,j,k,:]))
+
+
+
+
+    if gridtype=='regular' and (
+        grid_size_theta_old<grid_size_theta or grid_size_theta_old % 2==1):
+
+        #to have uneven grid size or grid sizes that are smaller than the
+        #minimum grid size, we need to interpolate.
+
+        f_int=sp.interpolate.interp1d(theta_s,phase_matrix_reg,axis=3,kind='linear',
+                                assume_sorted=True)
+
+        theta_s=np.linspace(0,180,num=grid_size_theta_old)
+        phase_matrix_reg=f_int(theta_s)
+
+
+    if full_phi==True:
+
+        if grid_size_theta_old % 2==1:
+            phi_size=(grid_size_theta_old-1)*2+1
+        else:
+            phi_size = grid_size_theta_old*2 + 1
+
+        phi_s_i=np.linspace(0,360.,num=phi_size)
+
+        #add value of phi_s=0 for phi_s=360
+        dump = phase_matrix_reg[:, :, :, :, 0]
+        qdump = np.shape(dump)
+        dump = np.reshape(dump, qdump + (1,))
+        phase_matrix_reg = np.append(phase_matrix_reg, dump, axis=4)
+        phi_s=np.append(phi_s,360)
+
+    else:
+        phi_s_i = np.linspace(0, 180., num=grid_size_theta_old)
+
+    # interpolate to assure that azimuth grid always include 0 and 180 and if
+    # the grid size are smaller than the minimum grid size.
+    f_int = sp.interpolate.interp1d(phi_s, phase_matrix_reg, axis=4, kind='linear',
+                                    assume_sorted=True)
+
+    phase_matrix_reg=f_int(phi_s_i)
+    phi_s=phi_s_i
+
+
+    # #filter out negative values of the (1,1) or in python (0,0)
+    # dummy=phase_matrix_reg[0,...]
+    # logic0=dummy<0
+    # dummy[logic0]=0
+    # phase_matrix_reg[0,...]=dummy
+
+    return phase_matrix_reg,theta_s,phi_s
+
+
+#==============================================================================
+#  plot mueller matrix
+#==============================================================================
 
 def plot_mueller(mueller_mat):
 
@@ -104,19 +1006,7 @@ def create_vpol_vector(vertices):
 # define Polarizers 
 #==============================================================================
 
-def rotater_mat(eta):
-    #Important eta has to be in rad!!
 
-
-    P=np.zeros((4,4))
-    P[0,0]=1
-    P[1,1]=np.cos(2*eta)
-    P[2,1]=np.sin(2*eta)
-    P[1,2]=-P[2,1]
-    P[2,2]=P[1,1]
-    P[3,3]=1
-
-    return P
 
 
 def pol_changer(vertices, vpol, vpol_lab ,mueller_mat,ext_mat,sph_object):
@@ -265,12 +1155,17 @@ def construct_by_symmetry(mueller_mat,ext_mat,V_sym):
 def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coeffs, max_ntrunc,
                       inc_dir, beta,
                       ref_lev, sym_XYobj=False, sym_XZobj=False,sym_YZobj=False):
-    #
-    #function to do the orientational average for one particle for a specific 
-    #   incidence angle and a specific particle tilt (beta) angle
+    
+    '''function to do the orientational average for one particle for a specific 
+       incidence angle and a specific particle tilt (beta) angle'''
 
+#    spawn_command('free -m')
+#    print('  ')
+#    print(f'starting or-avg: {memstring()}')
+#    print('beta: '+str(beta)+'deg - theta: '+str(np.arccos(inc_dir[2])*180/np.pi)+'deg') 
     
     
+
     #get the shape
     qm=(16,max_len_coeffs)
     q_ext=np.shape(ext_mat_array)
@@ -278,14 +1173,17 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
     #create spherical harmonics object
     sph_object=shtns.sht(max_ntrunc, max_ntrunc, 1, shtns.sht_orthonormal+shtns.SHT_NO_CS_PHASE)
     
-    # reshape mueller_array to common sph_expansion
-    for i in range(0,len(mueller_array)):
-                    
-        n_idx=np.array([len(j) for j in mueller_array[i]])
-        
-        for j in range(0,len(n_idx)):
-        
-            mueller_array[i][j]=spha.map_sphexp(mueller_array[i][j],sph_object) 
+#    # reshape mueller_array to common sph_expansion
+#    for i in range(0,len(mueller_array)):
+#                    
+#        if i%100==0:
+#            print('theta: '+str(np.arccos(inc_dir[2])*180/np.pi)+'deg - reshaping M: index '+str(i))
+#        
+#        n_idx=np.array([len(j) for j in mueller_array[i]])
+#        
+#        for j in range(0,len(n_idx)):
+#        
+#            mueller_array[i][j]=spha.map_sphexp(mueller_array[i][j],sph_object) 
     
     
     
@@ -298,14 +1196,17 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
     ext_mat_alpha_temp=ZERO_EXT.copy()
     
     
-
-    print()
-    print('theta: '+str(inc_dir))
+    spawn_command('free -m')
+    print('  ')
+    print(f'Before avg: {memstring()}')
+    print('now do averaging...')
+    print('beta: '+str(beta)+'deg - theta: '+str(np.arccos(inc_dir[2])*180/np.pi)+'deg')         
+    print('   ')
 
     #get the number of quadrature points
-    numQuadraturePoints=2*2**ref_lev
-    if numQuadraturePoints>16:
-        numQuadraturePoints=16
+    numQuadraturePoints=4*2**ref_lev
+    if numQuadraturePoints>64:
+        numQuadraturePoints=64
 
     #get the weights for gauss legendre quadrature
     [sample_points,gauss_weights]=np.polynomial.legendre.leggauss(numQuadraturePoints)
@@ -322,10 +1223,16 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
     
     for a_i in range(0,len(p_orientation_alpha)):
         
-
         n_alpha=n_alpha+1
         alpha=p_orientation_alpha[a_i]
 
+#        print('   ')
+#        spawn_command('free -m')
+#        print('  ')
+#        print(f'Before avg: {memstring()}')
+        print('I am averaging...alpha = '+str(alpha)+'deg')
+        print('beta: '+str(beta)+'deg - theta: '+str(np.arccos(inc_dir[2])*180/np.pi)+'deg')
+        print(datetime.now().time().isoformat())
 
         mue_mat_gamma_temp=ZERO_MUE.copy()
         ext_mat_gamma_temp=ZERO_EXT.copy()
@@ -349,8 +1256,8 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
 #            print('n_alpha: '+str(n_alpha)+', n_gamma: '+str(n_gamma))
             
             #make copy
-            mueller_array_temp=copy.deepcopy(mueller_array)
-            ext_mat_array_temp=ext_mat_array.copy()
+#            mueller_array_temp=copy.deepcopy(mueller_array)
+#            ext_mat_array_temp=ext_mat_array.copy()
             
             #rotate and interpolate incidence directions
             vertices_rot=ico.rotate_vertices(vertices,alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)
@@ -443,15 +1350,36 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
             #======================================================
             else:            
                     
+                
+#                print('alpha = '+str(alpha))
+#                print('beta  = '+str(beta))
+#                print('gamma = '+str(gamma))
+                
+                
                 #rotate original vpol
                 vpol_rot=ico.rotate_vertices(vpol[idx,:],alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)   
                 
+                
                 #map to new laboratory vpol
-                mueller_array_temp_sub=[mueller_array_temp[i] for i in idx]
+                mueller_array_temp_sub=[mueller_array[i] for i in idx]
+                
+                # reshape mueller_array to common sph_expansion
+                for i in range(0,len(mueller_array_temp_sub)):
+                                
+                    
+#                    print('theta: '+str(np.arccos(inc_dir[2])*180/np.pi)+'deg - reshaping M: index '+str(i))
+                    
+                    n_idx=np.array([len(j) for j in mueller_array_temp_sub[i]])
+                    
+                    for j in range(0,len(n_idx)):
+                    
+                        mueller_array_temp_sub[i][j]=spha.map_sphexp(mueller_array_temp_sub[i][j],sph_object) 
+                
+                
 
                 [mueller_mat_rot,ext_mat_rot]=pol_changer(vertices_rot[idx,:],
                                 vpol_rot,vpol_lab ,
-                                mueller_array_temp_sub,ext_mat_array_temp[idx,:,:],sph_object)
+                                mueller_array_temp_sub,ext_mat_array[idx,:,:],sph_object)
                 
 #                spha.visualize_mueller_matrix_sph(mueller_array_temp_sub[0][0],sph_object,max_len_coeffs,max_ntrunc)
 
@@ -489,7 +1417,9 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
           
 
 
-    print('bla')
+    print()    
+    print('theta: '+str(np.arccos(inc_dir[2])*180/np.pi)+'deg')
+    print('Yeah, it is done!')
     return [mue_mat_alpha_temp,ext_mat_alpha_temp]
 #    return [1,2]
 
@@ -497,7 +1427,7 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
 
 def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
                     outputdatapath=None, alpha_0=0, beta_0=0, gamma_0=0, 
-                    num_x=73, num_y=36,parallel=False):
+                    parallel=False,num_cores=8):
     #
     #function to do the orientational average for one particle for different 
     #   incidence angles and particle tilt (beta) angles
@@ -517,9 +1447,9 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     
     
     
-    num_cores = multiprocessing.cpu_count()
-    
-    #uncomment if number of core should be limited
+#    num_cores = multiprocessing.cpu_count()
+#    
+#    #uncomment if number of core should be limited
 #    if num_cores>16:
 #        num_cores=16
     
@@ -535,12 +1465,20 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     overviewlist = glob.glob(inputdatapath+"*overview_data.mat")
     
     
-    if np.size(overviewlist)!=1:
+    if np.size(overviewlist)>1:
         print('There was more than one overview file!')
         print('This is bad, because I am confused now...')
         
         #insert error statement here
         raise RuntimeError('Therefore, I have to stop, sorry...')
+        
+    elif np.size(overviewlist)<1:
+        print('There was no overview file!')
+        print('This is bad, because I do not know how to go on.')
+        
+        #insert error statement here
+        raise RuntimeError('Therefore, I have to stop, sorry...')
+        
     
     
     #load overviewdata
@@ -569,33 +1507,40 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
 
     
     #load mueller matrix
-    mueller_array=ty.arts.xml.load(inputdatapath+overviewdata['mueller_matrix_filename'])
     
-#    mueller_array=data.variables['mueller_matrix_array'][:]
-#    
-#    phi_s=data.variables['phi_s'][:]
-#    theta_s=data.variables['theta_s'][:]
+    print('loading adda results...')
+    mueller_array=ty.arts.xml.load(inputdatapath+overviewdata['mueller_matrix_filename']+'.xml')
     
+    #reduce mueller_array from complex128 to complex64
+    for i in range(len(mueller_array)):
+                
+        mueller_array[i]=[np.complex64(mueller_array[i][j]) for j in range(len(mueller_array[i]))]
+
+    
+    
+    dump=np.zeros(len(mueller_array))
+    for i in range(len(mueller_array)):
+        dump[i]=sum([len(n) for n in mueller_array[i]])
+        
     #==============================================================================
     # some preperations
     #==============================================================================
     
-#    qm=mueller_array.shape
+    #get shape
     q_ext=np.shape(ext_mat_array)
     
     
     #get refinement level
     ref_lev=np.size(overviewdata['eps_vec'])-sum(np.isnan(overviewdata['eps_vec']))            
                    
-                   
+    #allocate                   
     ext_mat_horiz_avg=np.zeros((len(p_orientation_beta),len(incidence_angles),q_ext[1],q_ext[2])) 
     ext_mat_horiz_avg[:]=np.nan
-    
-    mue_mat_horiz_avg_reg=np.zeros((len(p_orientation_beta),len(incidence_angles),num_y,num_x,16)) 
-    mue_mat_horiz_avg_reg[:]=np.nan
-    mue_mat_horiz_avg_sph=[None] * len(p_orientation_beta)
+    mue_mat_horiz_avg_sph=np.zeros((len(p_orientation_beta),len(incidence_angles),16,max_len_coeffs),dtype=complex) 
     
     #create vertical polarization vectors
+    
+    
     vpol=create_vpol_vector(vertices)
 
     
@@ -634,13 +1579,7 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
                      
     #==============================================================================
     #       ###do the averaging
-    #==============================================================================    
-    
-    #create spharmonics object for regular grid representation
-    x = spha.Spharmt(num_x,num_y,max_ntrunc,1,gridtype='gaussian')
-    phi_s,theta_s = np.meshgrid(x.lons, x.lats)
-    
-    
+    #==============================================================================          
     
     #counter beta
     n_beta=-1
@@ -653,83 +1592,77 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     
         print()
         print('n_beta: '+str(n_beta))
+        print('beta: '+str(beta)+' deg')
         
         
-        mue_mat_horiz_avg_beta_sph=[None] * len(incidence_angles)
+        with ty.utils.Timer():
+       
+               
+#==============================================================================
+#   parallel loop, 
+#==============================================================================
         
-#==============================================================================
-#   parallel loop, uncomment if parallel computing is possible
-#==============================================================================
-        
-        if parallel==True:
-
- 
-            results = Parallel(n_jobs=num_cores,max_nbytes=None)(delayed(orientational_avg)
-                         (vertices, vpol,mueller_array, ext_mat_array,
-                          max_len_coeffs, max_ntrunc, 
-                          np.array([np.sin(theta*np.pi/180),0,np.cos(theta*np.pi/180)]), beta,
-                                           ref_lev,sym_XYobj, sym_XZobj, sym_YZobj) 
-                         for theta in incidence_angles)
-             
-            for i in range(0,len(results)):
-                ext_mat_horiz_avg[n_beta,i,:,:]=results[i][1]
-#                
-                mue_mat_horiz_avg_beta_sph[i]=results[i][0]
-                
-                #regular grid representation     
-#                mue_mat_horiz_avg_reg[n_beta,i,:,:,:]=x.spectogrd(results[i][0])
-                
-                for mii in range(0,16):
-                           
-                    mue_mat_horiz_avg_reg[n_beta,i,:,:,mii]=x.spectogrd(
-                        np.complex128(results[i][0][mii,:]))
-     
-
-#==============================================================================
-#   serial loop, uncomment if parallel computing is not possible
-#==============================================================================
- 
-        elif parallel==False:
+            if parallel==True:
     
-            print('Parallel computing is not working!')
-            print('Then I switch to serial computing.')
-            
-            
-            #counter theta
-            n_theta=-1
-     
-            #Loop over incidence directions
-            for theta in incidence_angles:
-      
-                n_theta=n_theta+1
-      
-                inc_dir=np.array([np.sin(theta*np.pi/180),0,np.cos(theta*np.pi/180)])
-      
-                [mue_mat_alpha_temp,ext_mat_alpha_temp]=orientational_avg( 
-                          vertices, vpol, mueller_array, ext_mat_array, 
-                          max_len_coeffs, max_ntrunc,
-                          inc_dir, beta, 
-                          ref_lev,sym_XYobj, sym_XZobj, sym_YZobj)
-      
-                ext_mat_horiz_avg[n_beta,n_theta,:,:]=ext_mat_alpha_temp                
-                mue_mat_horiz_avg_beta_sph[n_theta]=mue_mat_alpha_temp
-
-                #regular grid representation    
-
-                for mii in range(0,16):
-                           
-                    mue_mat_horiz_avg_reg[n_beta,n_theta,:,:,mii]=x.spectogrd(
-                        np.complex128(mue_mat_alpha_temp[mii,:]))
+                spawn_command('free -m')
+                print(f'Before parallel: {memstring()}')
+                print('ncores: '+str(num_cores))
+                print('now it\'s time parallize.../\/\\//\\/')
+                print('                           ||||||||||')
                 
+     
+                results = Parallel(n_jobs=num_cores,max_nbytes=None)(delayed(orientational_avg)
+                             (vertices, vpol,mueller_array, ext_mat_array,
+                              max_len_coeffs, max_ntrunc, 
+                              np.array([np.sin(theta*np.pi/180),0,np.cos(theta*np.pi/180)]), beta,
+                                               ref_lev,sym_XYobj, sym_XZobj, sym_YZobj) 
+                             for theta in incidence_angles)
+                 
+                for i in range(0,len(results)):
+                    ext_mat_horiz_avg[n_beta,i,:,:]=results[i][1]
+                    mue_mat_horiz_avg_sph[n_beta,i,:,:]=np.array([results[i][0]])
+                    
+     
+    
 #==============================================================================
+#   serial loop,
+#==============================================================================
+     
+            elif parallel==False:
         
-        mue_mat_horiz_avg_sph[n_beta]=mue_mat_horiz_avg_beta_sph
+                print('Parallel computing is not working!')
+                print('Then I switch to serial computing.')
+                spawn_command('free -m')
+                print(f'Before ori-avg: {memstring()}')
+                
+                
+                #counter theta
+                n_theta=-1
+         
+                #Loop over incidence directions
+                for theta in incidence_angles:
+          
+                    n_theta=n_theta+1
+          
+                    inc_dir=np.array([np.sin(theta*np.pi/180),0,np.cos(theta*np.pi/180)])
+          
+                    [mue_mat_alpha_temp,ext_mat_alpha_temp]=orientational_avg( 
+                              vertices, vpol, mueller_array, ext_mat_array, 
+                              max_len_coeffs, max_ntrunc,
+                              inc_dir, beta, 
+                              ref_lev,sym_XYobj, sym_XZobj, sym_YZobj)
+          
+                    ext_mat_horiz_avg[n_beta,n_theta,:,:]=ext_mat_alpha_temp                
+                    mue_mat_horiz_avg_sph[n_beta,n_theta,:,:]=mue_mat_alpha_temp
 
     
 #==============================================================================
 #        
 #==============================================================================
- 
+
+    #Convert extmat from µm^2 to m^2
+    ext_mat_horiz_avg=ext_mat_horiz_avg*1e-12;
+    
 
     #prepare data for save as overview of run
     output_data={}
@@ -745,7 +1678,6 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     output_data['sym_XZobj']=overviewdata['sym_XZobj']
     output_data['sym_YZobj']=overviewdata['sym_YZobj']
     output_data['ext_mat_horiz_avg']=ext_mat_horiz_avg
-    output_data['mue_mat_horiz_avg']=mue_mat_horiz_avg_reg
     output_data['mue_mat_horiz_avg_sph']=mue_mat_horiz_avg_sph
     output_data['eps_vec']=overviewdata['eps_vec']
     output_data['delta']=overviewdata['delta']
@@ -758,8 +1690,8 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     output_data['alpha_0']=alpha_0
     output_data['beta_0']=beta_0
     output_data['gamma_0']=gamma_0
-    output_data['phi_s']=phi_s[0,:]*180/np.pi
-    output_data['theta_s']=theta_s[:,0]*180/np.pi
+    output_data['max_len_coeffs']=overviewdata['max_len_coeffs']
+    output_data['max_ntrunc']=overviewdata['max_ntrunc']
     
     #
     
@@ -773,7 +1705,7 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
         print('shape = '+overviewdata['shape_name'])
         print('Temperature = '+str(overviewdata['Temperature'])+' K')
         print('Frequency = '+str(overviewdata['Frequency'])+' GHz')
-        print('Size = '+str(overviewdata['diameter_volume_equ'])+' µm')
+        print('Size = '+str(overviewdata['diameter_volume_equ'])+' m')
         print('===============================================================')
         print('   ')
         

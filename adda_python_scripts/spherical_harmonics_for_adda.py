@@ -29,8 +29,11 @@ class Spharmt(object):
         nlons:  number of longitudes
         nlats:  number of latitudes"""
         self._shtns = shtns.sht(ntrunc, ntrunc, 1, \
-                                shtns.sht_orthonormal+shtns.SHT_NO_CS_PHASE)        
-        self._shtns.set_grid(nlats,nlons,shtns.sht_quick_init|shtns.SHT_PHI_CONTIGUOUS,1.e-10)        
+                                shtns.sht_orthonormal+shtns.SHT_NO_CS_PHASE)     
+        if gridtype == 'gaussian':
+            self._shtns.set_grid(nlats,nlons,shtns.sht_quick_init|shtns.SHT_PHI_CONTIGUOUS,1.e-10)  
+        elif gridtype == 'regular':
+            self._shtns.set_grid(nlats,nlons,shtns.sht_reg_poles|shtns.SHT_PHI_CONTIGUOUS,1.e-10)            
         self.lats = np.arccos(self._shtns.cos_theta)
         self.lons = (2.*np.pi/nlons)*np.arange(nlons)
         self.nlons = nlons
@@ -66,12 +69,19 @@ class Spharmt(object):
         """rotate spectral coefficients by angle alpha"""
         RLM=self._shtns.Zrotate(dataspec,alpha)
         return RLM
+    def yrotate(self,dataspec,beta):
+        """rotate spectral coefficients by angle beta (along y-axis)"""
+        RLM=self._shtns.Yrotate(dataspec,beta)
+        return RLM
     def gauss_wts(self):
         """computes gaussian weights for theta integration"""
         return self._shtns.gauss_wts()
     def idx(self,l,m):
         """get the index of the spectral array for coefficient l,m"""
         return self._shtns.idx(l,m)    
+    def SH_to_point(self,dataspec,cos_theta,phi):
+        """compute spatial point from spectral coefficients"""
+        return self._shtns.SH_to_point(dataspec,cos_theta,phi)
 
 
 
@@ -113,21 +123,21 @@ def twoD_int(K,THETA,PHI,wtheta=[]):
 
 
 def sph_expansion(f_true,theta,phi,eps=0,diagnostics=False):
-    # function to transform a field on a sphere into spherical harmonics
-    # with given mean accuracy
-    # 
-    # Input:
-    # f_true        field on sphere
-    # theta         polar grid (colatitudes) as a vector
-    # phi           azimuth grid (longitudes) as a vector
-    # eps           mean accuracy
-    # diagnostics   Set True if output about the expansion is wanted
-    #
-    # Output:
-    # sph_coeffs    spherical harmonics expansion coefficients
-    # x             spherical harmonics object
-    # f_int         input field but interpolate to gaussian grid for theta
-    # delta_temp    mean difference between spherical expansion and original field
+    ''' function to transform a field on a sphere into spherical harmonics
+        with given mean accuracy
+     
+      Input:
+      f_true        field on sphere
+      theta         polar grid (colatitudes) as a vector
+      phi           azimuth grid (longitudes) as a vector
+      eps           mean accuracy
+      diagnostics   Set True if output about the expansion is wanted
+     
+      Output:
+      sph_coeffs    spherical harmonics expansion coefficients
+      x             spherical harmonics object
+      f_int         input field but interpolate to gaussian grid for theta
+      delta_temp    mean difference between spherical expansion and original field'''
     
     #sphere size
     rsphere = 1
@@ -163,7 +173,7 @@ def sph_expansion(f_true,theta,phi,eps=0,diagnostics=False):
     
     #interpolate function to grid for spherical harmics toolbox
     f_true=np.float64(f_true)
-    fun = sp.interpolate.interp1d(theta, f_true, kind='linear', axis=0)
+    fun = sp.interpolate.interp1d(theta, f_true, kind='linear', axis=0,fill_value='extrapolate')
     f_int = fun(lats[:,0])
     
 #    f_int=np.float64(f_int)
@@ -180,7 +190,7 @@ def sph_expansion(f_true,theta,phi,eps=0,diagnostics=False):
     
     delta=np.copy(dtemp_int)
     
-    if delta>=eps:
+    if delta>=eps and eps >0:
         print('=============================================')   
         print('delta            = '+str(delta))        
         print('eps              = '+str(eps))
@@ -300,22 +310,22 @@ def sph_expansion(f_true,theta,phi,eps=0,diagnostics=False):
 #==============================================================================
 
 def expand_mueller_2_spharmonics(input_data,eps_sphexp,diagnostics=False):
-    # function to transform a field on a sphere into spherical harmonics
-    # with given mean accuracy
-    # 
-    # Input:
-    # input_data            dict of ADDA output, consisting of mueller matrix 
-    #                       ('mueller_array'), scattered directions (azimuth:'phis_grid',
-    #                       polar: 'thetas_grid'), and extinction matrix, which is unused 
-    #                       here.
-    # eps_sphexp            mean accuracy
-    # diagnostics           Set True if output about the expansion is wanted
-    #
-    # Output:
-    # mueller_matrix_sph    Expansion coefficients for each matrix element of
-    #                       the mueller matrix
-    # rel_error             relative error of the expansion for each matrix 
-    #                       element of the mueller matrix
+    ''' function to transform a field on a sphere into spherical harmonics
+        with given mean accuracy
+     
+      Input:
+      input_data            dict of ADDA output, consisting of mueller matrix 
+                           ('mueller_array'), scattered directions (azimuth:'phis_grid',
+                           polar: 'thetas_grid'), and extinction matrix, which is unused 
+                           here.
+      eps_sphexp            mean accuracy
+      diagnostics           Set True if output about the expansion is wanted
+     
+      Output:
+      mueller_matrix_sph    Expansion coefficients for each matrix element of
+                            the mueller matrix
+      rel_error             relative error of the expansion for each matrix 
+                            element of the mueller matrix'''
     
             
     mueller_matrix_reg=np.float64(input_data['mueller_array'])
@@ -324,6 +334,7 @@ def expand_mueller_2_spharmonics(input_data,eps_sphexp,diagnostics=False):
     
     [PHI,THETA]=np.meshgrid(phis_grid,thetas_grid)
     
+   
     #calculate variance of the first element
     M11=mueller_matrix_reg[:,:,0]
     m11_int=np.sqrt(twoD_int(M11**2*np.sin(THETA),thetas_grid,phis_grid))
@@ -333,7 +344,7 @@ def expand_mueller_2_spharmonics(input_data,eps_sphexp,diagnostics=False):
     
     #allocate
     mueller_matrix_sph = [None] * np.size(mueller_matrix_reg,axis=2)
-    rel_error = [None] * np.size(mueller_matrix_reg,axis=2)
+    rel_error = np.zeros(np.size(mueller_matrix_reg,axis=2))
     
     max_len_coeffs=np.array([0])
     max_ntrunc=np.array([0])
@@ -346,6 +357,8 @@ def expand_mueller_2_spharmonics(input_data,eps_sphexp,diagnostics=False):
         [sph_coeffs, x, _, delta]=sph_expansion(
                 f_reg,thetas_grid,phis_grid,eps=eps_m,diagnostics=diagnostics)
         
+      
+        
         mueller_matrix_sph[m_idx]=np.complex64(sph_coeffs)
         rel_error[m_idx]=delta/m11_int
         
@@ -354,7 +367,7 @@ def expand_mueller_2_spharmonics(input_data,eps_sphexp,diagnostics=False):
         max_len_coeffs[logic]=len(sph_coeffs)
         max_ntrunc[logic]=x.ntrunc
         
-    return mueller_matrix_sph,rel_error,max_len_coeffs, max_ntrunc
+    return mueller_matrix_sph,rel_error,max_len_coeffs[0], max_ntrunc[0]
 
 
 #==============================================================================
@@ -362,8 +375,7 @@ def expand_mueller_2_spharmonics(input_data,eps_sphexp,diagnostics=False):
 #==============================================================================
 
 def visualize_mueller_matrix_sph(sph_coeffs,sph_object, max_len_coeffs, max_ntrunc):
-#
-#function to visualize sph expansion of mueller matrix    
+    '''function to visualize sph expansion of mueller matrix    '''
     
     
     if max_ntrunc % 2 ==0:
@@ -425,9 +437,9 @@ def visualize_mueller_matrix_sph(sph_coeffs,sph_object, max_len_coeffs, max_ntru
 #==============================================================================
 
 def map_sphexp(sph_coeffs,sph_object):
-    #Function to map from one spherical harmonics expansion to another 
-    #Important the expansion, which is mapped to another has to be
-    # of smaller or same lmax as the expansion, to which it is mapped.
+    '''Function to map from one spherical harmonics expansion to another 
+    Important the expansion, which is mapped to another has to be
+    of smaller or same lmax as the expansion, to which it is mapped.'''
     
     #get truncation or lmax
     ntrunc=int(1/2+np.sqrt(1/4+2*len(sph_coeffs))-2)
@@ -490,8 +502,53 @@ def map_sphexp(sph_coeffs,sph_object):
     return sph_coeffs_new        
         
         
+#==============================================================================
+#     
+#==============================================================================
+
+def reshape_sphexp_2_common_exp(max_ntrunc_pha,max_len_coeffs_pha,phase_mat):
+    '''Function to reshape an array of sph_expansions to a common expansion'''
+
+#    #create spherical harmonics object
+#    if max_ntrunc_pha % 2 ==0:
+#        min_grid_size=max_ntrunc_pha+2
+#    else:
+#        min_grid_size=max_ntrunc_pha+1
     
+    sph_object=shtns.sht(int(max_ntrunc_pha), int(max_ntrunc_pha), 1,
+                         shtns.sht_orthonormal+shtns.SHT_NO_CS_PHASE)
+    
+    # reshape phase_arrays to common sph_expansion
+    #allocate
+    phase_mat_array=np.zeros((len(phase_mat),len(phase_mat[0]),16,int(np.max(max_len_coeffs_pha))),dtype=complex)
+    
+    for i in range(0,len(phase_mat)):
+    
+        phase_mat_i=phase_mat[i]
+        
+        for j in range(0,len(phase_mat_i)):
+            
+            phase_mat_ij=phase_mat_i[j]
+            
+            for k in range(0,len(phase_mat_ij)):
+            
+                phase_mat_array[i,j,k,:]=map_sphexp(phase_mat_ij[k],sph_object) 
+    
+    return phase_mat_array    
 
 
+#==============================================================================
+#   get truncation (lmax) from sph coefficients      
+#==============================================================================
     
+def get_lmax(sph_coeffs):
+    #2017-10-13 Manfred Brath
+    ''' Function to get the truncation limit or in other words the maximum
+        of the highest l coefficient'''
+    
+    #get truncation or lmax
+    lmax=int(1/2+np.sqrt(1/4+2*len(sph_coeffs))-2)
+    
+    
+    return lmax    
     

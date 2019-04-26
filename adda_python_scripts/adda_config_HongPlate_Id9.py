@@ -23,8 +23,6 @@ import adda_control_functions as acf
 #Speed of light
 c0=299792458 #[m/s]
 
-#number of cores
-ncores=32
 
 
 #==============================================================================
@@ -32,21 +30,37 @@ ncores=32
 #==============================================================================
 
 #how to calculate
-calc_type='mistral'
+
 
 #where am I?
 hereiam=socket.gethostname()
 
-if hereiam[0:6]=='mlogin': #we are on mistral
+if hereiam[0:6]=='mlogin' or hereiam[0:7]=='mistral' or hereiam[0:2]=='m2': #we are on mistral
 
-    prefix='/mnt/lustre01/work/um0878/users/mbrath/'
-    prefix_data='/mnt/lustre01/work/um0878/users/mbrath/'
+    prefix='/work/um0878/users/mbrath/'
+    prefix_data='/work/um0878/user_data/mbrath/'
 
     calc_type='mistral'
+    
+    ncores=36
+    Partition='compute2'
 
 else:
     prefix='/scratch/uni/u237/users/mbrath/'
     prefix_data='/scratch/uni/u237/user_data/mbrath/'
+    
+    calc_type='thunder'
+    
+    #number of cores
+    ncores=32
+
+    
+    
+#ramdrive
+if calc_type=='mistral':
+    ramdrive="/dev/shm/"
+else:
+    ramdrive="/dev/shm/u242031/"    
 
 
 #scat_params_path
@@ -76,8 +90,7 @@ shape_path=shape_mainpath+shape_foldername+'/'
 #subfolder
 subpath=shape_foldername+'/'
 
-#ramdrive
-ramdrive='/dev/shm/u242031/'
+
 
 #==============================================================================
 # Particle definition
@@ -135,15 +148,17 @@ sym_YZobj=False
 
 
 
-frequencies=np.array([ 89, 94, 115, 122])*1e9#np.logspace(10.,12.,num=10)#[Hz]
+frequencies=np.array([1,1.4, 3, 5, 7., 9, 10, 10.65, 13, 15, 19, 24, 31, 32, 36, 50, 58, 89,
+                      94, 115, 122, 164, 167, 175, 191, 228, 247, 314, 336, 
+                      439, 457, 657, 671, 862, 886.])*1e9
 #frequencies=np.array([1, 3, 5, 9, 10, 13, 15, 19, 24, 31, 32, 36, 50, 58, 89,
 #                      94, 115, 122, 164, 167, 175, 191, 228, 247, 314, 336, 
 #                      439, 457, 657, 671, 862, 886])*1e9
 
 
 #Temperature
-temperatures=np.array([230.])#np.array([203.,233.,253.,273.])
-#temperatures=np.array([190., 230., 270.])
+#temperatures=np.array([230.])#np.array([203.,233.,253.,273.])
+temperatures=np.array([190., 230., 270.])
 
 #Number of particle tilt orientations (Euler angle beta)
 number_of_betas=5
@@ -153,7 +168,6 @@ incidence_angles=np.linspace(0.,180.,num=10)
 
 #estimated time for batch-job
 #batch_time=100. #[minutes]
-
 
 #Limits and break criteria
 delta=0.01
@@ -177,6 +191,9 @@ gamma_0=0
 
 #force new calculation
 force_new=False
+
+#size parameter limit
+size_parameter_limit=10
 
 #==============================================================================
 # Adda inputs

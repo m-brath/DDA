@@ -1,0 +1,71 @@
+#!/bin/bash
+
+QUEUECOMMAND=sbatch
+if [[ $1 = "-d" ]]; then
+	QUEUECOMMAND=cat
+	shift
+fi
+
+if (( $# < 3 )); then
+	echo "Usage: $0 [-d] JOBNAME RUNTIME NCORES ADDAARGS" >&2
+	echo
+	echo "  -d  Debug, echoes slurm script instead of submitting it"
+	echo "      into the queue."
+	exit 1
+fi
+
+
+
+JOBNAME=$1
+shift
+
+RUNTIME=$1
+shift
+
+if [[ $RUNTIME == "default" ]]; then
+    RUNTIME="30"
+fi
+
+if (( "$1" < 1 )); then
+    echo "ERROR: Illegal number of cores. NCORES > 0, was '$1'" >&2
+    exit 1
+fi
+
+NCORES=$1
+shift
+
+#cat << _EOF_
+$QUEUECOMMAND << _EOF_
+#!/bin/bash
+#SBATCH --job-name=$JOBNAME       # Specify job name
+#SBATCH --output=$JOBNAME-%j.out  # File name for standard output
+#SBATCH --error=$JOBNAME-%j.err   # File name for standard error output
+
+#SBATCH --account=um0878          # Charge resources on this project account
+##SBATCH --partition=compute       # Specify partition name
+#SBATCH --partition=shared       # Specify partition name
+
+#SBATCH --nodes=1                 # Specify number of nodes
+#SBATCH --ntasks-per-node=$NCORES # Specify number of tasks on each node
+#SBATCH --time=$RUNTIME           # Set a limit on the total run time
+##SBATCH --mail-type=FAIL         # Notify user by email in case of job failure
+
+# Load environment
+module load intel
+# Environment settings to run a MPI parallel program compiled with Intel MPI
+module load intelmpi
+export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
+
+export LD_LIBRARY_PATH=/sw/rhel6-x64/numerics/fftw-3.3.4-bullxmpi-gcc48/lib
+
+# Use srun (not mpirun or mpiexec) command to launch programs compiled with any MPI library
+#srun -l --cpu_bind=cores --distribution=block:cyclic /work/um0878/sw/bin/adda_mpi -shape sphere -eq_rad 200 -lambda 80 -m 1.7748 0.0042 -eps 2
+#srun -l --cpu_bind=cores --distribution=block:cyclic /work/um0878/sw/bin/adda_mpi -shape sphere -eq_rad 200 -lambda 100 -m 1.7748 0.0042 -eps 2
+
+# No Hyper-Threading
+#srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic /work/um0878/sw/bin/adda_mpi $@
+# With Hyper-Threading
+srun -l --propagate=STACK --cpu_bind=threads --distribution=block:cyclic /work/um0878/sw/bin/adda_mpi $@
+
+_EOF_
+

@@ -27,6 +27,8 @@ modes = { zipfile.ZIP_DEFLATED: 'deflated',
 
 from netCDF4 import Dataset
 
+from posix_spawn import spawn_command
+
 
 #==============================================================================
 # Extinction matrix
@@ -176,7 +178,8 @@ def adda_call(input_data):
 
             #run adda==========================================================
 
-            sub.call(commando)
+            #sub.call(commando)
+            spawn_command(' '.join(commando))
 
             #==================================================================
 
@@ -1021,7 +1024,8 @@ def adda_call_randomorient(input_data):
 
         #run adda==========================================================
 
-        sub.call(commando)
+        #sub.call(commando)
+        spawn_command(' '.join(commando))
 
         #==================================================================
 
@@ -1220,70 +1224,120 @@ def _todict(matobj):
 #==============================================================================
 
 
-def check_dimensions(rootgrp, theta, phi,NSTOKES = 4):
-    """Checks dimensions in existing file to match current particle."""
-    if rootgrp.dimensions["theta"].size != len(theta):
-        raise RuntimeError("Theta dimension mismatch")
-    if rootgrp.dimensions["phi"].size != len(phi):
-        raise RuntimeError("Phi dimension mismatch")
-    if rootgrp.dimensions["stokes"].size != NSTOKES:
-        raise RuntimeError("Stokes dimension mismatch")
-    if rootgrp.dimensions["stokes2"].size != NSTOKES ** 2:
-        raise RuntimeError("Stokes**2 dimension mismatch")
-
-
-# @typhon.utils.Timer()
-def read_data_from_netcdf(filename, particle_id,NSTOKES = 4):
+def read_data_from_separate_netcdf(filename, particle_id):
     """Try to read particle data from file.
     Returns:
-         tuple or None: (mueller, extmat) or None if no data is available.
+         dict or None: {mueller_sph, relerror} or None if no data is available.
+    """
+    filename += particle_id + ".nc"
+    return read_data_from_netcdf(filename, particle_id)
+
+def write_data_to_separate_netcdf(filename, particle_id, mueller_sph, relerror,
+                                  max_len_coeffs, max_ntrunc,ext_mat, nstokes=4):
+    filename += particle_id + ".nc"
+    append_data_to_netcdf(filename, particle_id, mueller_sph, relerror,
+                          max_len_coeffs, max_ntrunc,ext_mat, nstokes)
+
+def read_data_from_netcdf(filename, particle_id):
+    """Try to read particle data from file.
+    Returns:
+         dict or None: {mueller_sph, relerror} or None if no data is available.
     """
     if os.path.exists(filename):
-        with Dataset(filename, "r") as rootgrp:           
+        with Dataset(filename, "r") as rootgrp:
             try:
-                output_data={}
-                output_data['mueller_array'] = rootgrp[f"/{particle_id}/mueller"][:]
-                output_data['ext_matrix'] = rootgrp[f"/{particle_id}/extmat"][:]
-                output_data['thetas_grid'] =rootgrp["thetas_grid"][:]
-                output_data['phis_grid'] =rootgrp["phis_grid"][:]
-                return output_data
+                ret = {}
+                mueller_sph_array = rootgrp[f"/{particle_id}/mueller_sph"][:]
+                
+                ret["mueller_sph"]=[c.view(np.complex64).astype(
+                        np.complex128) for c in mueller_sph_array]   
+                ret["relerror"] = rootgrp[f"/{particle_id}/relerror"][:]
+                ret["ext_matrix"] = rootgrp[f"/{particle_id}/ext_mat"][:]
+
+                group = rootgrp[f"/{particle_id}"]
+                ret["max_len_coeffs"] = group.max_len_coeffs
+                ret["max_ntrunc"] = group.max_ntrunc
+                return ret
+            except KeyError:
+                pass
+    return None
+
+def read_fulldata_from_netcdf(filename):
+    """Try to read all data from file.
+    Returns:
+         dict or None: {mueller_sph, relerror} or None if no data is available.
+    """
+    
+    if os.path.exists(filename):
+        with Dataset(filename, "r") as rootgrp:
+            try:
+                ret = {}
+                
+                
+                ret["mueller_sph_array"]=[[c.view(np.complex64).astype(np.complex128) 
+                    for c in g["mueller_sph"][:]] 
+                        for g in rootgrp.groups.values()] 
+    
+                ret["relerror"] = [g["relerror"][:] 
+                    for g in rootgrp.groups.values()]
+                ret["ext_matrix"] = np.array([g["ext_mat"][:] 
+                    for g in rootgrp.groups.values()])
+
+                ret["max_len_coeffs"] = np.array([g.max_len_coeffs 
+                    for g in rootgrp.groups.values()])
+                ret["max_ntrunc"] = np.array([g.max_ntrunc 
+                    for g in rootgrp.groups.values()])
+                return ret
             except KeyError:
                 pass
     return None
 
 
-def write_variables(rootgrp, particle_id, mueller, extmat):
-    """Create mueller and extinction matrix in NetCDF group."""
-    var_mueller = rootgrp.createVariable(f"/{particle_id}/mueller", "f4",
-                                         ("theta", "phi", "stokes2"),zlib=True)
-    var_extmat = rootgrp.createVariable(f"/{particle_id}/extmat", "f4",
-                                        ("stokes", "stokes"),zlib=True)
-    var_mueller[:] = mueller
-    var_extmat[:] = extmat
+def write_variables(rootgrp, particle_id, mueller_sph, relerror, max_len_coeffs,
+                    max_ntrunc, ext_mat):
+    """Create mueller and relerror in NetCDF group."""
+
+    vlen_t = rootgrp.vltypes["float_vlen"]
+
+    mueller_sph_array = np.ones(len(mueller_sph), dtype=object)
+    for i, c in enumerate(mueller_sph):
+        mueller_sph_array[i] = c.astype(np.complex64).view(np.float32)
+
+    var_mueller = rootgrp.createVariable(f"/{particle_id}/mueller_sph",
+                                         vlen_t, ("stokes2",))
+    var_mueller[:] = mueller_sph_array
+
+    var_relerror = rootgrp.createVariable(f"/{particle_id}/relerror", "f4",
+                                          ("stokes2",))
+    var_relerror[:] = relerror
+    
+    var_ext_mat = rootgrp.createVariable(f"/{particle_id}/ext_mat", "f4",
+                                          ("stokes","stokes",))
+    var_ext_mat[:] = ext_mat
+
+    group = rootgrp[f"/{particle_id}"]
+    group.max_len_coeffs = np.int32(max_len_coeffs)
+    group.max_ntrunc = np.int32(max_ntrunc)
 
 
 # @typhon.utils.Timer()
-def append_data_to_netcdf(filename, particle_id, theta, phi, mueller, extmat,NSTOKES = 4):
+def append_data_to_netcdf(filename, particle_id, mueller_sph, relerror,
+                          max_len_coeffs, max_ntrunc,ext_mat, nstokes=4):
     """Appends data to NetCDF file.
     File is created if it doesn't exist.
     """
     if not os.path.exists(filename):
+        print(f"Writing {particle_id} to file {filename}")
         with Dataset(filename, "w") as rootgrp:
-            rootgrp.createDimension("theta", len(theta))
-            rootgrp.createDimension("phi", len(phi))
-            rootgrp.createDimension("stokes", NSTOKES)
-            rootgrp.createDimension("stokes2", NSTOKES ** 2)
-            
-            var_thetas_grid = rootgrp.createVariable("thetas_grid", "f4",
-                                        ("theta",))
-            var_phis_grid = rootgrp.createVariable("phis_grid", "f4",
-                                        ("phi",))
-            
-            var_thetas_grid[:]=theta
-            var_phis_grid[:]=phi
+            rootgrp.createDimension("stokes2", nstokes ** 2)
+            rootgrp.createDimension("stokes", nstokes )
+            vlen_t = rootgrp.createVLType(np.float32, "float_vlen")
 
-            write_variables(rootgrp, particle_id, mueller, extmat)
+            write_variables(rootgrp, particle_id, mueller_sph, relerror,
+                            max_len_coeffs, max_ntrunc, ext_mat)
     else:
+        print(f"Appending {particle_id} to file {filename}")
         with Dataset(filename, "a") as rootgrp:
-            check_dimensions(rootgrp, theta, phi)
-            write_variables(rootgrp, particle_id, mueller, extmat)
+            write_variables(rootgrp, particle_id, mueller_sph, relerror,
+                            max_len_coeffs, max_ntrunc, ext_mat)
+
