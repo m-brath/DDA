@@ -41,7 +41,7 @@ else:
     prefix_data='/scratch/uni/u237/user_data/mbrath/'
 
     calc_type='thunder'
-    ncores=32
+    ncores=16
 
 
 #path of the configfile folder
@@ -59,7 +59,7 @@ temporary_folder=prefix_data+'/adda_results/temp'
 p_orientation_beta=np.linspace(0,180,num=19)
 
 #incidence angles
-incidence_angles=np.linspace(0,180.,num=13)
+incidence_angles=np.linspace(0,180.,num=19)
 
 #create regular grid
 regular_phasematrix=True
@@ -79,7 +79,7 @@ gamma_0=0
 parallel=True
 
 #accuracy of spherical harmonics representation of phase matrix
-eps_phase=0.01
+eps_phase=0.001
 
 
 #crystal_type='SingleCrystal'
@@ -445,7 +445,7 @@ if __name__ == "__main__":
 
         #Command string (queue on thunder)
         else:
-            sbatch_str=['/scratch/uni/u237/sw/bin/sbatch_simple',#'-x', 'ctc[132,133,134]',
+            sbatch_str=['/scratch/uni/u237/sw/bin/sbatch_simple','-p', 'uni-compute2',#'-x', 'ctc[132,133,134]',
                 'ADDA_'+folder,str(ncores)]
 
 
