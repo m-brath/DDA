@@ -1,0 +1,65 @@
+all data is saved in '/var/folders/gv/mb1d5jjj5r1dm8gmdg2gpltr0000gp/T/tmpxxtc_r16/out'
+box dimensions: 16x14x8
+lambda: 1561.419052   Dipoles/lambda: 1946.89
+Required relative residual norm: 0.001
+Total number of occupied dipoles: 1015
+Memory usage for MatVec matrices: 0.6 MB
+Calculating Green's function (Dmatrix)
+Fourier transform of Dmatrix......
+Initializing FFTW3
+Total memory usage: 1.1 MB
+
+here we go, calc Y
+
+CoupleConstant:0.05140337732+0.000121994895i
+x_0 = E_inc
+RE_000 = 1.8815668738E-01
+RE_001 = 5.1788393725E-02  + 
+RE_002 = 1.0233569751E-02  + 
+RE_003 = 2.9696901561E-03  + 
+RE_004 = 1.0466210642E-03  + 
+RE_005 = 2.8514833760E-04  + 
+Calculating scattered field for the whole solid angle:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Calculating grid of scattered field:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Cext	= 0.007967865985
+Qext	= 0.0001014500206
+Cabs	= 0.007959204197
+Qabs	= 0.0001013397353
+All inner integrations converged
+The outer integration converged
+In total 20 evaluations were used
+Csca	= 7.447735791e-06
+Qsca	= 9.482751728e-08
+
+here we go, calc X
+
+CoupleConstant:0.05140337732+0.000121994895i
+x_0 = E_inc
+RE_000 = 2.6617005532E-01
+RE_001 = 2.8421615768E-02  + 
+RE_002 = 9.8113617529E-03  + 
+RE_003 = 2.9937794708E-03  + 
+RE_004 = 1.0818888962E-03  + 
+RE_005 = 2.9054573564E-04  + 
+Calculating scattered field for the whole solid angle:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Calculating grid of scattered field:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Cext	= 0.005117752653
+Qext	= 6.516125058e-05
+Cabs	= 0.005111106719
+Qabs	= 6.507663192e-05
+All inner integrations converged
+The outer integration converged
+In total 20 evaluations were used
+Csca	= 4.70560989e-06
+Qsca	= 5.991368593e-08
+
+WARNING: (../make_particle.c:1903) boxX has been adjusted from 15 to 16. Size
+along X-axis in the shape description is the size of new (adjusted)
+computational grid.
+WARNING: (../param.c:1966) Directory
+'/var/folders/gv/mb1d5jjj5r1dm8gmdg2gpltr0000gp/T/tmpxxtc_r16/out' already
+exists

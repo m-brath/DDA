@@ -1,0 +1,55 @@
+# Description of a set of angles for which to calculate Mueller matrix
+#
+# Baseline variant: coarsened grid (10 deg steps) to keep baseline files small.
+# Used by baselines/make_baseline.py only; production uses
+# adda_python_scripts/scat_params.dat (1 deg grid).
+
+# grid or pairs
+global_type=grid
+#number of points
+N=2
+#lines of theta,phi
+pairs=
+0 0
+30 90
+
+theta:
+#range or values
+type=range
+#number of points (number of intervals + 1)
+N=19
+min=0
+max=180
+#lines of theta
+values=
+0
+10
+20
+30
+
+phi:
+#range or values
+type=range
+#number of points (number of intervals + 1)
+N=37
+min=0
+max=360
+#lines of phi
+values=
+0
+90
+
+phi_integr:
+# default: min=0;max=360;Jmin=2;Jmax=5;eps=0;equiv=true;periodic=true
+# axysymmetrical: max=0
+#   more precisely: max=45;Jmax=3;equiv=false
+#   then discard values of some Mueller matrix elements integrated with cos/sin multipliers (those that should be =0)
+min=0
+max=360
+Jmin=2
+Jmax=5
+eps=0
+equiv=true
+periodic=true
+
+# all angles are specified in degrees

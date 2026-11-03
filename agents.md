@@ -29,6 +29,7 @@ Orientation strategies:
 | `arts-sspdb-interface/` | Upstream MATLAB/Python interface for browsing/importing the published ARTS SSP database (zenodo 1175572), incl. RTTOV extraction. Read-only reference. |
 | `SSD_scripts_deprecated/` | Old/prototype SSDB interface scripts (`assp.py`, `sph.py`, `rttov.py`, …). **Deprecated — do not modify or extend.** |
 | `plans/` | Working plans (e.g. `DDA-modernization-plan.md` — numpy-2 / ADDA-1.4 migration + optimization). |
+| `baselines/` | Frozen regression baselines (golden ADDA outputs) + `make_baseline.py` / `check_baselines.py`. See `baselines/README.md`. **Do not regenerate casually; they are the reference for all migrations.** |
 
 ### Habits (shape folders / active configs)
 
@@ -61,7 +62,9 @@ reference patterns only.**
   rely on analytic tests (sphere/Mie, oblate ellipsoid) and 1.2-vs-1.4/1.5 cross-runs.
 - **Modernization plan approved** (see `plans/DDA-modernization-plan.md`): code analysis,
   numpy-2 migration, configurable ADDA binary (1.2 / 1.4 / 1.5.0-alpha3), symmetry-based
-  optimization, then production backlog. Status: planning done, implementation not started.
+  optimization, then production backlog. Status: **Phase 0 done** (git repos initialized,
+  env pinned via `environment.yml`, frozen baselines under `baselines/adda_1.2/` verified
+  across ADDA 1.2 vs 1.5.0-alpha3 and against independent Mie theory). Phases 1+ pending.
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -120,6 +123,21 @@ reference patterns only.**
   branches still point at `/scratch/uni/...` and `sbatch_*`. To run small test jobs locally:
   - Build ADDA locally: `cd adda/src && make seq` (or `make mpi` with mpich/openmpi).
     FFTW3 and OpenMP recommended. Never reuse the Linux ELF binaries in `adda_1.2/src/seq|mpi/`.
+  - **Proven macOS (arm64) build recipe** (works for both `adda_1.2` and `adda` 1.5.0-alpha3,
+    2026-11-03): FFTW3 comes from the DDA conda env; no gfortran on this Mac so build
+    without Fortran (only IGT/surface mode need it; the pipeline's default `-int defint`
+    does not):
+    ```sh
+    cd adda_1.2/src && make cleanseq
+    make seq "OPTIONS=NO_FORTRAN" \
+      FFTW3_INC_PATH=$CONDA_PREFIX/../envs/DDA/include \
+      FFTW3_LIB_PATH=$CONDA_PREFIX/../envs/DDA/lib
+    # make links without rpath; dyld then cannot find libfftw3.3.dylib. Fix by relinking
+    # the object files make produced, with rpath added, e.g.:
+    # cd seq && gcc -o adda *.o -L<env>/lib -Wl,-rpath,<env>/lib -lm -lfftw3
+    ```
+    Stale `.d` files from the old Linux build must be cleaned first (`make cleanseq`),
+    otherwise make aborts on `/usr/include/stdc-predef.h` dependencies.
   - A config needs a local branch (new hostname case or `calc_type='noqueue'`-style path
     that calls `adda_sub_control_*.py` directly instead of sbatch).
 - **Python:** dedicated mamba env **`DDA`** (`mamba activate DDA`), Python 3.12:

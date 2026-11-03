@@ -2,3 +2,14 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# ADDA build artifacts (adda_1.2 lives in the umbrella repo; sources stay tracked)
+adda_1.2/src/*/*.o
+adda_1.2/src/*/*.d
+adda_1.2/src/*/.ldopts
+adda_1.2/src/*/.copts
+adda_1.2/src/*/.fopts
+adda_1.2/src/*/.cppopts
+adda_1.2/src/seq/adda
+adda_1.2/src/mpi/adda_mpi
+baselines/tmp/
