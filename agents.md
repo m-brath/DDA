@@ -28,8 +28,9 @@ Orientation strategies:
 | `adda_aux_input/` | ADDA `avg_params.dat` files (Euler-angle integration control for built-in `-orient avg`) for EvanSnowflake_aggregate and hexPlateAggregates2. |
 | `arts-sspdb-interface/` | Upstream MATLAB/Python interface for browsing/importing the published ARTS SSP database (zenodo 1175572), incl. RTTOV extraction. Read-only reference. |
 | `SSD_scripts_deprecated/` | Old/prototype SSDB interface scripts (`assp.py`, `sph.py`, `rttov.py`, …). **Deprecated — do not modify or extend.** |
-| `plans/` | Working plans (e.g. `DDA-modernization-plan.md` — numpy-2 / ADDA-1.4 migration + optimization). |
+| `plans/` | Working plans (`DDA-modernization-plan.md`) and the running phase-findings report (`DDA-modernization-report.md` — updated after every phase). |
 | `baselines/` | Frozen regression baselines (golden ADDA outputs) + `make_baseline.py` / `check_baselines.py`. See `baselines/README.md`. **Do not regenerate casually; they are the reference for all migrations.** |
+| `analysis/` | Phase-1 analysis tools (e.g. `inventory.py` — habit×size×freq×T status sheet). |
 
 ### Habits (shape folders / active configs)
 
@@ -62,9 +63,10 @@ reference patterns only.**
   rely on analytic tests (sphere/Mie, oblate ellipsoid) and 1.2-vs-1.4/1.5 cross-runs.
 - **Modernization plan approved** (see `plans/DDA-modernization-plan.md`): code analysis,
   numpy-2 migration, configurable ADDA binary (1.2 / 1.4 / 1.5.0-alpha3), symmetry-based
-  optimization, then production backlog. Status: **Phase 0 done** (git repos initialized,
-  env pinned via `environment.yml`, frozen baselines under `baselines/adda_1.2/` verified
-  across ADDA 1.2 vs 1.5.0-alpha3 and against independent Mie theory). Phases 1+ pending.
+  optimization, then production backlog. Status: **Phases 0+1 done** — findings appended to
+  `plans/DDA-modernization-report.md` (read it before touching pipeline code; §1.5 lists
+  what is already fatal in the current env, §1.6 dormant bugs, §1.7 backlog reality check).
+  Phase 2+ pending.
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -166,6 +168,12 @@ reference patterns only.**
   and `getattr`-style checks).
 - Every shape `.adda` file must have a matching `.meta.mat` sibling; metadata drives
   size/frequency bookkeeping (`diameter_vol_eq`, `diameter_max`, `frequency_min`).
+- **Shape resolution scheme**: each physical size exists in 5 resolution files with
+  `frequency_min ∈ {192, 337, 457, 671, 887} GHz`; `N_dipoles` is fixed per shape file
+  (tied to fmin — ADDA rescales geometry, never resamples). The `f < fmin` skip in
+  `adda_main_control.py` implements resolution selection. Consequence: backlog configs
+  with frequencies < 192 GHz (the `=np.array([5,])*1e9` stubs) compute **nothing** —
+  see report §1.7.
 - Size parameter x = π·D_veq/λ; default cap `size_parameter_limit = 10`.
 - ARO config symmetry flags (`sym_XYobj`, `sym_XZobj`, `sym_YZobj`) must reflect the actual
   habit symmetry; wrong flags waste CPU or break averaging (ADDA assumes no symmetry itself).
@@ -173,6 +181,11 @@ reference patterns only.**
   have an XY mirror plane) and `sym_Zobj` (n-fold rotation about the particle's own axis) is
   commented out/unused — hexagonal habits are ~C6, a largely unused optimization potential
   (up to ~12× fewer orientation samples; see modernization plan Phase 4).
+  **Blockers found (Phase 1)**: the symmetry code paths are *broken by construction* —
+  `adda_sub_control_spharmonics.py:572` `vt.flatten(1)` (ValueError) and
+  `adda_orientational_avg_spharmonics_functions.py:1320` unconditionally raises
+  "Symmetry is still under construction". These must be fixed before Phase 4 can measure
+  anything (report §1.6-1).
 - **ADDA 1.2 → 1.4/1.5 compatibility** (checked against upstream changelog + `param.c` of
   the 1.5.0-alpha3 tree in `adda/`): `-eps <n>` semantics unchanged (residual exponent),
   `-orient`, `-m`, `-lambda`, `-eq_rad`, `-store_scat_grid`, `-scat_grid_inp`, `-scat_matr`,

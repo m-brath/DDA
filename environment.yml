@@ -112,6 +112,7 @@ dependencies:
   - python_abi=3.12=9_cp312
   - qhull=2020.2=h420ef59_5
   - readline=8.3=h8b90a29_1
+  - ruff=0.17.3=ha19a7bb_0
   - s2n=1.7.7=h430f396_0
   - scipy=1.18.1=py312h84b0c4e_2
   - setuptools=84.2.1=pyhe730653_0
