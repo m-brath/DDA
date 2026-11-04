@@ -31,6 +31,9 @@ so `CrossSec-X/Y` are directly comparable with production values.
 
 ## Verification results (Phase 0)
 
+Full write-up with figures: **`REPORT.md`** (regenerate figures with
+`plot_baseline_figs.py` → `report/`).
+
 - **Cross-version:** `adda` v1.2 vs v1.5.0-alpha3 binaries produce identical
   `Qext` for the sphere case to 12 significant digits.
 - **Cross-platform:** 1.5.0-alpha3 built on macOS arm64 (FFTW3 from the DDA

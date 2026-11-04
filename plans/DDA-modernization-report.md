@@ -258,4 +258,109 @@ shape selection (F1.1/F1.2); this also fixes HexPlaAgg re-processing if ever nee
 
 ---
 
-*(next section will be appended at Phase 2 completion)*
+# Phase 2 — Python modernization ✅ (2026-11-05)
+
+Scope: crash-level numpy-2/scipy/typhon fixes + behavior-preserving latent fixes
+(§1.8 list), verified by an **equivalence gate** — no algorithmic changes, those
+come in Phase 3/4.
+
+## Method: pre/post equivalence harness
+
+`analysis/phase2_equiv.py` snapshots observable behavior of `adda_python_scripts/`
+(HEAD `26cbd71`) and deep-compares old vs new at rtol 1e-12:
+
+- **PRE** = old code executed under compatibility shims (`np.NaN/np.NAN/np.complex`
+  aliases, `scipy.integrate.trapz = trapezoid`, stubbed `posix_spawn`) — needed because
+  the old code cannot even import natively in the pinned env (confirms §1.5).
+- **POST** = edited code, **no shims**.
+- Probes (12): `acf.loadmat` on real `.meta.mat` structs; icosphere base grid +
+  refinement(2) + vertex rotation + barycentric interpolation; `create_vpol_vector`;
+  `twoD_int`; **full `expand_mueller_2_spharmonics` at production grid resolution**
+  (181×361 `mueller_scatgrid` from the golden HongPlate 337 GHz baseline, eps 0.005);
+  `calculate_rotation_angles`; `matlib.repmat`→`np.tile` expression identity;
+  `definitions_for_netcdf` module-level defs (import-time `np.NaN` + shtns version probe);
+  end-to-end `acf.adda_call` (real ADDA 1.2 seq binary + full output parsing).
+
+**RESULT: PASS — all 12 probes identical** (import timestamps in SSDB defs masked).
+
+## Changes applied (all in `adda_python_scripts/`)
+
+1. `np.NaN`/`np.NAN` → `np.nan` — 38 sites, 7 files (definitions_for_netcdf,
+   process_aro_particles(+_single), sub_control_spharmonics, aoa_functions,
+   aoa_for_testing, icosphere_grid).
+2. `np.complex` → `np.complex128` (spherical_harmonics_for_adda:44,65). The SHT chain
+   was dead on numpy 2 (§1.5-2) — now proven working end-to-end via the sphcoeff probe.
+3. `sp.integrate.trapz` → `_trapezoid = trapezoid if hasattr else trapz`
+   (spherical_harmonics_for_adda:106,109) — works on old and new scipy (cluster safety).
+4. `numpy.matlib` removed: `repmat` → `np.tile` at aoa:999, aoa:1269,
+   sub_control:554 (matlib deprecated in numpy 2).
+5. `vt.flatten(1)` → `vt=vt.flatten()` (sub_control:572, aoa:1289) — **unblocks the
+   symmetry path crash**, Phase-4 gate 1 of 2 (the `under construction` raise stays —
+   Phase 4).
+6. `gamma=p_orientation_alpha[g_i]` → `p_orientation_gamma[g_i]` (sub_control:543) —
+   copy-paste bug, numerically invisible today (grids identical), fatal once Phase 4
+   shrinks the γ grid.
+7. `if 'calc_type' in locals()==False:` → `not in locals()` (sub_control:99) — chained-
+   comparison bug; default `'thunder'` now actually applies (configs override anyway →
+   no behavior change).
+8. `converged==False` → `converged=False` (sub_control:694 no-op).
+9. Loop-output vars (`ext_mat_array`, `mueller_array`, `rel_err_array`,
+   `max_len_array`, `max_ntrunc_array`, `ext_mat_horiz_avg_new`) initialized before the
+   refinement loop (sub_control:190s) — kills 5 `reportUnboundVariable`.
+10. `posix_spawn.py`: platform branch — glibc `posix_spawn` path unchanged on Linux;
+    macOS/other → `subprocess.run(['/bin/sh','-c',cmd])`. **All pipeline modules now
+    import natively on macOS** (verified: acf, ico, spha, aoa, dfn, exporter,
+    process_aro_particles).
+11. `acf.loadmat`: `mat_struct` imported from public `scipy.io.matlab` with fallback to
+    legacy `mio5_params` — future-proof for SciPy 2.0 (old private path still works on
+    cluster scipy).
+12. `definitions_for_netcdf.py:284`: bare `'python'` → `sys.executable` (import crashed
+    locally whenever `python` wasn't on PATH).
+13. **ARTS-XML artifact → pickle** (decision, see below):
+    write `pickle.dump(mueller_array)` (sub_control:773, file `<shape>_mueller_data.pkl`),
+    read `pickle.load` (aoa:1511); skip-if-done glob in `adda_main_control.py:170`
+    accepts both `.xml` (legacy HPC dirs) and `.pkl`.
+
+## Decision: typhon.arts.xml replacement = pickle (not PyARTS)
+
+- No `pyarts`/`arts` package on PyPI for any platform resolvable here; conda-forge has
+  none (osx-arm64). `typhon==0.8.0` (last version with `ty.arts.xml`) **fails to import
+  on Python 3.12** (`from collections import Iterable` in `typhon.trees`) → pinning is
+  not an option. typhon stays **0.10.0** (`ty.utils.Timer` still used, fine).
+- The XML file is a **pure internal intermediate** (sub_control → post-processing); the
+  ARTS-facing layer is the SSDB NetCDF export. Old-style `.xml` files are inaccessible
+  anyway (HPC results lost), so no backward conversion is needed — hence format change
+  is safe. **This is an intentional internal-format change** (agents.md updated).
+- Note: post-processing's complex128→complex64 downcast after load (aoa:1515-1517) is
+  unchanged — pickle keeps that logic intact.
+
+## Verification
+
+| Check | Before | After |
+|---|---|---|
+| Equivalence harness | (PRE baseline) | **PASS** 12/12 probes, rtol 1e-12 |
+| `ruff --select F,E9` | 158 | 159 (one extra config-global ref from init block; all F821 are the `exec import *` pattern) |
+| pyright errors | 422 | **346** (AttributeAccess 51→6, UnboundVariable 5→0, PossiblyUnbound 173→148) |
+| Module imports, no shims, macOS | fatal | **all OK** |
+| remaining `np.NaN/np.complex/matlib/trapz/flatten(1)/ty.arts` in active files | 60+ | **0** |
+
+The 6 remaining pyright `reportAttributeAccessIssue` are all in
+`adda_orientational_avg_spharmonics_for_testing.py` (`plt.hold`, `plt.cm.seismic` —
+dev script, left for Phase 3 housekeeping/deprecation decision).
+
+## Deliberately NOT touched (deferred)
+
+- `aoa.orientational_avg:1320` symmetry `raise` — Phase 4 (needs design, not just syntax).
+- `adda_sub_control_gridref.py` + `romberg_*` — recommend declaring deprecated (Phase 3).
+- TRO `adda_call_randomorient` mistral-branch NameError/bare-except — Phase 3 (repair).
+- Config-driven `adda_binary` + SSDB CalculationData metadata — Phase 3.
+- Duplicated α/γ averaging code consolidation — Phase 4.
+
+## Commit trail
+
+- `adda_python_scripts` nested repo: commit "Phase 2 …" on top of `26cbd71`.
+- Umbrella: harness + report + environment.yml (typhon 0.10.0 pinned) + gitlink bump.
+
+---
+
+*(next section will be appended at Phase 3 completion)*

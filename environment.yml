@@ -132,11 +132,13 @@ dependencies:
     - fsspec==2026.9.0
     - h5netcdf==1.8.2
     - lazy-loader==0.6
+    - llvmlite==0.50.0
     - meson==1.12.1
     - meson-python==0.22.1
     - narwhals==2.28.0
     - networkx==3.7
     - ninja==1.13.2
+    - numba==0.68.1
     - numexpr==2.14.2
     - pandas==3.1.0
     - pyproject-metadata==0.12.1

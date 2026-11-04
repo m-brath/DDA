@@ -63,10 +63,12 @@ reference patterns only.**
   rely on analytic tests (sphere/Mie, oblate ellipsoid) and 1.2-vs-1.4/1.5 cross-runs.
 - **Modernization plan approved** (see `plans/DDA-modernization-plan.md`): code analysis,
   numpy-2 migration, configurable ADDA binary (1.2 / 1.4 / 1.5.0-alpha3), symmetry-based
-  optimization, then production backlog. Status: **Phases 0+1 done** — findings appended to
-  `plans/DDA-modernization-report.md` (read it before touching pipeline code; §1.5 lists
-  what is already fatal in the current env, §1.6 dormant bugs, §1.7 backlog reality check).
-  Phase 2+ pending.
+  optimization, then production backlog. Status: **Phases 0+1+2 done** (Phase 2: pipeline
+  now runs natively on numpy 2 / scipy 1.18 / py3.12 / macOS, proven by the equivalence
+  harness `analysis/phase2_equiv.py`; internal Mueller artifact switched from ARTS-XML to
+  **pickle**) — findings in `plans/DDA-modernization-report.md` (read it before touching
+  pipeline code; §1.5 lists old breakages, §1.6 dormant bugs, §1.7 backlog reality check,
+  Phase-2 section lists what was deliberately deferred to Phase 3/4). Phase 3+ pending.
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -151,15 +153,13 @@ reference patterns only.**
     API used by `spherical_harmonics_for_adda.py`: `sht_orthonormal`, `SHT_NO_CS_PHASE`,
     `analys`/`synth`, `Zrotate`/`Yrotate`, `SH_to_point`, `gauss_wts`)
   - `adda_main_control.py` uses interactive `input()` to select the config.
-  - **numpy 2 migration pending** (env uses numpy 2.x on purpose; scripts to be updated).
-    Known incompatibilities found by import test:
-    - `np.NaN` → `np.nan` (removed in numpy 2): `definitions_for_netcdf.py`,
-      `adda_process_aro_particles*.py`, `adda_sub_control_spharmonics.py`,
-      `adda_orientational_avg_spharmonics*`, `icosphere_grid.py`
-    - `posix_spawn.py` loads Linux `libc.so.6` via ctypes → cannot import on macOS;
-      breaks `import adda_control_functions` locally (fine on the cluster)
-    - `numpy.matlib` still works but is deprecated: `adda_sub_control_spharmonics.py`,
-      `adda_orientational_avg_spharmonics_functions.py`
+  - **numpy 2 migration DONE** (Phase 2, 2026-11-05): all `np.NaN`→`np.nan`,
+    `np.complex`→`np.complex128`, `scipy.integrate.trapz`→`trapezoid` (with old-scipy
+    fallback), `matlib.repmat`→`np.tile`, `posix_spawn.py` has a platform branch
+    (Linux ctypes path unchanged; macOS uses subprocess) — every pipeline module now
+    imports and runs locally. `typhon` must stay **0.10.0** (0.8.0 is broken on
+    py3.12; `ty.arts.xml` is gone — internal Mueller artifacts are **pickle** files
+    `*_mueller_data.pkl` now, not ARTS XML).
 
 ## Conventions & Gotchas
 
