@@ -1,22 +1,32 @@
 import ctypes
 import os
+import sys
 
-# clib = ctypes.cdll.LoadLibrary("libc.dylib")
-clib = ctypes.cdll.LoadLibrary("libc.so.6")
+USE_POSIX_SPAWN = sys.platform.startswith('linux')
 
-_posix_spawn = clib.posix_spawn
-_posix_spawn.restype = ctypes.c_int
-_posix_spawn.argtypes = (
-        ctypes.POINTER(ctypes.c_int),
-        ctypes.c_char_p,
-        ctypes.c_void_p, ctypes.c_void_p,
-        ctypes.POINTER(ctypes.c_char_p),
-        ctypes.POINTER(ctypes.c_char_p)
-        )
+if USE_POSIX_SPAWN:
+    clib = ctypes.cdll.LoadLibrary("libc.so.6")
+
+    _posix_spawn = clib.posix_spawn
+    _posix_spawn.restype = ctypes.c_int
+    _posix_spawn.argtypes = (
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.c_char_p,
+            ctypes.c_void_p, ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_char_p)
+            )
 
 
 def spawn_command(cmd):
     shell = "/bin/sh"
+
+    if not USE_POSIX_SPAWN:
+        # POSIX libc (libc.so.6) is Linux-only; on other platforms (e.g. macOS)
+        # run the same "/bin/sh -c cmd" through subprocess. Callers only check
+        # for a zero/nonzero status, which subprocess.returncode provides.
+        import subprocess
+        return subprocess.run([shell, "-c", cmd]).returncode
 
     args = [s.encode('utf-8') for s in ["sh", "-c", cmd]] + [0]
     argv = (ctypes.c_char_p * len(args))(*args)

@@ -10,6 +10,9 @@ import numpy as np
 #from scipy.special import lpmv
 #from scipy.misc import factorial
 import scipy as sp
+from scipy import integrate as _spint
+# scipy>=1.18 renamed trapz->trapezoid (trapz removed); keep working on both
+_trapezoid = _spint.trapezoid if hasattr(_spint, "trapezoid") else _spint.trapz
 import matplotlib.pyplot as plt
 
 import shtns
@@ -41,7 +44,7 @@ class Spharmt(object):
         self.ntrunc = ntrunc
         self.nlm = self._shtns.nlm
         self.degree = self._shtns.l
-        self.lap = -self.degree*(self.degree+1.0).astype(np.complex)
+        self.lap = -self.degree*(self.degree+1.0).astype(np.complex128)
         self.invlap = np.zeros(self.lap.shape, self.lap.dtype)
         self.invlap[1:] = 1./self.lap[1:]
         self.rsphere = rsphere
@@ -62,7 +65,7 @@ class Spharmt(object):
         return self.lap*self.rsphere*vrtspec, self.lap*self.rsphere*divspec
     def getgrad(self,divspec):
         """compute gradient vector from spectral coeffs"""
-        vrtspec = np.zeros(divspec.shape, dtype=np.complex)
+        vrtspec = np.zeros(divspec.shape, dtype=np.complex128)
         u,v = self._shtns.synth(vrtspec,divspec)
         return u/self.rsphere, v/self.rsphere
     def zrotate(self,dataspec,alpha):
@@ -103,10 +106,10 @@ def twoD_int(K,THETA,PHI,wtheta=[]):
     
     
     
-    Ktemp=sp.integrate.trapz(K, x=PHI, axis=1)#, even='avg')
+    Ktemp=_trapezoid(K, x=PHI, axis=1)#, even='avg')
     
     if len(wtheta)==0:
-        atemp=sp.integrate.trapz(Ktemp, x=THETA)#, even='avg')
+        atemp=_trapezoid(Ktemp, x=THETA)#, even='avg')
     else:
         atemp=np.sum(Ktemp*wtheta)        
     

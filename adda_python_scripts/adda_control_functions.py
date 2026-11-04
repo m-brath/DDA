@@ -1184,6 +1184,13 @@ def chunking(time,ncores,duration):
 
 import scipy.io as spio
 
+try:
+    # scipy >= 1.12 public location (mio5_params namespace is deprecated,
+    # removed in SciPy 2.0)
+    from scipy.io.matlab import mat_struct as _mat_struct
+except ImportError:  # older scipy
+    from scipy.io.matlab.mio5_params import mat_struct as _mat_struct
+
 def loadmat(filename):
     '''
     this function should be called instead of direct spio.loadmat
@@ -1200,7 +1207,7 @@ def _check_keys(dict):
     todict is called to change them to nested dictionaries
     '''
     for key in dict:
-        if isinstance(dict[key], spio.matlab.mio5_params.mat_struct):
+        if isinstance(dict[key], _mat_struct):
             dict[key] = _todict(dict[key])
     return dict        
 
@@ -1211,7 +1218,7 @@ def _todict(matobj):
     dict = {}
     for strg in matobj._fieldnames:
         elem = matobj.__dict__[strg]
-        if isinstance(elem, spio.matlab.mio5_params.mat_struct):
+        if isinstance(elem, _mat_struct):
             dict[strg] = _todict(elem)
         else:
             dict[strg] = elem

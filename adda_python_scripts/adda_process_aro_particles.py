@@ -156,8 +156,8 @@ if __name__ == "__main__":
     counter=-1
 
     #Sizes and frequencies
-    D=np.zeros(len(folderlist))*np.NaN
-    F=np.zeros(len(folderlist))*np.NaN
+    D=np.zeros(len(folderlist))*np.nan
+    F=np.zeros(len(folderlist))*np.nan
 
     SizeAndFreqs={}
     SizeAndFreqs['Frequency']=F

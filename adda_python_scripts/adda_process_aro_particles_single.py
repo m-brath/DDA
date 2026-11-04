@@ -118,7 +118,7 @@ def adda_process_single_AroParticle(config,folder):
                 np.median(np.ravel((abs(a1[logic_a1]/ext_xsec[:,:,0][logic_a1])))),
                 max(abs(a1[logic_a1]/ext_xsec[:,:,0][logic_a1]))]
     else:
-        diagnostic=[np.NaN,np.NaN,np.NaN]
+        diagnostic=[np.nan,np.nan,np.nan]
 
     frac_of_neg_a1=sum(logic_a1.ravel())/np.size(logic_a1)
 

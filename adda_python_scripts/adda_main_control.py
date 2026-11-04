@@ -167,7 +167,9 @@ for T in temperatures:
             if os.path.exists(storage_path):
 #                os.makedirs(storage_path)
 
-                datalist=glob.glob(storage_path+'/*mueller_data.xml')
+                # note: '*_mueller_data.xml' was the old (ARTS-XML) artifact name;
+                # current runs write '*_mueller_data.pkl' — accept both
+                datalist=glob.glob(storage_path+'/*mueller_data.xml')+glob.glob(storage_path+'/*mueller_data.pkl')
 
                 if len(datalist)==1 and force_new==False:
 

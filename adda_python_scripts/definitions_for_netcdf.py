@@ -6,6 +6,7 @@ Created on Tue Sep 19 15:16:03 2017
 @author: u242031
 """
 
+import sys
 import numpy as np
 from datetime import datetime
 from subprocess import check_output
@@ -75,18 +76,18 @@ SSD_definition['variables']=['frequency',      #0
               
 SSD_definition['datatypes']=['f4','f4','i4','f4','f4','i1','i1','i1','f4','f4','f4','f4']              
               
-SSD_definition['fill_values']=[np.NaN,
-                 np.NaN,
+SSD_definition['fill_values']=[np.nan,
+                 np.nan,
                  -1,
-                 np.NaN,
-                 np.NaN,
+                 np.nan,
+                 np.nan,
                  -1,
                  -1,
                  -1,
-                 np.NaN,
-                 np.NaN,
-                 np.NaN,
-                 np.NaN]              
+                 np.nan,
+                 np.nan,
+                 np.nan,
+                 np.nan]              
               
 
 SSD_definition['dimensions']=[None,
@@ -192,17 +193,17 @@ ShD_definition['descriptions']=[
         ]
 
 ShD_definition['fill_values']=[
-        np.NaN,
-        np.NaN,
-        np.NaN,
-        np.NaN,
+        np.nan,
+        np.nan,
+        np.nan,
+        np.nan,
         -1,
         -1,
-        np.NaN,
-        np.NaN,
-        np.NaN,
-        np.NaN,
-        np.NaN,
+        np.nan,
+        np.nan,
+        np.nan,
+        np.nan,
+        np.nan,
         ]      
 
 ShD_definition['datatypes']=['f4','f4','f4','f4','i4','i4','f4','f4','f4','f4','f4']     
@@ -281,7 +282,7 @@ CaD_definition['values']=[
         ['sym_XYobj'],
         ['sym_XZobj'],
         ['sym_YZobj'],
-        (''.join(check_output(['python', '-c', 'import shtns; shtns.print_version()']
+        (''.join(check_output([sys.executable, '-c', 'import shtns; shtns.print_version()']
         ).decode('UTF-8').split()))#'SHTns 2.8 built Jul 13 2017, 14:54:27, id: avx'
         ]
 

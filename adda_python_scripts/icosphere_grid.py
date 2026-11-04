@@ -139,7 +139,7 @@ def refine_icosahedric_grid(vertices, triangles, numRefinements):
         #allocate
         verticesIndex_new=np.ones([maxnumVertices], dtype=int)
         triangles_new=np.ones([maxnumTriangles,3], dtype=int)
-        vertices_new=np.ones([maxnumVertices,3])*np.NaN
+        vertices_new=np.ones([maxnumVertices,3])*np.nan
 
         #Number of vertices from the refinement
         numVertices=0;

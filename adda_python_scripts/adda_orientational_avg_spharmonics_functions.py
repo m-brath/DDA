@@ -13,7 +13,6 @@ Created on Tue Feb  3 10:58:25 2015
 import glob
 import os
 import numpy as np
-import numpy.matlib 
 import scipy.io as sio
 import adda_control_functions as acf
 import icosphere_grid as ico
@@ -28,6 +27,7 @@ import typhon as ty
 import spherical_harmonics_for_adda as spha
 import shtns
 import copy
+import pickle
 import scipy as sp
 from datetime import datetime
 from posix_spawn import spawn_command
@@ -67,8 +67,8 @@ def calculate_rotation_angles(theta_inc, theta_s, phi_s):
     ql=np.shape(phi_s)
 
     #allocate
-    PHI1mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
-    PHI2mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
+    PHI1mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.nan
+    PHI2mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.nan
     
     print('calculating stokes rotation angles...')    
     print('theta size = '+str(ql[0]))
@@ -180,8 +180,8 @@ def core(t_i,p_i,theta_s, phi_s):
     ql=np.shape(phi_s)
 
     #allocate
-    PHI1mat=np.zeros((ql[0],ql[1]))*np.NaN
-    PHI2mat=np.zeros((ql[0],ql[1]))*np.NaN
+    PHI1mat=np.zeros((ql[0],ql[1]))*np.nan
+    PHI2mat=np.zeros((ql[0],ql[1]))*np.nan
     
     
     print('theta_inc = '+str(t_i*180/np.pi))
@@ -280,8 +280,8 @@ def calculate_rotation_angles_parallel(theta_inc, theta_s, phi_s,core_limit=16):
     ql=np.shape(phi_s)
 
     #allocate
-    PHI1mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
-    PHI2mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.NaN
+    PHI1mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.nan
+    PHI2mat=np.zeros((len(theta_inc),ql[0],ql[1]))*np.nan
     
     print('calculating stokes rotation angles...')    
     print('theta size = '+str(ql[0]))
@@ -356,11 +356,11 @@ def mueller2phase(output_data):
     
     
     #allocate
-    mueller_rot=np.zeros(qm,dtype=complex)*np.NaN
-    mueller_rot_spatial=np.zeros((qm[0],qm[1],qm[2],ql[0],ql[1]))*np.NaN
+    mueller_rot=np.zeros(qm,dtype=complex)*np.nan
+    mueller_rot_spatial=np.zeros((qm[0],qm[1],qm[2],ql[0],ql[1]))*np.nan
     
-    phase_mat_spatial=np.zeros((qm[0],qm[1],qm[2],ql[0],ql[1]))*np.NaN
-    phase_mat=np.ones(qm,dtype=complex)*np.NaN
+    phase_mat_spatial=np.zeros((qm[0],qm[1],qm[2],ql[0],ql[1]))*np.nan
+    phase_mat=np.ones(qm,dtype=complex)*np.nan
     
     
     # do the transformation
@@ -443,8 +443,8 @@ def mueller2phase_core(j,m_i,theta_inc,lamb,PHI1mat,PHI2mat,eps,
     ql=np.shape(xlons_fine)
     
     
-    mueller_rot_spatial=np.zeros((qm[2],ql[0],ql[1]))*np.NaN
-    phase_mat_spatial=np.zeros((qm[2],ql[0],ql[1]))*np.NaN
+    mueller_rot_spatial=np.zeros((qm[2],ql[0],ql[1]))*np.nan
+    phase_mat_spatial=np.zeros((qm[2],ql[0],ql[1]))*np.nan
         
     phase_mat_ijk=[None] * qm[2]
     for k in range(0,qm[2]):# loop over the matrix elements
@@ -644,7 +644,7 @@ def mueller2phase_reexpand(output_data,grid_size_theta=180,eps=0,parallel=False,
         [PHI1mat, PHI2mat]=calculate_rotation_angles(theta_inc, lat_new, lon_new)
     
     #allocate
-    phase_mat=np.ones(qm,dtype=complex)*np.NaN
+    phase_mat=np.ones(qm,dtype=complex)*np.nan
     
     phase_mat_i=[None] * qm[0]
     
@@ -996,7 +996,7 @@ def create_vpol_vector(vertices):
     
     #normalize vpol
     norm_V=np.sqrt( vpol[:,0]**2 + vpol[:,1]**2 + vpol[:,2]**2)    
-    norm_V=np.matlib.repmat(norm_V,3,1).transpose()
+    norm_V=np.tile(norm_V,(3,1)).transpose()
     vpol=vpol/norm_V
 
 
@@ -1266,7 +1266,7 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
             
             #create lab vertical polarization vectors
             vpol_lab=create_vpol_vector(inc_dir)
-            vpol_lab=np.matlib.repmat(vpol_lab,len(idx),1)
+            vpol_lab=np.tile(vpol_lab,(len(idx),1))
             
 #            vpol_lab=create_vpol_vector(vertices_rot[idx])
             
@@ -1286,7 +1286,7 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
                 for i in range(0,len(idx)):
                     
                     vt=np.copy(vertices[idx[i],:])
-                    vt.flatten(1)
+                    vt=vt.flatten()
                     
                     #Number of symmetries
 #                    N_sym=0
@@ -1509,7 +1509,7 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     #load mueller matrix
     
     print('loading adda results...')
-    mueller_array=ty.arts.xml.load(inputdatapath+overviewdata['mueller_matrix_filename']+'.xml')
+    mueller_array=pickle.load(open(inputdatapath+overviewdata['mueller_matrix_filename']+'.pkl','rb'))
     
     #reduce mueller_array from complex128 to complex64
     for i in range(len(mueller_array)):

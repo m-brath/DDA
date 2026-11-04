@@ -20,6 +20,7 @@ import numpy as np
 import scipy.io as sio
 import sys
 import itertools
+import pickle
 import typhon as ty
 #import zipfile
 
@@ -96,7 +97,7 @@ exec('from '+adda_config+' import *')
 #==============================================================================
 
 
-if 'calc_type' in locals()==False:
+if 'calc_type' not in locals():
 
     calc_type='thunder'
 
@@ -197,6 +198,16 @@ test_mat=np.zeros(limit_sph+1)
 ext_mat_array_old=np.ones((0,4,4))
 vertices_old=np.ones((0,3))
 triangles_old=np.ones((0,3))
+
+# initial placeholders for the refinement-loop outputs; they are always
+# (re-)allocated inside the loop, but binding them here prevents NameError
+# if the loop body ever exits before the allocation branch ran
+ext_mat_array=np.empty((0,0,0))
+mueller_array=[]
+rel_err_array=np.zeros((0,16))
+max_len_array=np.zeros(0)
+max_ntrunc_array=np.zeros(0)
+ext_mat_horiz_avg_new=np.full((len(p_orientation_beta),len(incidence_angles),4,4),np.nan)
 
 
 #prepare
@@ -346,7 +357,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 #                qm=np.shape(output_data['mueller_array'])
 
                 ext_mat_array=np.empty((np.size(vertices,axis=0),q[0],q[1]))
-                ext_mat_array[:] = np.NAN
+                ext_mat_array[:] = np.nan
                 ext_mat_array_old=ext_mat_array.copy()
 
                 mueller_array = [None] * np.size(vertices,axis=0)
@@ -390,7 +401,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 #                qm=np.shape(output_data['mueller_array'])
 
                 ext_mat_array=np.empty((np.size(vertices,axis=0),q[0],q[1]))
-                ext_mat_array[:] = np.NAN
+                ext_mat_array[:] = np.nan
 
                 mueller_array=[None] * np.size(vertices,axis=0)
 
@@ -540,7 +551,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                 for g_i in range(0,len(p_orientation_gamma)):
 
                     n_gamma=n_gamma+1
-                    gamma=p_orientation_alpha[g_i]
+                    gamma=p_orientation_gamma[g_i]
 
                     #rotate and interpolate adda sphere
                     vertices_rot=ico.rotate_vertices(vertices,alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)
@@ -551,7 +562,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
                     #create lab vertical polarization vectors
                     vpol_lab=aoa.create_vpol_vector(inc_dir)
-                    vpol_lab=np.matlib.repmat(vpol_lab,len(idx),1)
+                    vpol_lab=np.tile(vpol_lab,(len(idx),1))
 
                     #======================================================
                     # Exploit symmetry
@@ -569,7 +580,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                         for i in range(0,len(idx)):
 
                             vt=np.copy(vertices[idx[i],:])
-                            vt.flatten(1)
+                            vt=vt.flatten()
 
                             #Number of symmetries
         #                    N_sym=0
@@ -662,7 +673,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
             if ref_lev<1 and flag==False:
                 ext_mat_horiz_avg_new=(np.ones((len(p_orientation_beta),
-                                         len(incidence_angles),4,4))*np.NaN)
+                                         len(incidence_angles),4,4))*np.nan)
 
                 flag=True
 
@@ -691,7 +702,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
         eps_mat[ref_lev]=epsilon/old_value
 
     else:
-        converged==False
+        converged=False
 
 
 
@@ -716,7 +727,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 #prepare save names
 matfile_name=os.path.join(storage_path,shape_name+'_overview_data.mat')
 netcdf_name=os.path.join(storage_path,shape_name+'_mueller_data.nc')
-xml_name=os.path.join(storage_path,shape_name+'_mueller_data.xml')
+xml_name=os.path.join(storage_path,shape_name+'_mueller_data.pkl')
 
 #==============================================================================
 #       ###Save output in mat format
@@ -755,12 +766,17 @@ sio.savemat(matfile_name, {'output_data':output_data}, appendmat=True, format='5
 
 
 #==============================================================================
-#       ### save mueller matrix as xml
+#       ### save mueller matrix (pickle)
+#       formerly ARTS binary XML via typhon (ty.arts.xml) — that module was
+#       dropped in typhon >0.8 and PyARTS is unavailable on osx-arm64. The
+#       file is a pure internal artifact between sub_control and post-
+#       processing; the ARTS-facing layer is the SSDB NetCDF export.
 #==============================================================================
 
 
 print(f'Saving mueller array in {xml_name}')
-ty.arts.xml.save(mueller_array,xml_name,format='binary')
+with open(xml_name, 'wb') as fh:
+    pickle.dump(mueller_array, fh, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 #==============================================================================
