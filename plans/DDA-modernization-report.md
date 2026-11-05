@@ -722,9 +722,24 @@ per-component normalization would punish near-zero components).
 
 ## 4.11 Verification & commit trail
 
-TBD (filled at commit time).
+- All touched pipeline files + new configs `py_compile`-clean.
+- Gate evidence committed: `analysis/phase4_subcontrol_gate.log` (3 pairs, all
+  exit 0), `analysis/phase4_aoa_gate.log` (24-line summary, exit 0),
+  `analysis/phase4_symmetry_table.txt` (strict closure table).
+- Phase-3 equivalence suite re-run post-Phase-4: **PASS** (`/tmp` run at
+  commit time; gate script itself unchanged since Phase 3).
+- Commits: nested `adda_python_scripts` `bbd7b67` → **`2bce38d`**; umbrella
+  `dd722f0` → **`e06c36c`** (+ log-trim follow-up `fe20cd3`).
 
----
+## 4.12 Open for Phase 4b (deferred steps 17–19) / Phase 5
 
-*(end of Phase 4 section)*
+- Step 17 quadrature: β grid → Gauss–Legendre (current `linspace(0,180,N)`
+  wastes half the samples under XY symmetry — with mirrors enabled the β range
+  is reducible to 0–90°, another ~2×), incidence angles likewise 0–90°.
+- Step 18: ADDA-internal cost benchmark table on the ellipsoid probe
+  (`-eps` ladder, dpl tuning) — feeds production cost models.
+- Step 19: job structure (one job per (T,f,size) is coarse for HPC backlog).
+- `sym_Zobj` Cn support for HongPlate (measured true C6, further ~6×).
+- Phase-5 items unchanged (TRO `liste` temperature column, post-processing
+  localization, regenerate baselines under 1.4.0, fix 5 GHz backlog stubs).
 
