@@ -1,0 +1,6 @@
+icosphere level-3 vertices: 642
+shape: Dmax00013um_Dveq00010um_Mass4.79983e-13kg_Freq0192.000GHz.adda  f=228GHz T=190K x=0.02  eps=3
+n=60 solves, host cores=14
+sequential:     33.2s  (mean 0.53s sd 0.01)
+pool[8]:        6.7s  (mean 0.74s sd 0.04)
+wall speedup: 4.94x   CPU efficiency: 0.62

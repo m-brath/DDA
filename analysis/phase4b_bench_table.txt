@@ -1,0 +1,14 @@
+wall-time vs N_dipoles (single core):
+  N=193         0.02 s
+  N=374         0.02 s
+  N=599         0.03 s
+  N=880         0.04 s
+  N=1104        0.02 s
+  N=2128        0.22 s
+  N=2832        0.04 s
+  N=12312       0.49 s
+  N=12312       0.42 s
+  N=12312       0.29 s
+  N=48597       9.52 s
+
+saved: analysis/phase4b_bench_results.json

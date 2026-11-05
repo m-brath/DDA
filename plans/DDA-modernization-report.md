@@ -553,7 +553,7 @@ recommended as a Phase-5 first step.
 
 ---
 
-# Phase 4 — Symmetry exploitation 🔄 (2026-11-05, plan steps 16–20)
+# Phase 4 — Symmetry exploitation ✅ (2026-11-05, plan steps 16–19; core + 4b done, sym_Zobj parked)
 
 Status: core machinery implemented + gated; aggregate-file detector rows and one
 more habit speedup pending in background runs (marked TBD). Steps 17–19
@@ -770,4 +770,136 @@ per-component normalization would punish near-zero components).
   exploit exact C2z on the fine classes only (~2× there, not ~6×).
 - Phase-5 items unchanged (TRO `liste` temperature column, post-processing
   localization, regenerate baselines under 1.4.0, fix 5 GHz backlog stubs).
+
+---
+
+# Phase 4b — deferred plan steps 17–19 ✅ (2026-11-05)
+
+## 4b.0 Scope
+
+Plan steps 17 (quadrature), 18 (ADDA-internal benchmarks), 19 (job structure).
+All three resolved WITHOUT pipeline changes — each turned out to be either a
+non-lever (17) or an operational/planning decision (18, 19). Evidence scripts:
+`analysis/phase4b_halfrange_check.py`, `analysis/phase4b_adda_benchmark.py`
+(+ `phase4b_bench_results.json`), `analysis/phase4b_parallel_probe.py`.
+
+## 4b.1 Step 17 — β/incidence quadrature: NOT a lever (decision: no change)
+
+Measured structure of the pipeline: **β and θ_inc are SSDB output coordinates,
+not quadrature axes.** The ADDA solves run on the icosphere *vertex* set
+(α₀=β₀=γ₀=0, incidence = vertex unit vector); the (β, θ_inc) grid enters only
+in post-processing (`aoa.rawdata2average`: interpolation + α-average per
+output node, ≈6.5 s per (β,θ) pair, independent of particle size).
+
+Consequences:
+
+- **Gauss–Legendre nodes on β / 0–90° incidence ranges change ZERO ADDA
+  solves.** Solve count = vertex count (icosphere refinement sequence), so
+  the plan's "another ~2×" does not exist: the β/θ grid is an output product
+  grid; shrinking it shrinks the SSDB product, not the compute.
+- **Naive half-range reuse is provably wrong** (`phase4b_halfrange_check.py`
+  re-averages the committed phase4_hp_asym store on paired grids b vs 180−b,
+  t vs 180−t and compares):
+
+  | identification | ext_mat | mue_sph coeffs |
+  |---|---|---|
+  | β ↔ 180−β | 2.3e-3 | 1.3e-3 |
+  | θ ↔ 180−θ | 2.3e-3 | 7.2e-2 |
+
+  vs solver-noise reference ~1e-11 → the averaged products are NOT invariant
+  under these maps (each output node averages a different vertex subset with
+  different vpol bookkeeping). A correct symmetry reduction would need a
+  proper group action on the AVERAGED products (spharmonic coefficient level);
+  the raw mirror fill-in (§4.2) already captures the available exact vertex-
+  level symmetry, so the marginal gain does not justify the machinery. NOT
+  implemented; documented with the numbers above.
+
+## 4b.2 Step 18 — ADDA cost/accuracy benchmark (production binary 1.4.0)
+
+Oblate spheroid 1.0/0.5, Matzler-2006 ice @ 230 K, 183 GHz; single-core seq
+build; direct subprocess (no zip/parse noise); parsed from the ADDA banner.
+`-eps` semantics: residual exponent (4→1e-4 … 2→1e-2). "auto" = no `-dpl`
+(ADDA's automatic heuristic; `dpl_eff` = what it actually used).
+
+| x | eps | dpl | dpl_eff | N_dip | wall s | Cext err |
+|---|---|---|---|---|---|---|
+| 5 | 4 | auto | 18.0 | 12312 | 0.49 | 1.5e-3 vs eps2 |
+| 5 | 3 | auto | 18.0 | 12312 | 0.42 | 1.4e-3 vs eps2 |
+| 5 | 2 | auto | 18.0 | 12312 | 0.29 | (ref) |
+| 5 | 3 | 4 | 4.5 | 193 | 0.02 | **2.5e-1** vs dpl7 |
+| 5 | 3 | 5 | 5.6 | 374 | 0.02 | 4.5e-2 vs dpl7 |
+| 5 | 3 | 6 | 6.6 | 599 | 0.03 | 1.5e-2 vs dpl7 |
+| 5 | 3 | 7 | 7.5 | 880 | 0.04 | (ref) |
+| 1 | 3 | auto | 40.3 | 1104 | 0.02 | — |
+| 3 | 3 | auto | 18.4 | 2832 | 0.04 | — |
+| 8 | 3 | auto | 17.8 | 48597 | 9.52 | 1.4e-1 vs dpl6 twin |
+| 8 | 3 | 6 | 6.3 | 2128 | 0.22 | — |
+
+Findings:
+
+1. **The error budget is DISCRETIZATION-dominated at production x.** Manual
+   dpl≈6–7 is 1.5% off at x=5 and 14% off at x=8 (vs the auto grid, which
+   uses dpl_eff≈18 — i.e. ADDA's own heuristic is far finer than the classic
+   "dpl 6" rule at these x). Production habits never face this directly
+   (voxel spacing is baked into the shape files' fixed N per resolution
+   class), but it explains *why* the coarse (192-GHz-class) files differ:
+   their effective voxel density is at the low end of this table.
+2. **Solver tolerance `eps=3` sits at the noise floor**: Cext drift eps3→eps2
+   (1.4e-3) is the same order as the identical-re-run scatter (~8e-4 at
+   x=5, Phase-3 caveat) — tightening to eps=2 buys ~nothing and loosening to
+   eps=4 changes ~nothing either; keep **eps=3**.
+3. **Cost model (single Mac core, seq 1.4.0):** N∝x³·dpl³; measured anchors
+   N=12.3k→0.4 s, N=48.6k→9.5 s per solve (superlinear ~N log N thereafter:
+   the 2.96M-dipole HongPlate 26 µm/887 GHz class extrapolates to O(10 min)
+   per solve → a full 642-solve level ≈ O(100) CPU-h; the committed XY+XZ
+   mirror reduction cuts it to ≈ 177 solves ≈ O(30) CPU-h).
+   The auto-dpl heuristic (dpl_eff≈18 at production x) confirms production
+   runs must budget for the shape-file N, never for a "dpl 6" estimate.
+
+## 4b.3 Step 19 — job structure: solves are process-level parallel (probe)
+
+Each icosphere-vertex solve is an independent ADDA process (fixed particle
+orientation, per-vertex `-prop`). Today one job per (T,f,size) runs the whole
+vertex loop SEQUENTIALLY. Probe (HongPlate_Id9 10 µm probe, production CLO
+incl. scat grid, eps 3, 14-core Mac, OMP=1/solve):
+
+| layout | wall | speedup | CPU eff |
+|---|---|---|---|
+| sequential (today) | 33.2 s / 60 solves | 1× | — |
+| pool of 4 | 5.4 s / 28 | 2.9× | 0.72 |
+| pool of 8 | 6.7 s / 60 | **4.9×** | 0.62 |
+| pool of 14 | 3.6 s / 28 | 4.4× | 0.31 |
+
+Saturation at ~8× on this host because probe solves are tiny (0.5 s, FFT-setup
++ memory-bandwidth bound); production solves (minutes each) are compute-bound
+and scale near-linearly to the core count. **Recommendation (HPC backlog):**
+keep one job per (T,f,size) (the adaptive icosphere-refinement loop is
+sequential by design — vertex sets depend on convergence), but parallelize
+the VERTEX LOOP inside the job: N_cores concurrent single-core `adda`
+processes instead of one per-vertex solve at a time (the per-vertex NetCDF/
+zip caches are vertex-named → race-free; the spharmonic expansion per vertex
+can ride the same pool; convergence test stays on the master between
+levels). A Slurm job-array over vertices would break the adaptive loop —
+rejected. Not implemented (execution-layout change, needs a queue for a
+meaningful trial; the numbers above justify it for the backlog).
+
+## 4b.4 Phase-4b artifacts & commit trail
+
+- Scripts: `analysis/phase4b_adda_benchmark.py` (step 18, ADDA-banner
+  parsing; note numpy-2 gotcha: `repr()` of numpy scalars embeds the type
+  name and breaks CLI args — use `%.12g`), `analysis/
+  phase4b_halfrange_check.py` (step 17), `analysis/phase4b_parallel_probe.py`
+  (step 19).
+- Evidence: `analysis/phase4b_bench_results.json`,
+  `analysis/phase4b_bench_table.txt`, `analysis/phase4b_halfrange.log`,
+  `analysis/phase4b_parallel_probe.log`.
+- No pipeline code changed → no re-gating needed (Phase-3/4 gates unaffected).
+
+## Remaining for Phase 5
+
+TRO `liste` temperature column (FIXME), `adda_process_aro_particles.py`
+hostname localization, regenerate baselines under 1.4.0, fix 5-GHz backlog
+frequency stubs; optional: pool-parallel vertex loop from §4b.3 as a
+production optimization, per-resolution symmetry flags (fine-class C2z,
+§4.6 finding 2).
 

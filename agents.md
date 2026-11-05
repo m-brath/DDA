@@ -72,9 +72,15 @@ reference patterns only.**
   cross sections bit-identical, auto dpl heuristic identical; **production binary decision:
   ADDA 1.4.0**) — findings in `plans/DDA-modernization-report.md` (read it before touching
   pipeline code; §1.5 breakages, §1.6 dormant bugs, §1.7 backlog reality check, Phase-2/3
-  sections list deferred items). Phase 4 core complete (mirror machinery + flags,
-  gates passed); plan steps 17–19 (quadrature, ADDA benchmark table, job structure)
-  deferred; Phase 5 pending.
+  sections list deferred items). Phase 4 + 4b complete (mirror machinery + flags +
+  gates; steps 17–19 resolved in report Phase-4b: β/θ grids are SSDB output coords
+  not quadrature axes — GL nodes save no solves, half-range reuse provably wrong
+  (2.3e-3..7.2e-2 vs 1e-11 noise); ADDA cost table `analysis/phase4b_bench_results.json`
+  (error budget is discretization-dominated: eps=3 at noise floor, auto dpl_eff≈18 at
+  production x, anchors 12k dipoles→0.4s / 49k→9.5s single-core); vertex loop is
+  process-level parallel — HPC recommendation: pool N_cores single-core `adda` solves
+  inside the per-(T,f,size) job, keep adaptive refinement sequential).
+  `sym_Zobj` parked (not exactly available at model level, §4.6). Phase 5 pending.
 
 ## The Workflow (`adda_python_scripts/`)
 

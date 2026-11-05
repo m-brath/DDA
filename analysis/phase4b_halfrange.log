@@ -1,0 +1,4471 @@
+[SHTns 3.7.5] built Nov  3 2026, 00:04:47, id: neon,ishioka
+loading adda results...
+
+n_beta: 0
+beta: 0.0 deg
+Parallel computing is not working!
+Then I switch to serial computing.
+/bin/sh: free: command not found
+Before ori-avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 0.0deg - theta: 0.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 0.0deg - theta: 0.0deg
+15:14:22.397582
+I am averaging...alpha = -177.4100720781483deg
+beta: 0.0deg - theta: 0.0deg
+15:14:22.589893
+I am averaging...alpha = -173.65720600575116deg
+beta: 0.0deg - theta: 0.0deg
+15:14:22.785504
+I am averaging...alpha = -168.28309366879313deg
+beta: 0.0deg - theta: 0.0deg
+15:14:22.985509
+I am averaging...alpha = -161.33780803788937deg
+beta: 0.0deg - theta: 0.0deg
+15:14:23.181953
+I am averaging...alpha = -152.88617047186258deg
+beta: 0.0deg - theta: 0.0deg
+15:14:23.380940
+I am averaging...alpha = -143.00708327422964deg
+beta: 0.0deg - theta: 0.0deg
+15:14:23.576433
+I am averaging...alpha = -131.79278137325215deg
+beta: 0.0deg - theta: 0.0deg
+15:14:23.773746
+I am averaging...alpha = -119.34796804743874deg
+beta: 0.0deg - theta: 0.0deg
+15:14:23.969243
+I am averaging...alpha = -105.78883630333722deg
+beta: 0.0deg - theta: 0.0deg
+15:14:24.168169
+I am averaging...alpha = -91.24198360780129deg
+beta: 0.0deg - theta: 0.0deg
+15:14:24.365989
+I am averaging...alpha = -75.84322970351435deg
+beta: 0.0deg - theta: 0.0deg
+15:14:24.562403
+I am averaging...alpha = -59.73634841078298deg
+beta: 0.0deg - theta: 0.0deg
+15:14:24.758931
+I am averaging...alpha = -43.07172520538467deg
+beta: 0.0deg - theta: 0.0deg
+15:14:24.956543
+I am averaging...alpha = -26.004953084903367deg
+beta: 0.0deg - theta: 0.0deg
+15:14:25.153431
+I am averaging...alpha = -8.695379823792898deg
+beta: 0.0deg - theta: 0.0deg
+15:14:25.349876
+I am averaging...alpha = 8.695379823792898deg
+beta: 0.0deg - theta: 0.0deg
+15:14:25.548074
+I am averaging...alpha = 26.004953084903367deg
+beta: 0.0deg - theta: 0.0deg
+15:14:25.744008
+I am averaging...alpha = 43.07172520538467deg
+beta: 0.0deg - theta: 0.0deg
+15:14:25.942177
+I am averaging...alpha = 59.73634841078298deg
+beta: 0.0deg - theta: 0.0deg
+15:14:26.138494
+I am averaging...alpha = 75.84322970351435deg
+beta: 0.0deg - theta: 0.0deg
+15:14:26.335877
+I am averaging...alpha = 91.24198360780129deg
+beta: 0.0deg - theta: 0.0deg
+15:14:26.530946
+I am averaging...alpha = 105.78883630333722deg
+beta: 0.0deg - theta: 0.0deg
+15:14:26.727928
+I am averaging...alpha = 119.34796804743874deg
+beta: 0.0deg - theta: 0.0deg
+15:14:26.926352
+I am averaging...alpha = 131.79278137325215deg
+beta: 0.0deg - theta: 0.0deg
+15:14:27.122655
+I am averaging...alpha = 143.00708327422964deg
+beta: 0.0deg - theta: 0.0deg
+15:14:27.320948
+I am averaging...alpha = 152.88617047186258deg
+beta: 0.0deg - theta: 0.0deg
+15:14:27.515835
+I am averaging...alpha = 161.33780803788937deg
+beta: 0.0deg - theta: 0.0deg
+15:14:27.714269
+I am averaging...alpha = 168.28309366879313deg
+beta: 0.0deg - theta: 0.0deg
+15:14:27.910610
+I am averaging...alpha = 173.65720600575116deg
+beta: 0.0deg - theta: 0.0deg
+15:14:28.108361
+I am averaging...alpha = 177.4100720781483deg
+beta: 0.0deg - theta: 0.0deg
+15:14:28.302465
+I am averaging...alpha = 179.50749513290668deg
+beta: 0.0deg - theta: 0.0deg
+15:14:28.499819
+
+theta: 0.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 0.0deg - theta: 18.00000000000001deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:28.713916
+I am averaging...alpha = -177.4100720781483deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:28.866099
+I am averaging...alpha = -173.65720600575116deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:29.062165
+I am averaging...alpha = -168.28309366879313deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:29.260494
+I am averaging...alpha = -161.33780803788937deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:29.457852
+I am averaging...alpha = -152.88617047186258deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:29.653866
+I am averaging...alpha = -143.00708327422964deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:29.851413
+I am averaging...alpha = -131.79278137325215deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:30.048975
+I am averaging...alpha = -119.34796804743874deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:30.247839
+I am averaging...alpha = -105.78883630333722deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:30.444931
+I am averaging...alpha = -91.24198360780129deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:30.644445
+I am averaging...alpha = -75.84322970351435deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:30.850302
+I am averaging...alpha = -59.73634841078298deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:31.052959
+I am averaging...alpha = -43.07172520538467deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:31.252356
+I am averaging...alpha = -26.004953084903367deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:31.453656
+I am averaging...alpha = -8.695379823792898deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:31.655648
+I am averaging...alpha = 8.695379823792898deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:31.854942
+I am averaging...alpha = 26.004953084903367deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:32.054541
+I am averaging...alpha = 43.07172520538467deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:32.253625
+I am averaging...alpha = 59.73634841078298deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:32.453822
+I am averaging...alpha = 75.84322970351435deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:32.651463
+I am averaging...alpha = 91.24198360780129deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:32.850130
+I am averaging...alpha = 105.78883630333722deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:33.050399
+I am averaging...alpha = 119.34796804743874deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:33.246591
+I am averaging...alpha = 131.79278137325215deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:33.445511
+I am averaging...alpha = 143.00708327422964deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:33.642345
+I am averaging...alpha = 152.88617047186258deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:33.841445
+I am averaging...alpha = 161.33780803788937deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:34.040134
+I am averaging...alpha = 168.28309366879313deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:34.238058
+I am averaging...alpha = 173.65720600575116deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:34.435761
+I am averaging...alpha = 177.4100720781483deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:34.634954
+I am averaging...alpha = 179.50749513290668deg
+beta: 0.0deg - theta: 18.00000000000001deg
+15:14:34.834679
+
+theta: 18.00000000000001deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 0.0deg - theta: 72.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 0.0deg - theta: 72.0deg
+15:14:35.051034
+I am averaging...alpha = -177.4100720781483deg
+beta: 0.0deg - theta: 72.0deg
+15:14:35.154468
+I am averaging...alpha = -173.65720600575116deg
+beta: 0.0deg - theta: 72.0deg
+15:14:35.346895
+I am averaging...alpha = -168.28309366879313deg
+beta: 0.0deg - theta: 72.0deg
+15:14:35.544094
+I am averaging...alpha = -161.33780803788937deg
+beta: 0.0deg - theta: 72.0deg
+15:14:35.747685
+I am averaging...alpha = -152.88617047186258deg
+beta: 0.0deg - theta: 72.0deg
+15:14:35.949748
+I am averaging...alpha = -143.00708327422964deg
+beta: 0.0deg - theta: 72.0deg
+15:14:36.155452
+I am averaging...alpha = -131.79278137325215deg
+beta: 0.0deg - theta: 72.0deg
+15:14:36.361693
+I am averaging...alpha = -119.34796804743874deg
+beta: 0.0deg - theta: 72.0deg
+15:14:36.563731
+I am averaging...alpha = -105.78883630333722deg
+beta: 0.0deg - theta: 72.0deg
+15:14:36.768095
+I am averaging...alpha = -91.24198360780129deg
+beta: 0.0deg - theta: 72.0deg
+15:14:36.972604
+I am averaging...alpha = -75.84322970351435deg
+beta: 0.0deg - theta: 72.0deg
+15:14:37.175315
+I am averaging...alpha = -59.73634841078298deg
+beta: 0.0deg - theta: 72.0deg
+15:14:37.379040
+I am averaging...alpha = -43.07172520538467deg
+beta: 0.0deg - theta: 72.0deg
+15:14:37.583500
+I am averaging...alpha = -26.004953084903367deg
+beta: 0.0deg - theta: 72.0deg
+15:14:37.787492
+I am averaging...alpha = -8.695379823792898deg
+beta: 0.0deg - theta: 72.0deg
+15:14:37.993284
+I am averaging...alpha = 8.695379823792898deg
+beta: 0.0deg - theta: 72.0deg
+15:14:38.198805
+I am averaging...alpha = 26.004953084903367deg
+beta: 0.0deg - theta: 72.0deg
+15:14:38.403579
+I am averaging...alpha = 43.07172520538467deg
+beta: 0.0deg - theta: 72.0deg
+15:14:38.606228
+I am averaging...alpha = 59.73634841078298deg
+beta: 0.0deg - theta: 72.0deg
+15:14:38.812542
+I am averaging...alpha = 75.84322970351435deg
+beta: 0.0deg - theta: 72.0deg
+15:14:39.019831
+I am averaging...alpha = 91.24198360780129deg
+beta: 0.0deg - theta: 72.0deg
+15:14:39.224682
+I am averaging...alpha = 105.78883630333722deg
+beta: 0.0deg - theta: 72.0deg
+15:14:39.431428
+I am averaging...alpha = 119.34796804743874deg
+beta: 0.0deg - theta: 72.0deg
+15:14:39.635712
+I am averaging...alpha = 131.79278137325215deg
+beta: 0.0deg - theta: 72.0deg
+15:14:39.837086
+I am averaging...alpha = 143.00708327422964deg
+beta: 0.0deg - theta: 72.0deg
+15:14:40.040695
+I am averaging...alpha = 152.88617047186258deg
+beta: 0.0deg - theta: 72.0deg
+15:14:40.244277
+I am averaging...alpha = 161.33780803788937deg
+beta: 0.0deg - theta: 72.0deg
+15:14:40.445966
+I am averaging...alpha = 168.28309366879313deg
+beta: 0.0deg - theta: 72.0deg
+15:14:40.649946
+I am averaging...alpha = 173.65720600575116deg
+beta: 0.0deg - theta: 72.0deg
+15:14:40.852814
+I am averaging...alpha = 177.4100720781483deg
+beta: 0.0deg - theta: 72.0deg
+15:14:41.057417
+I am averaging...alpha = 179.50749513290668deg
+beta: 0.0deg - theta: 72.0deg
+15:14:41.263442
+
+theta: 72.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 0.0deg - theta: 90.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 0.0deg - theta: 90.0deg
+15:14:41.488851
+I am averaging...alpha = -177.4100720781483deg
+beta: 0.0deg - theta: 90.0deg
+15:14:41.588587
+I am averaging...alpha = -173.65720600575116deg
+beta: 0.0deg - theta: 90.0deg
+15:14:41.775770
+I am averaging...alpha = -168.28309366879313deg
+beta: 0.0deg - theta: 90.0deg
+15:14:41.971172
+I am averaging...alpha = -161.33780803788937deg
+beta: 0.0deg - theta: 90.0deg
+15:14:42.162373
+I am averaging...alpha = -152.88617047186258deg
+beta: 0.0deg - theta: 90.0deg
+15:14:42.362987
+I am averaging...alpha = -143.00708327422964deg
+beta: 0.0deg - theta: 90.0deg
+15:14:42.563920
+I am averaging...alpha = -131.79278137325215deg
+beta: 0.0deg - theta: 90.0deg
+15:14:42.764229
+I am averaging...alpha = -119.34796804743874deg
+beta: 0.0deg - theta: 90.0deg
+15:14:42.960704
+I am averaging...alpha = -105.78883630333722deg
+beta: 0.0deg - theta: 90.0deg
+15:14:43.161295
+I am averaging...alpha = -91.24198360780129deg
+beta: 0.0deg - theta: 90.0deg
+15:14:43.363012
+I am averaging...alpha = -75.84322970351435deg
+beta: 0.0deg - theta: 90.0deg
+15:14:43.564371
+I am averaging...alpha = -59.73634841078298deg
+beta: 0.0deg - theta: 90.0deg
+15:14:43.764647
+I am averaging...alpha = -43.07172520538467deg
+beta: 0.0deg - theta: 90.0deg
+15:14:43.965681
+I am averaging...alpha = -26.004953084903367deg
+beta: 0.0deg - theta: 90.0deg
+15:14:44.168067
+I am averaging...alpha = -8.695379823792898deg
+beta: 0.0deg - theta: 90.0deg
+15:14:44.368759
+I am averaging...alpha = 8.695379823792898deg
+beta: 0.0deg - theta: 90.0deg
+15:14:44.570492
+I am averaging...alpha = 26.004953084903367deg
+beta: 0.0deg - theta: 90.0deg
+15:14:44.772515
+I am averaging...alpha = 43.07172520538467deg
+beta: 0.0deg - theta: 90.0deg
+15:14:44.976265
+I am averaging...alpha = 59.73634841078298deg
+beta: 0.0deg - theta: 90.0deg
+15:14:45.175591
+I am averaging...alpha = 75.84322970351435deg
+beta: 0.0deg - theta: 90.0deg
+15:14:45.379094
+I am averaging...alpha = 91.24198360780129deg
+beta: 0.0deg - theta: 90.0deg
+15:14:45.578607
+I am averaging...alpha = 105.78883630333722deg
+beta: 0.0deg - theta: 90.0deg
+15:14:45.774608
+I am averaging...alpha = 119.34796804743874deg
+beta: 0.0deg - theta: 90.0deg
+15:14:45.974194
+I am averaging...alpha = 131.79278137325215deg
+beta: 0.0deg - theta: 90.0deg
+15:14:46.173134
+I am averaging...alpha = 143.00708327422964deg
+beta: 0.0deg - theta: 90.0deg
+15:14:46.373521
+I am averaging...alpha = 152.88617047186258deg
+beta: 0.0deg - theta: 90.0deg
+15:14:46.572459
+I am averaging...alpha = 161.33780803788937deg
+beta: 0.0deg - theta: 90.0deg
+15:14:46.771537
+I am averaging...alpha = 168.28309366879313deg
+beta: 0.0deg - theta: 90.0deg
+15:14:46.970217
+I am averaging...alpha = 173.65720600575116deg
+beta: 0.0deg - theta: 90.0deg
+15:14:47.168958
+I am averaging...alpha = 177.4100720781483deg
+beta: 0.0deg - theta: 90.0deg
+15:14:47.369088
+I am averaging...alpha = 179.50749513290668deg
+beta: 0.0deg - theta: 90.0deg
+15:14:47.569170
+
+theta: 90.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 0.0deg - theta: 108.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 0.0deg - theta: 108.0deg
+15:14:47.846863
+I am averaging...alpha = -177.4100720781483deg
+beta: 0.0deg - theta: 108.0deg
+15:14:47.953961
+I am averaging...alpha = -173.65720600575116deg
+beta: 0.0deg - theta: 108.0deg
+15:14:48.144751
+I am averaging...alpha = -168.28309366879313deg
+beta: 0.0deg - theta: 108.0deg
+15:14:48.341888
+I am averaging...alpha = -161.33780803788937deg
+beta: 0.0deg - theta: 108.0deg
+15:14:48.549243
+I am averaging...alpha = -152.88617047186258deg
+beta: 0.0deg - theta: 108.0deg
+15:14:48.752159
+I am averaging...alpha = -143.00708327422964deg
+beta: 0.0deg - theta: 108.0deg
+15:14:48.953639
+I am averaging...alpha = -131.79278137325215deg
+beta: 0.0deg - theta: 108.0deg
+15:14:49.156859
+I am averaging...alpha = -119.34796804743874deg
+beta: 0.0deg - theta: 108.0deg
+15:14:49.358988
+I am averaging...alpha = -105.78883630333722deg
+beta: 0.0deg - theta: 108.0deg
+15:14:49.562306
+I am averaging...alpha = -91.24198360780129deg
+beta: 0.0deg - theta: 108.0deg
+15:14:49.764660
+I am averaging...alpha = -75.84322970351435deg
+beta: 0.0deg - theta: 108.0deg
+15:14:49.968048
+I am averaging...alpha = -59.73634841078298deg
+beta: 0.0deg - theta: 108.0deg
+15:14:50.172511
+I am averaging...alpha = -43.07172520538467deg
+beta: 0.0deg - theta: 108.0deg
+15:14:50.375542
+I am averaging...alpha = -26.004953084903367deg
+beta: 0.0deg - theta: 108.0deg
+15:14:50.576188
+I am averaging...alpha = -8.695379823792898deg
+beta: 0.0deg - theta: 108.0deg
+15:14:50.781647
+I am averaging...alpha = 8.695379823792898deg
+beta: 0.0deg - theta: 108.0deg
+15:14:50.985624
+I am averaging...alpha = 26.004953084903367deg
+beta: 0.0deg - theta: 108.0deg
+15:14:51.186237
+I am averaging...alpha = 43.07172520538467deg
+beta: 0.0deg - theta: 108.0deg
+15:14:51.389076
+I am averaging...alpha = 59.73634841078298deg
+beta: 0.0deg - theta: 108.0deg
+15:14:51.590821
+I am averaging...alpha = 75.84322970351435deg
+beta: 0.0deg - theta: 108.0deg
+15:14:51.793233
+I am averaging...alpha = 91.24198360780129deg
+beta: 0.0deg - theta: 108.0deg
+15:14:51.991883
+I am averaging...alpha = 105.78883630333722deg
+beta: 0.0deg - theta: 108.0deg
+15:14:52.191387
+I am averaging...alpha = 119.34796804743874deg
+beta: 0.0deg - theta: 108.0deg
+15:14:52.391996
+I am averaging...alpha = 131.79278137325215deg
+beta: 0.0deg - theta: 108.0deg
+15:14:52.593157
+I am averaging...alpha = 143.00708327422964deg
+beta: 0.0deg - theta: 108.0deg
+15:14:52.792965
+I am averaging...alpha = 152.88617047186258deg
+beta: 0.0deg - theta: 108.0deg
+15:14:52.993331
+I am averaging...alpha = 161.33780803788937deg
+beta: 0.0deg - theta: 108.0deg
+15:14:53.194725
+I am averaging...alpha = 168.28309366879313deg
+beta: 0.0deg - theta: 108.0deg
+15:14:53.394587
+I am averaging...alpha = 173.65720600575116deg
+beta: 0.0deg - theta: 108.0deg
+15:14:53.595066
+I am averaging...alpha = 177.4100720781483deg
+beta: 0.0deg - theta: 108.0deg
+15:14:53.796471
+I am averaging...alpha = 179.50749513290668deg
+beta: 0.0deg - theta: 108.0deg
+15:14:53.997166
+
+theta: 108.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 0.0deg - theta: 162.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 0.0deg - theta: 162.0deg
+15:14:54.257300
+I am averaging...alpha = -177.4100720781483deg
+beta: 0.0deg - theta: 162.0deg
+15:14:54.416135
+I am averaging...alpha = -173.65720600575116deg
+beta: 0.0deg - theta: 162.0deg
+15:14:54.614341
+I am averaging...alpha = -168.28309366879313deg
+beta: 0.0deg - theta: 162.0deg
+15:14:54.815099
+I am averaging...alpha = -161.33780803788937deg
+beta: 0.0deg - theta: 162.0deg
+15:14:55.014201
+I am averaging...alpha = -152.88617047186258deg
+beta: 0.0deg - theta: 162.0deg
+15:14:55.215399
+I am averaging...alpha = -143.00708327422964deg
+beta: 0.0deg - theta: 162.0deg
+15:14:55.415040
+I am averaging...alpha = -131.79278137325215deg
+beta: 0.0deg - theta: 162.0deg
+15:14:55.613333
+I am averaging...alpha = -119.34796804743874deg
+beta: 0.0deg - theta: 162.0deg
+15:14:55.812702
+I am averaging...alpha = -105.78883630333722deg
+beta: 0.0deg - theta: 162.0deg
+15:14:56.013478
+I am averaging...alpha = -91.24198360780129deg
+beta: 0.0deg - theta: 162.0deg
+15:14:56.211887
+I am averaging...alpha = -75.84322970351435deg
+beta: 0.0deg - theta: 162.0deg
+15:14:56.410878
+I am averaging...alpha = -59.73634841078298deg
+beta: 0.0deg - theta: 162.0deg
+15:14:56.612982
+I am averaging...alpha = -43.07172520538467deg
+beta: 0.0deg - theta: 162.0deg
+15:14:56.812440
+I am averaging...alpha = -26.004953084903367deg
+beta: 0.0deg - theta: 162.0deg
+15:14:57.012888
+I am averaging...alpha = -8.695379823792898deg
+beta: 0.0deg - theta: 162.0deg
+15:14:57.209847
+I am averaging...alpha = 8.695379823792898deg
+beta: 0.0deg - theta: 162.0deg
+15:14:57.410159
+I am averaging...alpha = 26.004953084903367deg
+beta: 0.0deg - theta: 162.0deg
+15:14:57.611021
+I am averaging...alpha = 43.07172520538467deg
+beta: 0.0deg - theta: 162.0deg
+15:14:57.809842
+I am averaging...alpha = 59.73634841078298deg
+beta: 0.0deg - theta: 162.0deg
+15:14:58.007291
+I am averaging...alpha = 75.84322970351435deg
+beta: 0.0deg - theta: 162.0deg
+15:14:58.205693
+I am averaging...alpha = 91.24198360780129deg
+beta: 0.0deg - theta: 162.0deg
+15:14:58.402189
+I am averaging...alpha = 105.78883630333722deg
+beta: 0.0deg - theta: 162.0deg
+15:14:58.599407
+I am averaging...alpha = 119.34796804743874deg
+beta: 0.0deg - theta: 162.0deg
+15:14:58.797503
+I am averaging...alpha = 131.79278137325215deg
+beta: 0.0deg - theta: 162.0deg
+15:14:58.994170
+I am averaging...alpha = 143.00708327422964deg
+beta: 0.0deg - theta: 162.0deg
+15:14:59.193972
+I am averaging...alpha = 152.88617047186258deg
+beta: 0.0deg - theta: 162.0deg
+15:14:59.394677
+I am averaging...alpha = 161.33780803788937deg
+beta: 0.0deg - theta: 162.0deg
+15:14:59.592664
+I am averaging...alpha = 168.28309366879313deg
+beta: 0.0deg - theta: 162.0deg
+15:14:59.791623
+I am averaging...alpha = 173.65720600575116deg
+beta: 0.0deg - theta: 162.0deg
+15:14:59.993805
+I am averaging...alpha = 177.4100720781483deg
+beta: 0.0deg - theta: 162.0deg
+15:15:00.194375
+I am averaging...alpha = 179.50749513290668deg
+beta: 0.0deg - theta: 162.0deg
+15:15:00.393296
+
+theta: 162.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 0.0deg - theta: 180.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 0.0deg - theta: 180.0deg
+15:15:00.609491
+I am averaging...alpha = -177.4100720781483deg
+beta: 0.0deg - theta: 180.0deg
+15:15:00.807246
+I am averaging...alpha = -173.65720600575116deg
+beta: 0.0deg - theta: 180.0deg
+15:15:01.009815
+I am averaging...alpha = -168.28309366879313deg
+beta: 0.0deg - theta: 180.0deg
+15:15:01.209116
+I am averaging...alpha = -161.33780803788937deg
+beta: 0.0deg - theta: 180.0deg
+15:15:01.410295
+I am averaging...alpha = -152.88617047186258deg
+beta: 0.0deg - theta: 180.0deg
+15:15:01.612923
+I am averaging...alpha = -143.00708327422964deg
+beta: 0.0deg - theta: 180.0deg
+15:15:01.812738
+I am averaging...alpha = -131.79278137325215deg
+beta: 0.0deg - theta: 180.0deg
+15:15:02.012004
+I am averaging...alpha = -119.34796804743874deg
+beta: 0.0deg - theta: 180.0deg
+15:15:02.215376
+I am averaging...alpha = -105.78883630333722deg
+beta: 0.0deg - theta: 180.0deg
+15:15:02.418574
+I am averaging...alpha = -91.24198360780129deg
+beta: 0.0deg - theta: 180.0deg
+15:15:02.618437
+I am averaging...alpha = -75.84322970351435deg
+beta: 0.0deg - theta: 180.0deg
+15:15:02.819376
+I am averaging...alpha = -59.73634841078298deg
+beta: 0.0deg - theta: 180.0deg
+15:15:03.020249
+I am averaging...alpha = -43.07172520538467deg
+beta: 0.0deg - theta: 180.0deg
+15:15:03.221054
+I am averaging...alpha = -26.004953084903367deg
+beta: 0.0deg - theta: 180.0deg
+15:15:03.420267
+I am averaging...alpha = -8.695379823792898deg
+beta: 0.0deg - theta: 180.0deg
+15:15:03.620439
+I am averaging...alpha = 8.695379823792898deg
+beta: 0.0deg - theta: 180.0deg
+15:15:03.820312
+I am averaging...alpha = 26.004953084903367deg
+beta: 0.0deg - theta: 180.0deg
+15:15:04.020612
+I am averaging...alpha = 43.07172520538467deg
+beta: 0.0deg - theta: 180.0deg
+15:15:04.218285
+I am averaging...alpha = 59.73634841078298deg
+beta: 0.0deg - theta: 180.0deg
+15:15:04.417455
+I am averaging...alpha = 75.84322970351435deg
+beta: 0.0deg - theta: 180.0deg
+15:15:04.617654
+I am averaging...alpha = 91.24198360780129deg
+beta: 0.0deg - theta: 180.0deg
+15:15:04.814466
+I am averaging...alpha = 105.78883630333722deg
+beta: 0.0deg - theta: 180.0deg
+15:15:05.016952
+I am averaging...alpha = 119.34796804743874deg
+beta: 0.0deg - theta: 180.0deg
+15:15:05.217048
+I am averaging...alpha = 131.79278137325215deg
+beta: 0.0deg - theta: 180.0deg
+15:15:05.414285
+I am averaging...alpha = 143.00708327422964deg
+beta: 0.0deg - theta: 180.0deg
+15:15:05.614369
+I am averaging...alpha = 152.88617047186258deg
+beta: 0.0deg - theta: 180.0deg
+15:15:05.815937
+I am averaging...alpha = 161.33780803788937deg
+beta: 0.0deg - theta: 180.0deg
+15:15:06.014045
+I am averaging...alpha = 168.28309366879313deg
+beta: 0.0deg - theta: 180.0deg
+15:15:06.213037
+I am averaging...alpha = 173.65720600575116deg
+beta: 0.0deg - theta: 180.0deg
+15:15:06.415180
+I am averaging...alpha = 177.4100720781483deg
+beta: 0.0deg - theta: 180.0deg
+15:15:06.613739
+I am averaging...alpha = 179.50749513290668deg
+beta: 0.0deg - theta: 180.0deg
+15:15:06.812099
+
+theta: 180.0deg
+Yeah, it is done!
+elapsed time: 0:00:44.645278
+
+n_beta: 1
+beta: 36.0 deg
+Parallel computing is not working!
+Then I switch to serial computing.
+/bin/sh: free: command not found
+Before ori-avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 36.0deg - theta: 0.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 36.0deg - theta: 0.0deg
+15:15:07.044338
+I am averaging...alpha = -177.4100720781483deg
+beta: 36.0deg - theta: 0.0deg
+15:15:07.165867
+I am averaging...alpha = -173.65720600575116deg
+beta: 36.0deg - theta: 0.0deg
+15:15:07.370296
+I am averaging...alpha = -168.28309366879313deg
+beta: 36.0deg - theta: 0.0deg
+15:15:07.570521
+I am averaging...alpha = -161.33780803788937deg
+beta: 36.0deg - theta: 0.0deg
+15:15:07.773102
+I am averaging...alpha = -152.88617047186258deg
+beta: 36.0deg - theta: 0.0deg
+15:15:07.978879
+I am averaging...alpha = -143.00708327422964deg
+beta: 36.0deg - theta: 0.0deg
+15:15:08.179403
+I am averaging...alpha = -131.79278137325215deg
+beta: 36.0deg - theta: 0.0deg
+15:15:08.380947
+I am averaging...alpha = -119.34796804743874deg
+beta: 36.0deg - theta: 0.0deg
+15:15:08.584360
+I am averaging...alpha = -105.78883630333722deg
+beta: 36.0deg - theta: 0.0deg
+15:15:08.785595
+I am averaging...alpha = -91.24198360780129deg
+beta: 36.0deg - theta: 0.0deg
+15:15:08.985428
+I am averaging...alpha = -75.84322970351435deg
+beta: 36.0deg - theta: 0.0deg
+15:15:09.187141
+I am averaging...alpha = -59.73634841078298deg
+beta: 36.0deg - theta: 0.0deg
+15:15:09.390030
+I am averaging...alpha = -43.07172520538467deg
+beta: 36.0deg - theta: 0.0deg
+15:15:09.589332
+I am averaging...alpha = -26.004953084903367deg
+beta: 36.0deg - theta: 0.0deg
+15:15:09.789963
+I am averaging...alpha = -8.695379823792898deg
+beta: 36.0deg - theta: 0.0deg
+15:15:09.994029
+I am averaging...alpha = 8.695379823792898deg
+beta: 36.0deg - theta: 0.0deg
+15:15:10.195475
+I am averaging...alpha = 26.004953084903367deg
+beta: 36.0deg - theta: 0.0deg
+15:15:10.395470
+I am averaging...alpha = 43.07172520538467deg
+beta: 36.0deg - theta: 0.0deg
+15:15:10.594877
+I am averaging...alpha = 59.73634841078298deg
+beta: 36.0deg - theta: 0.0deg
+15:15:10.797039
+I am averaging...alpha = 75.84322970351435deg
+beta: 36.0deg - theta: 0.0deg
+15:15:11.001457
+I am averaging...alpha = 91.24198360780129deg
+beta: 36.0deg - theta: 0.0deg
+15:15:11.204085
+I am averaging...alpha = 105.78883630333722deg
+beta: 36.0deg - theta: 0.0deg
+15:15:11.404416
+I am averaging...alpha = 119.34796804743874deg
+beta: 36.0deg - theta: 0.0deg
+15:15:11.605875
+I am averaging...alpha = 131.79278137325215deg
+beta: 36.0deg - theta: 0.0deg
+15:15:11.807012
+I am averaging...alpha = 143.00708327422964deg
+beta: 36.0deg - theta: 0.0deg
+15:15:12.009406
+I am averaging...alpha = 152.88617047186258deg
+beta: 36.0deg - theta: 0.0deg
+15:15:12.212250
+I am averaging...alpha = 161.33780803788937deg
+beta: 36.0deg - theta: 0.0deg
+15:15:12.414718
+I am averaging...alpha = 168.28309366879313deg
+beta: 36.0deg - theta: 0.0deg
+15:15:12.617663
+I am averaging...alpha = 173.65720600575116deg
+beta: 36.0deg - theta: 0.0deg
+15:15:12.820073
+I am averaging...alpha = 177.4100720781483deg
+beta: 36.0deg - theta: 0.0deg
+15:15:13.021810
+I am averaging...alpha = 179.50749513290668deg
+beta: 36.0deg - theta: 0.0deg
+15:15:13.228159
+
+theta: 0.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 36.0deg - theta: 18.00000000000001deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:13.447993
+I am averaging...alpha = -177.4100720781483deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:13.558646
+I am averaging...alpha = -173.65720600575116deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:13.760423
+I am averaging...alpha = -168.28309366879313deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:13.956381
+I am averaging...alpha = -161.33780803788937deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:14.152275
+I am averaging...alpha = -152.88617047186258deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:14.355261
+I am averaging...alpha = -143.00708327422964deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:14.542608
+I am averaging...alpha = -131.79278137325215deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:14.728081
+I am averaging...alpha = -119.34796804743874deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:14.926138
+I am averaging...alpha = -105.78883630333722deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:15.125685
+I am averaging...alpha = -91.24198360780129deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:15.326450
+I am averaging...alpha = -75.84322970351435deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:15.525838
+I am averaging...alpha = -59.73634841078298deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:15.733248
+I am averaging...alpha = -43.07172520538467deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:15.931382
+I am averaging...alpha = -26.004953084903367deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:16.128831
+I am averaging...alpha = -8.695379823792898deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:16.325729
+I am averaging...alpha = 8.695379823792898deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:16.522739
+I am averaging...alpha = 26.004953084903367deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:16.720310
+I am averaging...alpha = 43.07172520538467deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:16.918835
+I am averaging...alpha = 59.73634841078298deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:17.121934
+I am averaging...alpha = 75.84322970351435deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:17.321531
+I am averaging...alpha = 91.24198360780129deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:17.521285
+I am averaging...alpha = 105.78883630333722deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:17.722481
+I am averaging...alpha = 119.34796804743874deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:17.926917
+I am averaging...alpha = 131.79278137325215deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:18.126812
+I am averaging...alpha = 143.00708327422964deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:18.325990
+I am averaging...alpha = 152.88617047186258deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:18.528055
+I am averaging...alpha = 161.33780803788937deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:18.728529
+I am averaging...alpha = 168.28309366879313deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:18.927073
+I am averaging...alpha = 173.65720600575116deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:19.126133
+I am averaging...alpha = 177.4100720781483deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:19.324361
+I am averaging...alpha = 179.50749513290668deg
+beta: 36.0deg - theta: 18.00000000000001deg
+15:15:19.523799
+
+theta: 18.00000000000001deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 36.0deg - theta: 72.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 36.0deg - theta: 72.0deg
+15:15:19.740808
+I am averaging...alpha = -177.4100720781483deg
+beta: 36.0deg - theta: 72.0deg
+15:15:19.943187
+I am averaging...alpha = -173.65720600575116deg
+beta: 36.0deg - theta: 72.0deg
+15:15:20.145269
+I am averaging...alpha = -168.28309366879313deg
+beta: 36.0deg - theta: 72.0deg
+15:15:20.346042
+I am averaging...alpha = -161.33780803788937deg
+beta: 36.0deg - theta: 72.0deg
+15:15:20.547132
+I am averaging...alpha = -152.88617047186258deg
+beta: 36.0deg - theta: 72.0deg
+15:15:20.738431
+I am averaging...alpha = -143.00708327422964deg
+beta: 36.0deg - theta: 72.0deg
+15:15:20.935060
+I am averaging...alpha = -131.79278137325215deg
+beta: 36.0deg - theta: 72.0deg
+15:15:21.136296
+I am averaging...alpha = -119.34796804743874deg
+beta: 36.0deg - theta: 72.0deg
+15:15:21.339240
+I am averaging...alpha = -105.78883630333722deg
+beta: 36.0deg - theta: 72.0deg
+15:15:21.539017
+I am averaging...alpha = -91.24198360780129deg
+beta: 36.0deg - theta: 72.0deg
+15:15:21.728519
+I am averaging...alpha = -75.84322970351435deg
+beta: 36.0deg - theta: 72.0deg
+15:15:21.930697
+I am averaging...alpha = -59.73634841078298deg
+beta: 36.0deg - theta: 72.0deg
+15:15:22.126847
+I am averaging...alpha = -43.07172520538467deg
+beta: 36.0deg - theta: 72.0deg
+15:15:22.327388
+I am averaging...alpha = -26.004953084903367deg
+beta: 36.0deg - theta: 72.0deg
+15:15:22.525887
+I am averaging...alpha = -8.695379823792898deg
+beta: 36.0deg - theta: 72.0deg
+15:15:22.723714
+I am averaging...alpha = 8.695379823792898deg
+beta: 36.0deg - theta: 72.0deg
+15:15:22.923290
+I am averaging...alpha = 26.004953084903367deg
+beta: 36.0deg - theta: 72.0deg
+15:15:23.124359
+I am averaging...alpha = 43.07172520538467deg
+beta: 36.0deg - theta: 72.0deg
+15:15:23.323674
+I am averaging...alpha = 59.73634841078298deg
+beta: 36.0deg - theta: 72.0deg
+15:15:23.528338
+I am averaging...alpha = 75.84322970351435deg
+beta: 36.0deg - theta: 72.0deg
+15:15:23.731271
+I am averaging...alpha = 91.24198360780129deg
+beta: 36.0deg - theta: 72.0deg
+15:15:23.929812
+I am averaging...alpha = 105.78883630333722deg
+beta: 36.0deg - theta: 72.0deg
+15:15:24.130878
+I am averaging...alpha = 119.34796804743874deg
+beta: 36.0deg - theta: 72.0deg
+15:15:24.332213
+I am averaging...alpha = 131.79278137325215deg
+beta: 36.0deg - theta: 72.0deg
+15:15:24.533391
+I am averaging...alpha = 143.00708327422964deg
+beta: 36.0deg - theta: 72.0deg
+15:15:24.732563
+I am averaging...alpha = 152.88617047186258deg
+beta: 36.0deg - theta: 72.0deg
+15:15:24.934160
+I am averaging...alpha = 161.33780803788937deg
+beta: 36.0deg - theta: 72.0deg
+15:15:25.135030
+I am averaging...alpha = 168.28309366879313deg
+beta: 36.0deg - theta: 72.0deg
+15:15:25.333277
+I am averaging...alpha = 173.65720600575116deg
+beta: 36.0deg - theta: 72.0deg
+15:15:25.534242
+I am averaging...alpha = 177.4100720781483deg
+beta: 36.0deg - theta: 72.0deg
+15:15:25.734571
+I am averaging...alpha = 179.50749513290668deg
+beta: 36.0deg - theta: 72.0deg
+15:15:25.934806
+
+theta: 72.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 36.0deg - theta: 90.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 36.0deg - theta: 90.0deg
+15:15:26.153476
+I am averaging...alpha = -177.4100720781483deg
+beta: 36.0deg - theta: 90.0deg
+15:15:26.266422
+I am averaging...alpha = -173.65720600575116deg
+beta: 36.0deg - theta: 90.0deg
+15:15:26.458321
+I am averaging...alpha = -168.28309366879313deg
+beta: 36.0deg - theta: 90.0deg
+15:15:26.655134
+I am averaging...alpha = -161.33780803788937deg
+beta: 36.0deg - theta: 90.0deg
+15:15:26.853345
+I am averaging...alpha = -152.88617047186258deg
+beta: 36.0deg - theta: 90.0deg
+15:15:27.053829
+I am averaging...alpha = -143.00708327422964deg
+beta: 36.0deg - theta: 90.0deg
+15:15:27.252113
+I am averaging...alpha = -131.79278137325215deg
+beta: 36.0deg - theta: 90.0deg
+15:15:27.454766
+I am averaging...alpha = -119.34796804743874deg
+beta: 36.0deg - theta: 90.0deg
+15:15:27.656427
+I am averaging...alpha = -105.78883630333722deg
+beta: 36.0deg - theta: 90.0deg
+15:15:27.858386
+I am averaging...alpha = -91.24198360780129deg
+beta: 36.0deg - theta: 90.0deg
+15:15:28.060708
+I am averaging...alpha = -75.84322970351435deg
+beta: 36.0deg - theta: 90.0deg
+15:15:28.261520
+I am averaging...alpha = -59.73634841078298deg
+beta: 36.0deg - theta: 90.0deg
+15:15:28.462644
+I am averaging...alpha = -43.07172520538467deg
+beta: 36.0deg - theta: 90.0deg
+15:15:28.666196
+I am averaging...alpha = -26.004953084903367deg
+beta: 36.0deg - theta: 90.0deg
+15:15:28.866517
+I am averaging...alpha = -8.695379823792898deg
+beta: 36.0deg - theta: 90.0deg
+15:15:29.067142
+I am averaging...alpha = 8.695379823792898deg
+beta: 36.0deg - theta: 90.0deg
+15:15:29.266922
+I am averaging...alpha = 26.004953084903367deg
+beta: 36.0deg - theta: 90.0deg
+15:15:29.468810
+I am averaging...alpha = 43.07172520538467deg
+beta: 36.0deg - theta: 90.0deg
+15:15:29.671342
+I am averaging...alpha = 59.73634841078298deg
+beta: 36.0deg - theta: 90.0deg
+15:15:29.874212
+I am averaging...alpha = 75.84322970351435deg
+beta: 36.0deg - theta: 90.0deg
+15:15:30.077167
+I am averaging...alpha = 91.24198360780129deg
+beta: 36.0deg - theta: 90.0deg
+15:15:30.279250
+I am averaging...alpha = 105.78883630333722deg
+beta: 36.0deg - theta: 90.0deg
+15:15:30.481368
+I am averaging...alpha = 119.34796804743874deg
+beta: 36.0deg - theta: 90.0deg
+15:15:30.683591
+I am averaging...alpha = 131.79278137325215deg
+beta: 36.0deg - theta: 90.0deg
+15:15:30.886527
+I am averaging...alpha = 143.00708327422964deg
+beta: 36.0deg - theta: 90.0deg
+15:15:31.090287
+I am averaging...alpha = 152.88617047186258deg
+beta: 36.0deg - theta: 90.0deg
+15:15:31.291012
+I am averaging...alpha = 161.33780803788937deg
+beta: 36.0deg - theta: 90.0deg
+15:15:31.492109
+I am averaging...alpha = 168.28309366879313deg
+beta: 36.0deg - theta: 90.0deg
+15:15:31.696177
+I am averaging...alpha = 173.65720600575116deg
+beta: 36.0deg - theta: 90.0deg
+15:15:31.897466
+I am averaging...alpha = 177.4100720781483deg
+beta: 36.0deg - theta: 90.0deg
+15:15:32.098869
+I am averaging...alpha = 179.50749513290668deg
+beta: 36.0deg - theta: 90.0deg
+15:15:32.299756
+
+theta: 90.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 36.0deg - theta: 108.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 36.0deg - theta: 108.0deg
+15:15:32.518354
+I am averaging...alpha = -177.4100720781483deg
+beta: 36.0deg - theta: 108.0deg
+15:15:32.636134
+I am averaging...alpha = -173.65720600575116deg
+beta: 36.0deg - theta: 108.0deg
+15:15:32.835040
+I am averaging...alpha = -168.28309366879313deg
+beta: 36.0deg - theta: 108.0deg
+15:15:33.035704
+I am averaging...alpha = -161.33780803788937deg
+beta: 36.0deg - theta: 108.0deg
+15:15:33.236349
+I am averaging...alpha = -152.88617047186258deg
+beta: 36.0deg - theta: 108.0deg
+15:15:33.415581
+I am averaging...alpha = -143.00708327422964deg
+beta: 36.0deg - theta: 108.0deg
+15:15:33.610903
+I am averaging...alpha = -131.79278137325215deg
+beta: 36.0deg - theta: 108.0deg
+15:15:33.813541
+I am averaging...alpha = -119.34796804743874deg
+beta: 36.0deg - theta: 108.0deg
+15:15:34.013766
+I am averaging...alpha = -105.78883630333722deg
+beta: 36.0deg - theta: 108.0deg
+15:15:34.213123
+I am averaging...alpha = -91.24198360780129deg
+beta: 36.0deg - theta: 108.0deg
+15:15:34.414992
+I am averaging...alpha = -75.84322970351435deg
+beta: 36.0deg - theta: 108.0deg
+15:15:34.616964
+I am averaging...alpha = -59.73634841078298deg
+beta: 36.0deg - theta: 108.0deg
+15:15:34.817033
+I am averaging...alpha = -43.07172520538467deg
+beta: 36.0deg - theta: 108.0deg
+15:15:35.016723
+I am averaging...alpha = -26.004953084903367deg
+beta: 36.0deg - theta: 108.0deg
+15:15:35.215241
+I am averaging...alpha = -8.695379823792898deg
+beta: 36.0deg - theta: 108.0deg
+15:15:35.413774
+I am averaging...alpha = 8.695379823792898deg
+beta: 36.0deg - theta: 108.0deg
+15:15:35.612201
+I am averaging...alpha = 26.004953084903367deg
+beta: 36.0deg - theta: 108.0deg
+15:15:35.812319
+I am averaging...alpha = 43.07172520538467deg
+beta: 36.0deg - theta: 108.0deg
+15:15:36.013836
+I am averaging...alpha = 59.73634841078298deg
+beta: 36.0deg - theta: 108.0deg
+15:15:36.213119
+I am averaging...alpha = 75.84322970351435deg
+beta: 36.0deg - theta: 108.0deg
+15:15:36.412286
+I am averaging...alpha = 91.24198360780129deg
+beta: 36.0deg - theta: 108.0deg
+15:15:36.612707
+I am averaging...alpha = 105.78883630333722deg
+beta: 36.0deg - theta: 108.0deg
+15:15:36.820554
+I am averaging...alpha = 119.34796804743874deg
+beta: 36.0deg - theta: 108.0deg
+15:15:37.023088
+I am averaging...alpha = 131.79278137325215deg
+beta: 36.0deg - theta: 108.0deg
+15:15:37.226406
+I am averaging...alpha = 143.00708327422964deg
+beta: 36.0deg - theta: 108.0deg
+15:15:37.425203
+I am averaging...alpha = 152.88617047186258deg
+beta: 36.0deg - theta: 108.0deg
+15:15:37.629234
+I am averaging...alpha = 161.33780803788937deg
+beta: 36.0deg - theta: 108.0deg
+15:15:37.831142
+I am averaging...alpha = 168.28309366879313deg
+beta: 36.0deg - theta: 108.0deg
+15:15:38.029784
+I am averaging...alpha = 173.65720600575116deg
+beta: 36.0deg - theta: 108.0deg
+15:15:38.231630
+I am averaging...alpha = 177.4100720781483deg
+beta: 36.0deg - theta: 108.0deg
+15:15:38.432949
+I am averaging...alpha = 179.50749513290668deg
+beta: 36.0deg - theta: 108.0deg
+15:15:38.637129
+
+theta: 108.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 36.0deg - theta: 162.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 36.0deg - theta: 162.0deg
+15:15:38.855012
+I am averaging...alpha = -177.4100720781483deg
+beta: 36.0deg - theta: 162.0deg
+15:15:39.056512
+I am averaging...alpha = -173.65720600575116deg
+beta: 36.0deg - theta: 162.0deg
+15:15:39.258956
+I am averaging...alpha = -168.28309366879313deg
+beta: 36.0deg - theta: 162.0deg
+15:15:39.461493
+I am averaging...alpha = -161.33780803788937deg
+beta: 36.0deg - theta: 162.0deg
+15:15:39.662376
+I am averaging...alpha = -152.88617047186258deg
+beta: 36.0deg - theta: 162.0deg
+15:15:39.859512
+I am averaging...alpha = -143.00708327422964deg
+beta: 36.0deg - theta: 162.0deg
+15:15:40.060913
+I am averaging...alpha = -131.79278137325215deg
+beta: 36.0deg - theta: 162.0deg
+15:15:40.261944
+I am averaging...alpha = -119.34796804743874deg
+beta: 36.0deg - theta: 162.0deg
+15:15:40.463430
+I am averaging...alpha = -105.78883630333722deg
+beta: 36.0deg - theta: 162.0deg
+15:15:40.666628
+I am averaging...alpha = -91.24198360780129deg
+beta: 36.0deg - theta: 162.0deg
+15:15:40.868410
+I am averaging...alpha = -75.84322970351435deg
+beta: 36.0deg - theta: 162.0deg
+15:15:41.069516
+I am averaging...alpha = -59.73634841078298deg
+beta: 36.0deg - theta: 162.0deg
+15:15:41.272079
+I am averaging...alpha = -43.07172520538467deg
+beta: 36.0deg - theta: 162.0deg
+15:15:41.472603
+I am averaging...alpha = -26.004953084903367deg
+beta: 36.0deg - theta: 162.0deg
+15:15:41.671638
+I am averaging...alpha = -8.695379823792898deg
+beta: 36.0deg - theta: 162.0deg
+15:15:41.872121
+I am averaging...alpha = 8.695379823792898deg
+beta: 36.0deg - theta: 162.0deg
+15:15:42.072960
+I am averaging...alpha = 26.004953084903367deg
+beta: 36.0deg - theta: 162.0deg
+15:15:42.272614
+I am averaging...alpha = 43.07172520538467deg
+beta: 36.0deg - theta: 162.0deg
+15:15:42.477595
+I am averaging...alpha = 59.73634841078298deg
+beta: 36.0deg - theta: 162.0deg
+15:15:42.679384
+I am averaging...alpha = 75.84322970351435deg
+beta: 36.0deg - theta: 162.0deg
+15:15:42.880652
+I am averaging...alpha = 91.24198360780129deg
+beta: 36.0deg - theta: 162.0deg
+15:15:43.082795
+I am averaging...alpha = 105.78883630333722deg
+beta: 36.0deg - theta: 162.0deg
+15:15:43.282994
+I am averaging...alpha = 119.34796804743874deg
+beta: 36.0deg - theta: 162.0deg
+15:15:43.485215
+I am averaging...alpha = 131.79278137325215deg
+beta: 36.0deg - theta: 162.0deg
+15:15:43.685916
+I am averaging...alpha = 143.00708327422964deg
+beta: 36.0deg - theta: 162.0deg
+15:15:43.886104
+I am averaging...alpha = 152.88617047186258deg
+beta: 36.0deg - theta: 162.0deg
+15:15:44.089713
+I am averaging...alpha = 161.33780803788937deg
+beta: 36.0deg - theta: 162.0deg
+15:15:44.291399
+I am averaging...alpha = 168.28309366879313deg
+beta: 36.0deg - theta: 162.0deg
+15:15:44.494797
+I am averaging...alpha = 173.65720600575116deg
+beta: 36.0deg - theta: 162.0deg
+15:15:44.695140
+I am averaging...alpha = 177.4100720781483deg
+beta: 36.0deg - theta: 162.0deg
+15:15:44.897207
+I am averaging...alpha = 179.50749513290668deg
+beta: 36.0deg - theta: 162.0deg
+15:15:45.101201
+
+theta: 162.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 36.0deg - theta: 180.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 36.0deg - theta: 180.0deg
+15:15:45.320606
+I am averaging...alpha = -177.4100720781483deg
+beta: 36.0deg - theta: 180.0deg
+15:15:45.527770
+I am averaging...alpha = -173.65720600575116deg
+beta: 36.0deg - theta: 180.0deg
+15:15:45.736708
+I am averaging...alpha = -168.28309366879313deg
+beta: 36.0deg - theta: 180.0deg
+15:15:45.941533
+I am averaging...alpha = -161.33780803788937deg
+beta: 36.0deg - theta: 180.0deg
+15:15:46.146547
+I am averaging...alpha = -152.88617047186258deg
+beta: 36.0deg - theta: 180.0deg
+15:15:46.345665
+I am averaging...alpha = -143.00708327422964deg
+beta: 36.0deg - theta: 180.0deg
+15:15:46.549289
+I am averaging...alpha = -131.79278137325215deg
+beta: 36.0deg - theta: 180.0deg
+15:15:46.754048
+I am averaging...alpha = -119.34796804743874deg
+beta: 36.0deg - theta: 180.0deg
+15:15:46.954822
+I am averaging...alpha = -105.78883630333722deg
+beta: 36.0deg - theta: 180.0deg
+15:15:47.155633
+I am averaging...alpha = -91.24198360780129deg
+beta: 36.0deg - theta: 180.0deg
+15:15:47.353715
+I am averaging...alpha = -75.84322970351435deg
+beta: 36.0deg - theta: 180.0deg
+15:15:47.553151
+I am averaging...alpha = -59.73634841078298deg
+beta: 36.0deg - theta: 180.0deg
+15:15:47.750732
+I am averaging...alpha = -43.07172520538467deg
+beta: 36.0deg - theta: 180.0deg
+15:15:47.949496
+I am averaging...alpha = -26.004953084903367deg
+beta: 36.0deg - theta: 180.0deg
+15:15:48.147918
+I am averaging...alpha = -8.695379823792898deg
+beta: 36.0deg - theta: 180.0deg
+15:15:48.350939
+I am averaging...alpha = 8.695379823792898deg
+beta: 36.0deg - theta: 180.0deg
+15:15:48.555025
+I am averaging...alpha = 26.004953084903367deg
+beta: 36.0deg - theta: 180.0deg
+15:15:48.754608
+I am averaging...alpha = 43.07172520538467deg
+beta: 36.0deg - theta: 180.0deg
+15:15:48.958259
+I am averaging...alpha = 59.73634841078298deg
+beta: 36.0deg - theta: 180.0deg
+15:15:49.159298
+I am averaging...alpha = 75.84322970351435deg
+beta: 36.0deg - theta: 180.0deg
+15:15:49.362321
+I am averaging...alpha = 91.24198360780129deg
+beta: 36.0deg - theta: 180.0deg
+15:15:49.568905
+I am averaging...alpha = 105.78883630333722deg
+beta: 36.0deg - theta: 180.0deg
+15:15:49.770165
+I am averaging...alpha = 119.34796804743874deg
+beta: 36.0deg - theta: 180.0deg
+15:15:49.970345
+I am averaging...alpha = 131.79278137325215deg
+beta: 36.0deg - theta: 180.0deg
+15:15:50.173304
+I am averaging...alpha = 143.00708327422964deg
+beta: 36.0deg - theta: 180.0deg
+15:15:50.374318
+I am averaging...alpha = 152.88617047186258deg
+beta: 36.0deg - theta: 180.0deg
+15:15:50.577589
+I am averaging...alpha = 161.33780803788937deg
+beta: 36.0deg - theta: 180.0deg
+15:15:50.779525
+I am averaging...alpha = 168.28309366879313deg
+beta: 36.0deg - theta: 180.0deg
+15:15:50.980445
+I am averaging...alpha = 173.65720600575116deg
+beta: 36.0deg - theta: 180.0deg
+15:15:51.185085
+I am averaging...alpha = 177.4100720781483deg
+beta: 36.0deg - theta: 180.0deg
+15:15:51.388378
+I am averaging...alpha = 179.50749513290668deg
+beta: 36.0deg - theta: 180.0deg
+15:15:51.589467
+
+theta: 180.0deg
+Yeah, it is done!
+elapsed time: 0:00:44.779919
+
+n_beta: 2
+beta: 72.0 deg
+Parallel computing is not working!
+Then I switch to serial computing.
+/bin/sh: free: command not found
+Before ori-avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 72.0deg - theta: 0.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 72.0deg - theta: 0.0deg
+15:15:51.821963
+I am averaging...alpha = -177.4100720781483deg
+beta: 72.0deg - theta: 0.0deg
+15:15:52.028340
+I am averaging...alpha = -173.65720600575116deg
+beta: 72.0deg - theta: 0.0deg
+15:15:52.234342
+I am averaging...alpha = -168.28309366879313deg
+beta: 72.0deg - theta: 0.0deg
+15:15:52.439932
+I am averaging...alpha = -161.33780803788937deg
+beta: 72.0deg - theta: 0.0deg
+15:15:52.645910
+I am averaging...alpha = -152.88617047186258deg
+beta: 72.0deg - theta: 0.0deg
+15:15:52.851673
+I am averaging...alpha = -143.00708327422964deg
+beta: 72.0deg - theta: 0.0deg
+15:15:53.056468
+I am averaging...alpha = -131.79278137325215deg
+beta: 72.0deg - theta: 0.0deg
+15:15:53.263028
+I am averaging...alpha = -119.34796804743874deg
+beta: 72.0deg - theta: 0.0deg
+15:15:53.471719
+I am averaging...alpha = -105.78883630333722deg
+beta: 72.0deg - theta: 0.0deg
+15:15:53.673405
+I am averaging...alpha = -91.24198360780129deg
+beta: 72.0deg - theta: 0.0deg
+15:15:53.875438
+I am averaging...alpha = -75.84322970351435deg
+beta: 72.0deg - theta: 0.0deg
+15:15:54.079655
+I am averaging...alpha = -59.73634841078298deg
+beta: 72.0deg - theta: 0.0deg
+15:15:54.281888
+I am averaging...alpha = -43.07172520538467deg
+beta: 72.0deg - theta: 0.0deg
+15:15:54.485415
+I am averaging...alpha = -26.004953084903367deg
+beta: 72.0deg - theta: 0.0deg
+15:15:54.689649
+I am averaging...alpha = -8.695379823792898deg
+beta: 72.0deg - theta: 0.0deg
+15:15:54.899024
+I am averaging...alpha = 8.695379823792898deg
+beta: 72.0deg - theta: 0.0deg
+15:15:55.103539
+I am averaging...alpha = 26.004953084903367deg
+beta: 72.0deg - theta: 0.0deg
+15:15:55.309569
+I am averaging...alpha = 43.07172520538467deg
+beta: 72.0deg - theta: 0.0deg
+15:15:55.515885
+I am averaging...alpha = 59.73634841078298deg
+beta: 72.0deg - theta: 0.0deg
+15:15:55.725547
+I am averaging...alpha = 75.84322970351435deg
+beta: 72.0deg - theta: 0.0deg
+15:15:55.932306
+I am averaging...alpha = 91.24198360780129deg
+beta: 72.0deg - theta: 0.0deg
+15:15:56.137326
+I am averaging...alpha = 105.78883630333722deg
+beta: 72.0deg - theta: 0.0deg
+15:15:56.343099
+I am averaging...alpha = 119.34796804743874deg
+beta: 72.0deg - theta: 0.0deg
+15:15:56.551788
+I am averaging...alpha = 131.79278137325215deg
+beta: 72.0deg - theta: 0.0deg
+15:15:56.761297
+I am averaging...alpha = 143.00708327422964deg
+beta: 72.0deg - theta: 0.0deg
+15:15:56.969500
+I am averaging...alpha = 152.88617047186258deg
+beta: 72.0deg - theta: 0.0deg
+15:15:57.176370
+I am averaging...alpha = 161.33780803788937deg
+beta: 72.0deg - theta: 0.0deg
+15:15:57.387954
+I am averaging...alpha = 168.28309366879313deg
+beta: 72.0deg - theta: 0.0deg
+15:15:57.595829
+I am averaging...alpha = 173.65720600575116deg
+beta: 72.0deg - theta: 0.0deg
+15:15:57.801927
+I am averaging...alpha = 177.4100720781483deg
+beta: 72.0deg - theta: 0.0deg
+15:15:58.011405
+I am averaging...alpha = 179.50749513290668deg
+beta: 72.0deg - theta: 0.0deg
+15:15:58.221195
+
+theta: 0.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 72.0deg - theta: 18.00000000000001deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:58.447078
+I am averaging...alpha = -177.4100720781483deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:58.654722
+I am averaging...alpha = -173.65720600575116deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:58.861906
+I am averaging...alpha = -168.28309366879313deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:59.067488
+I am averaging...alpha = -161.33780803788937deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:59.272926
+I am averaging...alpha = -152.88617047186258deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:59.479316
+I am averaging...alpha = -143.00708327422964deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:59.684183
+I am averaging...alpha = -131.79278137325215deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:15:59.888183
+I am averaging...alpha = -119.34796804743874deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:00.088692
+I am averaging...alpha = -105.78883630333722deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:00.290921
+I am averaging...alpha = -91.24198360780129deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:00.494081
+I am averaging...alpha = -75.84322970351435deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:00.699183
+I am averaging...alpha = -59.73634841078298deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:00.903962
+I am averaging...alpha = -43.07172520538467deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:01.106895
+I am averaging...alpha = -26.004953084903367deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:01.311302
+I am averaging...alpha = -8.695379823792898deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:01.514760
+I am averaging...alpha = 8.695379823792898deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:01.717668
+I am averaging...alpha = 26.004953084903367deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:01.920114
+I am averaging...alpha = 43.07172520538467deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:02.124529
+I am averaging...alpha = 59.73634841078298deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:02.331206
+I am averaging...alpha = 75.84322970351435deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:02.533788
+I am averaging...alpha = 91.24198360780129deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:02.736656
+I am averaging...alpha = 105.78883630333722deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:02.941146
+I am averaging...alpha = 119.34796804743874deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:03.145543
+I am averaging...alpha = 131.79278137325215deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:03.349621
+I am averaging...alpha = 143.00708327422964deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:03.552212
+I am averaging...alpha = 152.88617047186258deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:03.755845
+I am averaging...alpha = 161.33780803788937deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:03.962388
+I am averaging...alpha = 168.28309366879313deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:04.165583
+I am averaging...alpha = 173.65720600575116deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:04.368654
+I am averaging...alpha = 177.4100720781483deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:04.573960
+I am averaging...alpha = 179.50749513290668deg
+beta: 72.0deg - theta: 18.00000000000001deg
+15:16:04.776894
+
+theta: 18.00000000000001deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 72.0deg - theta: 72.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 72.0deg - theta: 72.0deg
+15:16:04.998270
+I am averaging...alpha = -177.4100720781483deg
+beta: 72.0deg - theta: 72.0deg
+15:16:05.202427
+I am averaging...alpha = -173.65720600575116deg
+beta: 72.0deg - theta: 72.0deg
+15:16:05.404621
+I am averaging...alpha = -168.28309366879313deg
+beta: 72.0deg - theta: 72.0deg
+15:16:05.609996
+I am averaging...alpha = -161.33780803788937deg
+beta: 72.0deg - theta: 72.0deg
+15:16:05.813709
+I am averaging...alpha = -152.88617047186258deg
+beta: 72.0deg - theta: 72.0deg
+15:16:06.017627
+I am averaging...alpha = -143.00708327422964deg
+beta: 72.0deg - theta: 72.0deg
+15:16:06.221721
+I am averaging...alpha = -131.79278137325215deg
+beta: 72.0deg - theta: 72.0deg
+15:16:06.421239
+I am averaging...alpha = -119.34796804743874deg
+beta: 72.0deg - theta: 72.0deg
+15:16:06.622024
+I am averaging...alpha = -105.78883630333722deg
+beta: 72.0deg - theta: 72.0deg
+15:16:06.822421
+I am averaging...alpha = -91.24198360780129deg
+beta: 72.0deg - theta: 72.0deg
+15:16:07.022145
+I am averaging...alpha = -75.84322970351435deg
+beta: 72.0deg - theta: 72.0deg
+15:16:07.223370
+I am averaging...alpha = -59.73634841078298deg
+beta: 72.0deg - theta: 72.0deg
+15:16:07.424265
+I am averaging...alpha = -43.07172520538467deg
+beta: 72.0deg - theta: 72.0deg
+15:16:07.624437
+I am averaging...alpha = -26.004953084903367deg
+beta: 72.0deg - theta: 72.0deg
+15:16:07.824632
+I am averaging...alpha = -8.695379823792898deg
+beta: 72.0deg - theta: 72.0deg
+15:16:08.024434
+I am averaging...alpha = 8.695379823792898deg
+beta: 72.0deg - theta: 72.0deg
+15:16:08.215458
+I am averaging...alpha = 26.004953084903367deg
+beta: 72.0deg - theta: 72.0deg
+15:16:08.414795
+I am averaging...alpha = 43.07172520538467deg
+beta: 72.0deg - theta: 72.0deg
+15:16:08.616183
+I am averaging...alpha = 59.73634841078298deg
+beta: 72.0deg - theta: 72.0deg
+15:16:08.817332
+I am averaging...alpha = 75.84322970351435deg
+beta: 72.0deg - theta: 72.0deg
+15:16:09.019865
+I am averaging...alpha = 91.24198360780129deg
+beta: 72.0deg - theta: 72.0deg
+15:16:09.220908
+I am averaging...alpha = 105.78883630333722deg
+beta: 72.0deg - theta: 72.0deg
+15:16:09.422582
+I am averaging...alpha = 119.34796804743874deg
+beta: 72.0deg - theta: 72.0deg
+15:16:09.624779
+I am averaging...alpha = 131.79278137325215deg
+beta: 72.0deg - theta: 72.0deg
+15:16:09.827876
+I am averaging...alpha = 143.00708327422964deg
+beta: 72.0deg - theta: 72.0deg
+15:16:10.028938
+I am averaging...alpha = 152.88617047186258deg
+beta: 72.0deg - theta: 72.0deg
+15:16:10.229962
+I am averaging...alpha = 161.33780803788937deg
+beta: 72.0deg - theta: 72.0deg
+15:16:10.431603
+I am averaging...alpha = 168.28309366879313deg
+beta: 72.0deg - theta: 72.0deg
+15:16:10.633754
+I am averaging...alpha = 173.65720600575116deg
+beta: 72.0deg - theta: 72.0deg
+15:16:10.838312
+I am averaging...alpha = 177.4100720781483deg
+beta: 72.0deg - theta: 72.0deg
+15:16:11.040192
+I am averaging...alpha = 179.50749513290668deg
+beta: 72.0deg - theta: 72.0deg
+15:16:11.241840
+
+theta: 72.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 72.0deg - theta: 90.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 72.0deg - theta: 90.0deg
+15:16:11.463405
+I am averaging...alpha = -177.4100720781483deg
+beta: 72.0deg - theta: 90.0deg
+15:16:11.667242
+I am averaging...alpha = -173.65720600575116deg
+beta: 72.0deg - theta: 90.0deg
+15:16:11.871125
+I am averaging...alpha = -168.28309366879313deg
+beta: 72.0deg - theta: 90.0deg
+15:16:12.073466
+I am averaging...alpha = -161.33780803788937deg
+beta: 72.0deg - theta: 90.0deg
+15:16:12.279121
+I am averaging...alpha = -152.88617047186258deg
+beta: 72.0deg - theta: 90.0deg
+15:16:12.480847
+I am averaging...alpha = -143.00708327422964deg
+beta: 72.0deg - theta: 90.0deg
+15:16:12.681340
+I am averaging...alpha = -131.79278137325215deg
+beta: 72.0deg - theta: 90.0deg
+15:16:12.880112
+I am averaging...alpha = -119.34796804743874deg
+beta: 72.0deg - theta: 90.0deg
+15:16:13.079510
+I am averaging...alpha = -105.78883630333722deg
+beta: 72.0deg - theta: 90.0deg
+15:16:13.280114
+I am averaging...alpha = -91.24198360780129deg
+beta: 72.0deg - theta: 90.0deg
+15:16:13.482529
+I am averaging...alpha = -75.84322970351435deg
+beta: 72.0deg - theta: 90.0deg
+15:16:13.682065
+I am averaging...alpha = -59.73634841078298deg
+beta: 72.0deg - theta: 90.0deg
+15:16:13.881811
+I am averaging...alpha = -43.07172520538467deg
+beta: 72.0deg - theta: 90.0deg
+15:16:14.081919
+I am averaging...alpha = -26.004953084903367deg
+beta: 72.0deg - theta: 90.0deg
+15:16:14.283494
+I am averaging...alpha = -8.695379823792898deg
+beta: 72.0deg - theta: 90.0deg
+15:16:14.482392
+I am averaging...alpha = 8.695379823792898deg
+beta: 72.0deg - theta: 90.0deg
+15:16:14.682100
+I am averaging...alpha = 26.004953084903367deg
+beta: 72.0deg - theta: 90.0deg
+15:16:14.888910
+I am averaging...alpha = 43.07172520538467deg
+beta: 72.0deg - theta: 90.0deg
+15:16:15.092731
+I am averaging...alpha = 59.73634841078298deg
+beta: 72.0deg - theta: 90.0deg
+15:16:15.295234
+I am averaging...alpha = 75.84322970351435deg
+beta: 72.0deg - theta: 90.0deg
+15:16:15.499791
+I am averaging...alpha = 91.24198360780129deg
+beta: 72.0deg - theta: 90.0deg
+15:16:15.702108
+I am averaging...alpha = 105.78883630333722deg
+beta: 72.0deg - theta: 90.0deg
+15:16:15.904240
+I am averaging...alpha = 119.34796804743874deg
+beta: 72.0deg - theta: 90.0deg
+15:16:16.106966
+I am averaging...alpha = 131.79278137325215deg
+beta: 72.0deg - theta: 90.0deg
+15:16:16.310415
+I am averaging...alpha = 143.00708327422964deg
+beta: 72.0deg - theta: 90.0deg
+15:16:16.512245
+I am averaging...alpha = 152.88617047186258deg
+beta: 72.0deg - theta: 90.0deg
+15:16:16.715086
+I am averaging...alpha = 161.33780803788937deg
+beta: 72.0deg - theta: 90.0deg
+15:16:16.918362
+I am averaging...alpha = 168.28309366879313deg
+beta: 72.0deg - theta: 90.0deg
+15:16:17.121825
+I am averaging...alpha = 173.65720600575116deg
+beta: 72.0deg - theta: 90.0deg
+15:16:17.325321
+I am averaging...alpha = 177.4100720781483deg
+beta: 72.0deg - theta: 90.0deg
+15:16:17.527693
+I am averaging...alpha = 179.50749513290668deg
+beta: 72.0deg - theta: 90.0deg
+15:16:17.731104
+
+theta: 90.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 72.0deg - theta: 108.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 72.0deg - theta: 108.0deg
+15:16:17.951977
+I am averaging...alpha = -177.4100720781483deg
+beta: 72.0deg - theta: 108.0deg
+15:16:18.156176
+I am averaging...alpha = -173.65720600575116deg
+beta: 72.0deg - theta: 108.0deg
+15:16:18.354482
+I am averaging...alpha = -168.28309366879313deg
+beta: 72.0deg - theta: 108.0deg
+15:16:18.558330
+I am averaging...alpha = -161.33780803788937deg
+beta: 72.0deg - theta: 108.0deg
+15:16:18.760493
+I am averaging...alpha = -152.88617047186258deg
+beta: 72.0deg - theta: 108.0deg
+15:16:18.961038
+I am averaging...alpha = -143.00708327422964deg
+beta: 72.0deg - theta: 108.0deg
+15:16:19.159448
+I am averaging...alpha = -131.79278137325215deg
+beta: 72.0deg - theta: 108.0deg
+15:16:19.359341
+I am averaging...alpha = -119.34796804743874deg
+beta: 72.0deg - theta: 108.0deg
+15:16:19.560205
+I am averaging...alpha = -105.78883630333722deg
+beta: 72.0deg - theta: 108.0deg
+15:16:19.769555
+I am averaging...alpha = -91.24198360780129deg
+beta: 72.0deg - theta: 108.0deg
+15:16:19.972361
+I am averaging...alpha = -75.84322970351435deg
+beta: 72.0deg - theta: 108.0deg
+15:16:20.175917
+I am averaging...alpha = -59.73634841078298deg
+beta: 72.0deg - theta: 108.0deg
+15:16:20.378156
+I am averaging...alpha = -43.07172520538467deg
+beta: 72.0deg - theta: 108.0deg
+15:16:20.579584
+I am averaging...alpha = -26.004953084903367deg
+beta: 72.0deg - theta: 108.0deg
+15:16:20.783394
+I am averaging...alpha = -8.695379823792898deg
+beta: 72.0deg - theta: 108.0deg
+15:16:20.985818
+I am averaging...alpha = 8.695379823792898deg
+beta: 72.0deg - theta: 108.0deg
+15:16:21.187845
+I am averaging...alpha = 26.004953084903367deg
+beta: 72.0deg - theta: 108.0deg
+15:16:21.387746
+I am averaging...alpha = 43.07172520538467deg
+beta: 72.0deg - theta: 108.0deg
+15:16:21.592339
+I am averaging...alpha = 59.73634841078298deg
+beta: 72.0deg - theta: 108.0deg
+15:16:21.795221
+I am averaging...alpha = 75.84322970351435deg
+beta: 72.0deg - theta: 108.0deg
+15:16:21.998656
+I am averaging...alpha = 91.24198360780129deg
+beta: 72.0deg - theta: 108.0deg
+15:16:22.199201
+I am averaging...alpha = 105.78883630333722deg
+beta: 72.0deg - theta: 108.0deg
+15:16:22.403097
+I am averaging...alpha = 119.34796804743874deg
+beta: 72.0deg - theta: 108.0deg
+15:16:22.605422
+I am averaging...alpha = 131.79278137325215deg
+beta: 72.0deg - theta: 108.0deg
+15:16:22.805878
+I am averaging...alpha = 143.00708327422964deg
+beta: 72.0deg - theta: 108.0deg
+15:16:23.008580
+I am averaging...alpha = 152.88617047186258deg
+beta: 72.0deg - theta: 108.0deg
+15:16:23.212106
+I am averaging...alpha = 161.33780803788937deg
+beta: 72.0deg - theta: 108.0deg
+15:16:23.413141
+I am averaging...alpha = 168.28309366879313deg
+beta: 72.0deg - theta: 108.0deg
+15:16:23.613166
+I am averaging...alpha = 173.65720600575116deg
+beta: 72.0deg - theta: 108.0deg
+15:16:23.814977
+I am averaging...alpha = 177.4100720781483deg
+beta: 72.0deg - theta: 108.0deg
+15:16:24.018687
+I am averaging...alpha = 179.50749513290668deg
+beta: 72.0deg - theta: 108.0deg
+15:16:24.224270
+
+theta: 108.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 72.0deg - theta: 162.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 72.0deg - theta: 162.0deg
+15:16:24.444992
+I am averaging...alpha = -177.4100720781483deg
+beta: 72.0deg - theta: 162.0deg
+15:16:24.650281
+I am averaging...alpha = -173.65720600575116deg
+beta: 72.0deg - theta: 162.0deg
+15:16:24.851134
+I am averaging...alpha = -168.28309366879313deg
+beta: 72.0deg - theta: 162.0deg
+15:16:25.050665
+I am averaging...alpha = -161.33780803788937deg
+beta: 72.0deg - theta: 162.0deg
+15:16:25.250433
+I am averaging...alpha = -152.88617047186258deg
+beta: 72.0deg - theta: 162.0deg
+15:16:25.450185
+I am averaging...alpha = -143.00708327422964deg
+beta: 72.0deg - theta: 162.0deg
+15:16:25.648246
+I am averaging...alpha = -131.79278137325215deg
+beta: 72.0deg - theta: 162.0deg
+15:16:25.849421
+I am averaging...alpha = -119.34796804743874deg
+beta: 72.0deg - theta: 162.0deg
+15:16:26.052884
+I am averaging...alpha = -105.78883630333722deg
+beta: 72.0deg - theta: 162.0deg
+15:16:26.251440
+I am averaging...alpha = -91.24198360780129deg
+beta: 72.0deg - theta: 162.0deg
+15:16:26.451996
+I am averaging...alpha = -75.84322970351435deg
+beta: 72.0deg - theta: 162.0deg
+15:16:26.654401
+I am averaging...alpha = -59.73634841078298deg
+beta: 72.0deg - theta: 162.0deg
+15:16:26.852954
+I am averaging...alpha = -43.07172520538467deg
+beta: 72.0deg - theta: 162.0deg
+15:16:27.053998
+I am averaging...alpha = -26.004953084903367deg
+beta: 72.0deg - theta: 162.0deg
+15:16:27.255786
+I am averaging...alpha = -8.695379823792898deg
+beta: 72.0deg - theta: 162.0deg
+15:16:27.456799
+I am averaging...alpha = 8.695379823792898deg
+beta: 72.0deg - theta: 162.0deg
+15:16:27.656925
+I am averaging...alpha = 26.004953084903367deg
+beta: 72.0deg - theta: 162.0deg
+15:16:27.857309
+I am averaging...alpha = 43.07172520538467deg
+beta: 72.0deg - theta: 162.0deg
+15:16:28.060178
+I am averaging...alpha = 59.73634841078298deg
+beta: 72.0deg - theta: 162.0deg
+15:16:28.263740
+I am averaging...alpha = 75.84322970351435deg
+beta: 72.0deg - theta: 162.0deg
+15:16:28.465921
+I am averaging...alpha = 91.24198360780129deg
+beta: 72.0deg - theta: 162.0deg
+15:16:28.666792
+I am averaging...alpha = 105.78883630333722deg
+beta: 72.0deg - theta: 162.0deg
+15:16:28.869668
+I am averaging...alpha = 119.34796804743874deg
+beta: 72.0deg - theta: 162.0deg
+15:16:29.073731
+I am averaging...alpha = 131.79278137325215deg
+beta: 72.0deg - theta: 162.0deg
+15:16:29.274443
+I am averaging...alpha = 143.00708327422964deg
+beta: 72.0deg - theta: 162.0deg
+15:16:29.474723
+I am averaging...alpha = 152.88617047186258deg
+beta: 72.0deg - theta: 162.0deg
+15:16:29.677660
+I am averaging...alpha = 161.33780803788937deg
+beta: 72.0deg - theta: 162.0deg
+15:16:29.881160
+I am averaging...alpha = 168.28309366879313deg
+beta: 72.0deg - theta: 162.0deg
+15:16:30.080750
+I am averaging...alpha = 173.65720600575116deg
+beta: 72.0deg - theta: 162.0deg
+15:16:30.283470
+I am averaging...alpha = 177.4100720781483deg
+beta: 72.0deg - theta: 162.0deg
+15:16:30.488558
+I am averaging...alpha = 179.50749513290668deg
+beta: 72.0deg - theta: 162.0deg
+15:16:30.695008
+
+theta: 162.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 72.0deg - theta: 180.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 72.0deg - theta: 180.0deg
+15:16:30.939912
+I am averaging...alpha = -177.4100720781483deg
+beta: 72.0deg - theta: 180.0deg
+15:16:31.144907
+I am averaging...alpha = -173.65720600575116deg
+beta: 72.0deg - theta: 180.0deg
+15:16:31.346339
+I am averaging...alpha = -168.28309366879313deg
+beta: 72.0deg - theta: 180.0deg
+15:16:31.548285
+I am averaging...alpha = -161.33780803788937deg
+beta: 72.0deg - theta: 180.0deg
+15:16:31.750762
+I am averaging...alpha = -152.88617047186258deg
+beta: 72.0deg - theta: 180.0deg
+15:16:31.954840
+I am averaging...alpha = -143.00708327422964deg
+beta: 72.0deg - theta: 180.0deg
+15:16:32.156909
+I am averaging...alpha = -131.79278137325215deg
+beta: 72.0deg - theta: 180.0deg
+15:16:32.364183
+I am averaging...alpha = -119.34796804743874deg
+beta: 72.0deg - theta: 180.0deg
+15:16:32.565250
+I am averaging...alpha = -105.78883630333722deg
+beta: 72.0deg - theta: 180.0deg
+15:16:32.766855
+I am averaging...alpha = -91.24198360780129deg
+beta: 72.0deg - theta: 180.0deg
+15:16:32.968824
+I am averaging...alpha = -75.84322970351435deg
+beta: 72.0deg - theta: 180.0deg
+15:16:33.171100
+I am averaging...alpha = -59.73634841078298deg
+beta: 72.0deg - theta: 180.0deg
+15:16:33.373583
+I am averaging...alpha = -43.07172520538467deg
+beta: 72.0deg - theta: 180.0deg
+15:16:33.576456
+I am averaging...alpha = -26.004953084903367deg
+beta: 72.0deg - theta: 180.0deg
+15:16:33.780762
+I am averaging...alpha = -8.695379823792898deg
+beta: 72.0deg - theta: 180.0deg
+15:16:33.982014
+I am averaging...alpha = 8.695379823792898deg
+beta: 72.0deg - theta: 180.0deg
+15:16:34.186148
+I am averaging...alpha = 26.004953084903367deg
+beta: 72.0deg - theta: 180.0deg
+15:16:34.394357
+I am averaging...alpha = 43.07172520538467deg
+beta: 72.0deg - theta: 180.0deg
+15:16:34.599287
+I am averaging...alpha = 59.73634841078298deg
+beta: 72.0deg - theta: 180.0deg
+15:16:34.802450
+I am averaging...alpha = 75.84322970351435deg
+beta: 72.0deg - theta: 180.0deg
+15:16:35.007446
+I am averaging...alpha = 91.24198360780129deg
+beta: 72.0deg - theta: 180.0deg
+15:16:35.213044
+I am averaging...alpha = 105.78883630333722deg
+beta: 72.0deg - theta: 180.0deg
+15:16:35.414030
+I am averaging...alpha = 119.34796804743874deg
+beta: 72.0deg - theta: 180.0deg
+15:16:35.617864
+I am averaging...alpha = 131.79278137325215deg
+beta: 72.0deg - theta: 180.0deg
+15:16:35.821828
+I am averaging...alpha = 143.00708327422964deg
+beta: 72.0deg - theta: 180.0deg
+15:16:36.023892
+I am averaging...alpha = 152.88617047186258deg
+beta: 72.0deg - theta: 180.0deg
+15:16:36.228246
+I am averaging...alpha = 161.33780803788937deg
+beta: 72.0deg - theta: 180.0deg
+15:16:36.431582
+I am averaging...alpha = 168.28309366879313deg
+beta: 72.0deg - theta: 180.0deg
+15:16:36.635064
+I am averaging...alpha = 173.65720600575116deg
+beta: 72.0deg - theta: 180.0deg
+15:16:36.835458
+I am averaging...alpha = 177.4100720781483deg
+beta: 72.0deg - theta: 180.0deg
+15:16:37.038627
+I am averaging...alpha = 179.50749513290668deg
+beta: 72.0deg - theta: 180.0deg
+15:16:37.241559
+
+theta: 180.0deg
+Yeah, it is done!
+elapsed time: 0:00:45.652666
+
+n_beta: 3
+beta: 108.0 deg
+Parallel computing is not working!
+Then I switch to serial computing.
+/bin/sh: free: command not found
+Before ori-avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 108.0deg - theta: 0.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 108.0deg - theta: 0.0deg
+15:16:37.475361
+I am averaging...alpha = -177.4100720781483deg
+beta: 108.0deg - theta: 0.0deg
+15:16:37.681182
+I am averaging...alpha = -173.65720600575116deg
+beta: 108.0deg - theta: 0.0deg
+15:16:37.883260
+I am averaging...alpha = -168.28309366879313deg
+beta: 108.0deg - theta: 0.0deg
+15:16:38.083674
+I am averaging...alpha = -161.33780803788937deg
+beta: 108.0deg - theta: 0.0deg
+15:16:38.285486
+I am averaging...alpha = -152.88617047186258deg
+beta: 108.0deg - theta: 0.0deg
+15:16:38.489777
+I am averaging...alpha = -143.00708327422964deg
+beta: 108.0deg - theta: 0.0deg
+15:16:38.691463
+I am averaging...alpha = -131.79278137325215deg
+beta: 108.0deg - theta: 0.0deg
+15:16:38.894229
+I am averaging...alpha = -119.34796804743874deg
+beta: 108.0deg - theta: 0.0deg
+15:16:39.108480
+I am averaging...alpha = -105.78883630333722deg
+beta: 108.0deg - theta: 0.0deg
+15:16:39.311991
+I am averaging...alpha = -91.24198360780129deg
+beta: 108.0deg - theta: 0.0deg
+15:16:39.515570
+I am averaging...alpha = -75.84322970351435deg
+beta: 108.0deg - theta: 0.0deg
+15:16:39.721562
+I am averaging...alpha = -59.73634841078298deg
+beta: 108.0deg - theta: 0.0deg
+15:16:39.926080
+I am averaging...alpha = -43.07172520538467deg
+beta: 108.0deg - theta: 0.0deg
+15:16:40.131296
+I am averaging...alpha = -26.004953084903367deg
+beta: 108.0deg - theta: 0.0deg
+15:16:40.333062
+I am averaging...alpha = -8.695379823792898deg
+beta: 108.0deg - theta: 0.0deg
+15:16:40.537561
+I am averaging...alpha = 8.695379823792898deg
+beta: 108.0deg - theta: 0.0deg
+15:16:40.742595
+I am averaging...alpha = 26.004953084903367deg
+beta: 108.0deg - theta: 0.0deg
+15:16:40.948954
+I am averaging...alpha = 43.07172520538467deg
+beta: 108.0deg - theta: 0.0deg
+15:16:41.152915
+I am averaging...alpha = 59.73634841078298deg
+beta: 108.0deg - theta: 0.0deg
+15:16:41.356403
+I am averaging...alpha = 75.84322970351435deg
+beta: 108.0deg - theta: 0.0deg
+15:16:41.558596
+I am averaging...alpha = 91.24198360780129deg
+beta: 108.0deg - theta: 0.0deg
+15:16:41.762032
+I am averaging...alpha = 105.78883630333722deg
+beta: 108.0deg - theta: 0.0deg
+15:16:41.964673
+I am averaging...alpha = 119.34796804743874deg
+beta: 108.0deg - theta: 0.0deg
+15:16:42.169601
+I am averaging...alpha = 131.79278137325215deg
+beta: 108.0deg - theta: 0.0deg
+15:16:42.371585
+I am averaging...alpha = 143.00708327422964deg
+beta: 108.0deg - theta: 0.0deg
+15:16:42.575983
+I am averaging...alpha = 152.88617047186258deg
+beta: 108.0deg - theta: 0.0deg
+15:16:42.778673
+I am averaging...alpha = 161.33780803788937deg
+beta: 108.0deg - theta: 0.0deg
+15:16:42.983103
+I am averaging...alpha = 168.28309366879313deg
+beta: 108.0deg - theta: 0.0deg
+15:16:43.186042
+I am averaging...alpha = 173.65720600575116deg
+beta: 108.0deg - theta: 0.0deg
+15:16:43.383415
+I am averaging...alpha = 177.4100720781483deg
+beta: 108.0deg - theta: 0.0deg
+15:16:43.583053
+I am averaging...alpha = 179.50749513290668deg
+beta: 108.0deg - theta: 0.0deg
+15:16:43.783089
+
+theta: 0.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 108.0deg - theta: 18.00000000000001deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:44.331471
+I am averaging...alpha = -177.4100720781483deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:44.571687
+I am averaging...alpha = -173.65720600575116deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:44.772895
+I am averaging...alpha = -168.28309366879313deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:44.973988
+I am averaging...alpha = -161.33780803788937deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:45.174940
+I am averaging...alpha = -152.88617047186258deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:45.374423
+I am averaging...alpha = -143.00708327422964deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:45.576284
+I am averaging...alpha = -131.79278137325215deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:45.776553
+I am averaging...alpha = -119.34796804743874deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:45.976748
+I am averaging...alpha = -105.78883630333722deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:46.178160
+I am averaging...alpha = -91.24198360780129deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:46.378642
+I am averaging...alpha = -75.84322970351435deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:46.578338
+I am averaging...alpha = -59.73634841078298deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:46.779285
+I am averaging...alpha = -43.07172520538467deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:46.980014
+I am averaging...alpha = -26.004953084903367deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:47.180644
+I am averaging...alpha = -8.695379823792898deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:47.381381
+I am averaging...alpha = 8.695379823792898deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:47.585206
+I am averaging...alpha = 26.004953084903367deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:47.790125
+I am averaging...alpha = 43.07172520538467deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:47.993422
+I am averaging...alpha = 59.73634841078298deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:48.195060
+I am averaging...alpha = 75.84322970351435deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:48.398060
+I am averaging...alpha = 91.24198360780129deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:48.601457
+I am averaging...alpha = 105.78883630333722deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:48.803340
+I am averaging...alpha = 119.34796804743874deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:49.005986
+I am averaging...alpha = 131.79278137325215deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:49.209510
+I am averaging...alpha = 143.00708327422964deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:49.413822
+I am averaging...alpha = 152.88617047186258deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:49.615433
+I am averaging...alpha = 161.33780803788937deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:49.817334
+I am averaging...alpha = 168.28309366879313deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:50.020599
+I am averaging...alpha = 173.65720600575116deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:50.223357
+I am averaging...alpha = 177.4100720781483deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:50.424822
+I am averaging...alpha = 179.50749513290668deg
+beta: 108.0deg - theta: 18.00000000000001deg
+15:16:50.623181
+
+theta: 18.00000000000001deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 108.0deg - theta: 72.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 108.0deg - theta: 72.0deg
+15:16:50.840500
+I am averaging...alpha = -177.4100720781483deg
+beta: 108.0deg - theta: 72.0deg
+15:16:51.043284
+I am averaging...alpha = -173.65720600575116deg
+beta: 108.0deg - theta: 72.0deg
+15:16:51.244420
+I am averaging...alpha = -168.28309366879313deg
+beta: 108.0deg - theta: 72.0deg
+15:16:51.446441
+I am averaging...alpha = -161.33780803788937deg
+beta: 108.0deg - theta: 72.0deg
+15:16:51.647336
+I am averaging...alpha = -152.88617047186258deg
+beta: 108.0deg - theta: 72.0deg
+15:16:51.849307
+I am averaging...alpha = -143.00708327422964deg
+beta: 108.0deg - theta: 72.0deg
+15:16:52.052714
+I am averaging...alpha = -131.79278137325215deg
+beta: 108.0deg - theta: 72.0deg
+15:16:52.256702
+I am averaging...alpha = -119.34796804743874deg
+beta: 108.0deg - theta: 72.0deg
+15:16:52.458111
+I am averaging...alpha = -105.78883630333722deg
+beta: 108.0deg - theta: 72.0deg
+15:16:52.661441
+I am averaging...alpha = -91.24198360780129deg
+beta: 108.0deg - theta: 72.0deg
+15:16:52.868903
+I am averaging...alpha = -75.84322970351435deg
+beta: 108.0deg - theta: 72.0deg
+15:16:53.073040
+I am averaging...alpha = -59.73634841078298deg
+beta: 108.0deg - theta: 72.0deg
+15:16:53.278023
+I am averaging...alpha = -43.07172520538467deg
+beta: 108.0deg - theta: 72.0deg
+15:16:53.482964
+I am averaging...alpha = -26.004953084903367deg
+beta: 108.0deg - theta: 72.0deg
+15:16:53.688185
+I am averaging...alpha = -8.695379823792898deg
+beta: 108.0deg - theta: 72.0deg
+15:16:53.894274
+I am averaging...alpha = 8.695379823792898deg
+beta: 108.0deg - theta: 72.0deg
+15:16:54.099672
+I am averaging...alpha = 26.004953084903367deg
+beta: 108.0deg - theta: 72.0deg
+15:16:54.303393
+I am averaging...alpha = 43.07172520538467deg
+beta: 108.0deg - theta: 72.0deg
+15:16:54.508088
+I am averaging...alpha = 59.73634841078298deg
+beta: 108.0deg - theta: 72.0deg
+15:16:54.712822
+I am averaging...alpha = 75.84322970351435deg
+beta: 108.0deg - theta: 72.0deg
+15:16:54.917403
+I am averaging...alpha = 91.24198360780129deg
+beta: 108.0deg - theta: 72.0deg
+15:16:55.122577
+I am averaging...alpha = 105.78883630333722deg
+beta: 108.0deg - theta: 72.0deg
+15:16:55.327980
+I am averaging...alpha = 119.34796804743874deg
+beta: 108.0deg - theta: 72.0deg
+15:16:55.535304
+I am averaging...alpha = 131.79278137325215deg
+beta: 108.0deg - theta: 72.0deg
+15:16:55.739640
+I am averaging...alpha = 143.00708327422964deg
+beta: 108.0deg - theta: 72.0deg
+15:16:55.944409
+I am averaging...alpha = 152.88617047186258deg
+beta: 108.0deg - theta: 72.0deg
+15:16:56.150798
+I am averaging...alpha = 161.33780803788937deg
+beta: 108.0deg - theta: 72.0deg
+15:16:56.356473
+I am averaging...alpha = 168.28309366879313deg
+beta: 108.0deg - theta: 72.0deg
+15:16:56.561519
+I am averaging...alpha = 173.65720600575116deg
+beta: 108.0deg - theta: 72.0deg
+15:16:56.765445
+I am averaging...alpha = 177.4100720781483deg
+beta: 108.0deg - theta: 72.0deg
+15:16:56.969548
+I am averaging...alpha = 179.50749513290668deg
+beta: 108.0deg - theta: 72.0deg
+15:16:57.170963
+
+theta: 72.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 108.0deg - theta: 90.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 108.0deg - theta: 90.0deg
+15:16:57.390290
+I am averaging...alpha = -177.4100720781483deg
+beta: 108.0deg - theta: 90.0deg
+15:16:57.594295
+I am averaging...alpha = -173.65720600575116deg
+beta: 108.0deg - theta: 90.0deg
+15:16:57.794894
+I am averaging...alpha = -168.28309366879313deg
+beta: 108.0deg - theta: 90.0deg
+15:16:57.996825
+I am averaging...alpha = -161.33780803788937deg
+beta: 108.0deg - theta: 90.0deg
+15:16:58.199815
+I am averaging...alpha = -152.88617047186258deg
+beta: 108.0deg - theta: 90.0deg
+15:16:58.401496
+I am averaging...alpha = -143.00708327422964deg
+beta: 108.0deg - theta: 90.0deg
+15:16:58.604496
+I am averaging...alpha = -131.79278137325215deg
+beta: 108.0deg - theta: 90.0deg
+15:16:58.806971
+I am averaging...alpha = -119.34796804743874deg
+beta: 108.0deg - theta: 90.0deg
+15:16:59.009721
+I am averaging...alpha = -105.78883630333722deg
+beta: 108.0deg - theta: 90.0deg
+15:16:59.211763
+I am averaging...alpha = -91.24198360780129deg
+beta: 108.0deg - theta: 90.0deg
+15:16:59.414514
+I am averaging...alpha = -75.84322970351435deg
+beta: 108.0deg - theta: 90.0deg
+15:16:59.618156
+I am averaging...alpha = -59.73634841078298deg
+beta: 108.0deg - theta: 90.0deg
+15:16:59.821624
+I am averaging...alpha = -43.07172520538467deg
+beta: 108.0deg - theta: 90.0deg
+15:17:00.024318
+I am averaging...alpha = -26.004953084903367deg
+beta: 108.0deg - theta: 90.0deg
+15:17:00.229307
+I am averaging...alpha = -8.695379823792898deg
+beta: 108.0deg - theta: 90.0deg
+15:17:00.435426
+I am averaging...alpha = 8.695379823792898deg
+beta: 108.0deg - theta: 90.0deg
+15:17:00.638548
+I am averaging...alpha = 26.004953084903367deg
+beta: 108.0deg - theta: 90.0deg
+15:17:00.844416
+I am averaging...alpha = 43.07172520538467deg
+beta: 108.0deg - theta: 90.0deg
+15:17:01.050370
+I am averaging...alpha = 59.73634841078298deg
+beta: 108.0deg - theta: 90.0deg
+15:17:01.254236
+I am averaging...alpha = 75.84322970351435deg
+beta: 108.0deg - theta: 90.0deg
+15:17:01.459349
+I am averaging...alpha = 91.24198360780129deg
+beta: 108.0deg - theta: 90.0deg
+15:17:01.665051
+I am averaging...alpha = 105.78883630333722deg
+beta: 108.0deg - theta: 90.0deg
+15:17:01.868850
+I am averaging...alpha = 119.34796804743874deg
+beta: 108.0deg - theta: 90.0deg
+15:17:02.073286
+I am averaging...alpha = 131.79278137325215deg
+beta: 108.0deg - theta: 90.0deg
+15:17:02.278879
+I am averaging...alpha = 143.00708327422964deg
+beta: 108.0deg - theta: 90.0deg
+15:17:02.483406
+I am averaging...alpha = 152.88617047186258deg
+beta: 108.0deg - theta: 90.0deg
+15:17:02.686912
+I am averaging...alpha = 161.33780803788937deg
+beta: 108.0deg - theta: 90.0deg
+15:17:02.890551
+I am averaging...alpha = 168.28309366879313deg
+beta: 108.0deg - theta: 90.0deg
+15:17:03.096817
+I am averaging...alpha = 173.65720600575116deg
+beta: 108.0deg - theta: 90.0deg
+15:17:03.299899
+I am averaging...alpha = 177.4100720781483deg
+beta: 108.0deg - theta: 90.0deg
+15:17:03.501616
+I am averaging...alpha = 179.50749513290668deg
+beta: 108.0deg - theta: 90.0deg
+15:17:03.705715
+
+theta: 90.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 108.0deg - theta: 108.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 108.0deg - theta: 108.0deg
+15:17:03.925552
+I am averaging...alpha = -177.4100720781483deg
+beta: 108.0deg - theta: 108.0deg
+15:17:04.126887
+I am averaging...alpha = -173.65720600575116deg
+beta: 108.0deg - theta: 108.0deg
+15:17:04.328325
+I am averaging...alpha = -168.28309366879313deg
+beta: 108.0deg - theta: 108.0deg
+15:17:04.528783
+I am averaging...alpha = -161.33780803788937deg
+beta: 108.0deg - theta: 108.0deg
+15:17:04.728556
+I am averaging...alpha = -152.88617047186258deg
+beta: 108.0deg - theta: 108.0deg
+15:17:04.928615
+I am averaging...alpha = -143.00708327422964deg
+beta: 108.0deg - theta: 108.0deg
+15:17:05.130016
+I am averaging...alpha = -131.79278137325215deg
+beta: 108.0deg - theta: 108.0deg
+15:17:05.329927
+I am averaging...alpha = -119.34796804743874deg
+beta: 108.0deg - theta: 108.0deg
+15:17:05.531009
+I am averaging...alpha = -105.78883630333722deg
+beta: 108.0deg - theta: 108.0deg
+15:17:05.734126
+I am averaging...alpha = -91.24198360780129deg
+beta: 108.0deg - theta: 108.0deg
+15:17:05.934623
+I am averaging...alpha = -75.84322970351435deg
+beta: 108.0deg - theta: 108.0deg
+15:17:06.136774
+I am averaging...alpha = -59.73634841078298deg
+beta: 108.0deg - theta: 108.0deg
+15:17:06.339001
+I am averaging...alpha = -43.07172520538467deg
+beta: 108.0deg - theta: 108.0deg
+15:17:06.542741
+I am averaging...alpha = -26.004953084903367deg
+beta: 108.0deg - theta: 108.0deg
+15:17:06.745481
+I am averaging...alpha = -8.695379823792898deg
+beta: 108.0deg - theta: 108.0deg
+15:17:06.946393
+I am averaging...alpha = 8.695379823792898deg
+beta: 108.0deg - theta: 108.0deg
+15:17:07.148664
+I am averaging...alpha = 26.004953084903367deg
+beta: 108.0deg - theta: 108.0deg
+15:17:07.351387
+I am averaging...alpha = 43.07172520538467deg
+beta: 108.0deg - theta: 108.0deg
+15:17:07.552261
+I am averaging...alpha = 59.73634841078298deg
+beta: 108.0deg - theta: 108.0deg
+15:17:07.755157
+I am averaging...alpha = 75.84322970351435deg
+beta: 108.0deg - theta: 108.0deg
+15:17:07.956592
+I am averaging...alpha = 91.24198360780129deg
+beta: 108.0deg - theta: 108.0deg
+15:17:08.160115
+I am averaging...alpha = 105.78883630333722deg
+beta: 108.0deg - theta: 108.0deg
+15:17:08.363449
+I am averaging...alpha = 119.34796804743874deg
+beta: 108.0deg - theta: 108.0deg
+15:17:08.566332
+I am averaging...alpha = 131.79278137325215deg
+beta: 108.0deg - theta: 108.0deg
+15:17:08.768752
+I am averaging...alpha = 143.00708327422964deg
+beta: 108.0deg - theta: 108.0deg
+15:17:08.970265
+I am averaging...alpha = 152.88617047186258deg
+beta: 108.0deg - theta: 108.0deg
+15:17:09.172510
+I am averaging...alpha = 161.33780803788937deg
+beta: 108.0deg - theta: 108.0deg
+15:17:09.374197
+I am averaging...alpha = 168.28309366879313deg
+beta: 108.0deg - theta: 108.0deg
+15:17:09.574955
+I am averaging...alpha = 173.65720600575116deg
+beta: 108.0deg - theta: 108.0deg
+15:17:09.774567
+I am averaging...alpha = 177.4100720781483deg
+beta: 108.0deg - theta: 108.0deg
+15:17:09.976101
+I am averaging...alpha = 179.50749513290668deg
+beta: 108.0deg - theta: 108.0deg
+15:17:10.177358
+
+theta: 108.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 108.0deg - theta: 162.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 108.0deg - theta: 162.0deg
+15:17:10.394450
+I am averaging...alpha = -177.4100720781483deg
+beta: 108.0deg - theta: 162.0deg
+15:17:10.595381
+I am averaging...alpha = -173.65720600575116deg
+beta: 108.0deg - theta: 162.0deg
+15:17:10.802983
+I am averaging...alpha = -168.28309366879313deg
+beta: 108.0deg - theta: 162.0deg
+15:17:11.004449
+I am averaging...alpha = -161.33780803788937deg
+beta: 108.0deg - theta: 162.0deg
+15:17:11.207782
+I am averaging...alpha = -152.88617047186258deg
+beta: 108.0deg - theta: 162.0deg
+15:17:11.409063
+I am averaging...alpha = -143.00708327422964deg
+beta: 108.0deg - theta: 162.0deg
+15:17:11.610251
+I am averaging...alpha = -131.79278137325215deg
+beta: 108.0deg - theta: 162.0deg
+15:17:11.811262
+I am averaging...alpha = -119.34796804743874deg
+beta: 108.0deg - theta: 162.0deg
+15:17:12.014129
+I am averaging...alpha = -105.78883630333722deg
+beta: 108.0deg - theta: 162.0deg
+15:17:12.218252
+I am averaging...alpha = -91.24198360780129deg
+beta: 108.0deg - theta: 162.0deg
+15:17:12.420278
+I am averaging...alpha = -75.84322970351435deg
+beta: 108.0deg - theta: 162.0deg
+15:17:12.623460
+I am averaging...alpha = -59.73634841078298deg
+beta: 108.0deg - theta: 162.0deg
+15:17:12.827098
+I am averaging...alpha = -43.07172520538467deg
+beta: 108.0deg - theta: 162.0deg
+15:17:13.038575
+I am averaging...alpha = -26.004953084903367deg
+beta: 108.0deg - theta: 162.0deg
+15:17:13.241807
+I am averaging...alpha = -8.695379823792898deg
+beta: 108.0deg - theta: 162.0deg
+15:17:13.446399
+I am averaging...alpha = 8.695379823792898deg
+beta: 108.0deg - theta: 162.0deg
+15:17:13.649933
+I am averaging...alpha = 26.004953084903367deg
+beta: 108.0deg - theta: 162.0deg
+15:17:13.852334
+I am averaging...alpha = 43.07172520538467deg
+beta: 108.0deg - theta: 162.0deg
+15:17:14.054098
+I am averaging...alpha = 59.73634841078298deg
+beta: 108.0deg - theta: 162.0deg
+15:17:14.257210
+I am averaging...alpha = 75.84322970351435deg
+beta: 108.0deg - theta: 162.0deg
+15:17:14.459301
+I am averaging...alpha = 91.24198360780129deg
+beta: 108.0deg - theta: 162.0deg
+15:17:14.661013
+I am averaging...alpha = 105.78883630333722deg
+beta: 108.0deg - theta: 162.0deg
+15:17:14.863068
+I am averaging...alpha = 119.34796804743874deg
+beta: 108.0deg - theta: 162.0deg
+15:17:15.065117
+I am averaging...alpha = 131.79278137325215deg
+beta: 108.0deg - theta: 162.0deg
+15:17:15.267385
+I am averaging...alpha = 143.00708327422964deg
+beta: 108.0deg - theta: 162.0deg
+15:17:15.468946
+I am averaging...alpha = 152.88617047186258deg
+beta: 108.0deg - theta: 162.0deg
+15:17:15.672714
+I am averaging...alpha = 161.33780803788937deg
+beta: 108.0deg - theta: 162.0deg
+15:17:15.874864
+I am averaging...alpha = 168.28309366879313deg
+beta: 108.0deg - theta: 162.0deg
+15:17:16.072168
+I am averaging...alpha = 173.65720600575116deg
+beta: 108.0deg - theta: 162.0deg
+15:17:16.272473
+I am averaging...alpha = 177.4100720781483deg
+beta: 108.0deg - theta: 162.0deg
+15:17:16.474911
+I am averaging...alpha = 179.50749513290668deg
+beta: 108.0deg - theta: 162.0deg
+15:17:16.675499
+
+theta: 162.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 108.0deg - theta: 180.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 108.0deg - theta: 180.0deg
+15:17:16.892632
+I am averaging...alpha = -177.4100720781483deg
+beta: 108.0deg - theta: 180.0deg
+15:17:17.100057
+I am averaging...alpha = -173.65720600575116deg
+beta: 108.0deg - theta: 180.0deg
+15:17:17.300465
+I am averaging...alpha = -168.28309366879313deg
+beta: 108.0deg - theta: 180.0deg
+15:17:17.501980
+I am averaging...alpha = -161.33780803788937deg
+beta: 108.0deg - theta: 180.0deg
+15:17:17.702080
+I am averaging...alpha = -152.88617047186258deg
+beta: 108.0deg - theta: 180.0deg
+15:17:17.902515
+I am averaging...alpha = -143.00708327422964deg
+beta: 108.0deg - theta: 180.0deg
+15:17:18.105585
+I am averaging...alpha = -131.79278137325215deg
+beta: 108.0deg - theta: 180.0deg
+15:17:18.308226
+I am averaging...alpha = -119.34796804743874deg
+beta: 108.0deg - theta: 180.0deg
+15:17:18.508739
+I am averaging...alpha = -105.78883630333722deg
+beta: 108.0deg - theta: 180.0deg
+15:17:18.714947
+I am averaging...alpha = -91.24198360780129deg
+beta: 108.0deg - theta: 180.0deg
+15:17:18.918794
+I am averaging...alpha = -75.84322970351435deg
+beta: 108.0deg - theta: 180.0deg
+15:17:19.120219
+I am averaging...alpha = -59.73634841078298deg
+beta: 108.0deg - theta: 180.0deg
+15:17:19.321810
+I am averaging...alpha = -43.07172520538467deg
+beta: 108.0deg - theta: 180.0deg
+15:17:19.528565
+I am averaging...alpha = -26.004953084903367deg
+beta: 108.0deg - theta: 180.0deg
+15:17:19.730594
+I am averaging...alpha = -8.695379823792898deg
+beta: 108.0deg - theta: 180.0deg
+15:17:19.935218
+I am averaging...alpha = 8.695379823792898deg
+beta: 108.0deg - theta: 180.0deg
+15:17:20.138179
+I am averaging...alpha = 26.004953084903367deg
+beta: 108.0deg - theta: 180.0deg
+15:17:20.342015
+I am averaging...alpha = 43.07172520538467deg
+beta: 108.0deg - theta: 180.0deg
+15:17:20.542998
+I am averaging...alpha = 59.73634841078298deg
+beta: 108.0deg - theta: 180.0deg
+15:17:20.746118
+I am averaging...alpha = 75.84322970351435deg
+beta: 108.0deg - theta: 180.0deg
+15:17:20.950529
+I am averaging...alpha = 91.24198360780129deg
+beta: 108.0deg - theta: 180.0deg
+15:17:21.151709
+I am averaging...alpha = 105.78883630333722deg
+beta: 108.0deg - theta: 180.0deg
+15:17:21.353177
+I am averaging...alpha = 119.34796804743874deg
+beta: 108.0deg - theta: 180.0deg
+15:17:21.556245
+I am averaging...alpha = 131.79278137325215deg
+beta: 108.0deg - theta: 180.0deg
+15:17:21.758740
+I am averaging...alpha = 143.00708327422964deg
+beta: 108.0deg - theta: 180.0deg
+15:17:21.959591
+I am averaging...alpha = 152.88617047186258deg
+beta: 108.0deg - theta: 180.0deg
+15:17:22.163104
+I am averaging...alpha = 161.33780803788937deg
+beta: 108.0deg - theta: 180.0deg
+15:17:22.362778
+I am averaging...alpha = 168.28309366879313deg
+beta: 108.0deg - theta: 180.0deg
+15:17:22.561440
+I am averaging...alpha = 173.65720600575116deg
+beta: 108.0deg - theta: 180.0deg
+15:17:22.762486
+I am averaging...alpha = 177.4100720781483deg
+beta: 108.0deg - theta: 180.0deg
+15:17:22.963284
+I am averaging...alpha = 179.50749513290668deg
+beta: 108.0deg - theta: 180.0deg
+15:17:23.162696
+
+theta: 180.0deg
+Yeah, it is done!
+elapsed time: 0:00:45.918835
+
+n_beta: 4
+beta: 144.0 deg
+Parallel computing is not working!
+Then I switch to serial computing.
+/bin/sh: free: command not found
+Before ori-avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 144.0deg - theta: 0.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 144.0deg - theta: 0.0deg
+15:17:23.396729
+I am averaging...alpha = -177.4100720781483deg
+beta: 144.0deg - theta: 0.0deg
+15:17:23.600194
+I am averaging...alpha = -173.65720600575116deg
+beta: 144.0deg - theta: 0.0deg
+15:17:23.810041
+I am averaging...alpha = -168.28309366879313deg
+beta: 144.0deg - theta: 0.0deg
+15:17:24.015850
+I am averaging...alpha = -161.33780803788937deg
+beta: 144.0deg - theta: 0.0deg
+15:17:24.219542
+I am averaging...alpha = -152.88617047186258deg
+beta: 144.0deg - theta: 0.0deg
+15:17:24.423752
+I am averaging...alpha = -143.00708327422964deg
+beta: 144.0deg - theta: 0.0deg
+15:17:24.628097
+I am averaging...alpha = -131.79278137325215deg
+beta: 144.0deg - theta: 0.0deg
+15:17:24.831167
+I am averaging...alpha = -119.34796804743874deg
+beta: 144.0deg - theta: 0.0deg
+15:17:25.034508
+I am averaging...alpha = -105.78883630333722deg
+beta: 144.0deg - theta: 0.0deg
+15:17:25.237798
+I am averaging...alpha = -91.24198360780129deg
+beta: 144.0deg - theta: 0.0deg
+15:17:25.441344
+I am averaging...alpha = -75.84322970351435deg
+beta: 144.0deg - theta: 0.0deg
+15:17:25.644411
+I am averaging...alpha = -59.73634841078298deg
+beta: 144.0deg - theta: 0.0deg
+15:17:25.845819
+I am averaging...alpha = -43.07172520538467deg
+beta: 144.0deg - theta: 0.0deg
+15:17:26.048745
+I am averaging...alpha = -26.004953084903367deg
+beta: 144.0deg - theta: 0.0deg
+15:17:26.251397
+I am averaging...alpha = -8.695379823792898deg
+beta: 144.0deg - theta: 0.0deg
+15:17:26.453158
+I am averaging...alpha = 8.695379823792898deg
+beta: 144.0deg - theta: 0.0deg
+15:17:26.655552
+I am averaging...alpha = 26.004953084903367deg
+beta: 144.0deg - theta: 0.0deg
+15:17:26.857899
+I am averaging...alpha = 43.07172520538467deg
+beta: 144.0deg - theta: 0.0deg
+15:17:27.059358
+I am averaging...alpha = 59.73634841078298deg
+beta: 144.0deg - theta: 0.0deg
+15:17:27.262015
+I am averaging...alpha = 75.84322970351435deg
+beta: 144.0deg - theta: 0.0deg
+15:17:27.462678
+I am averaging...alpha = 91.24198360780129deg
+beta: 144.0deg - theta: 0.0deg
+15:17:27.664167
+I am averaging...alpha = 105.78883630333722deg
+beta: 144.0deg - theta: 0.0deg
+15:17:27.865273
+I am averaging...alpha = 119.34796804743874deg
+beta: 144.0deg - theta: 0.0deg
+15:17:28.066066
+I am averaging...alpha = 131.79278137325215deg
+beta: 144.0deg - theta: 0.0deg
+15:17:28.264279
+I am averaging...alpha = 143.00708327422964deg
+beta: 144.0deg - theta: 0.0deg
+15:17:28.463588
+I am averaging...alpha = 152.88617047186258deg
+beta: 144.0deg - theta: 0.0deg
+15:17:28.664926
+I am averaging...alpha = 161.33780803788937deg
+beta: 144.0deg - theta: 0.0deg
+15:17:28.863072
+I am averaging...alpha = 168.28309366879313deg
+beta: 144.0deg - theta: 0.0deg
+15:17:29.066363
+I am averaging...alpha = 173.65720600575116deg
+beta: 144.0deg - theta: 0.0deg
+15:17:29.275505
+I am averaging...alpha = 177.4100720781483deg
+beta: 144.0deg - theta: 0.0deg
+15:17:29.479295
+I am averaging...alpha = 179.50749513290668deg
+beta: 144.0deg - theta: 0.0deg
+15:17:29.682212
+
+theta: 0.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 144.0deg - theta: 18.00000000000001deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:29.900997
+I am averaging...alpha = -177.4100720781483deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:30.101817
+I am averaging...alpha = -173.65720600575116deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:30.309558
+I am averaging...alpha = -168.28309366879313deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:30.510062
+I am averaging...alpha = -161.33780803788937deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:30.715446
+I am averaging...alpha = -152.88617047186258deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:30.922211
+I am averaging...alpha = -143.00708327422964deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:31.123496
+I am averaging...alpha = -131.79278137325215deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:31.325934
+I am averaging...alpha = -119.34796804743874deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:31.530249
+I am averaging...alpha = -105.78883630333722deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:31.730852
+I am averaging...alpha = -91.24198360780129deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:31.932093
+I am averaging...alpha = -75.84322970351435deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:32.139545
+I am averaging...alpha = -59.73634841078298deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:32.344322
+I am averaging...alpha = -43.07172520538467deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:32.548949
+I am averaging...alpha = -26.004953084903367deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:32.750987
+I am averaging...alpha = -8.695379823792898deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:32.954499
+I am averaging...alpha = 8.695379823792898deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:33.159092
+I am averaging...alpha = 26.004953084903367deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:33.361425
+I am averaging...alpha = 43.07172520538467deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:33.562793
+I am averaging...alpha = 59.73634841078298deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:33.767190
+I am averaging...alpha = 75.84322970351435deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:33.967483
+I am averaging...alpha = 91.24198360780129deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:34.168651
+I am averaging...alpha = 105.78883630333722deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:34.369119
+I am averaging...alpha = 119.34796804743874deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:34.569533
+I am averaging...alpha = 131.79278137325215deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:34.769860
+I am averaging...alpha = 143.00708327422964deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:34.971018
+I am averaging...alpha = 152.88617047186258deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:35.173005
+I am averaging...alpha = 161.33780803788937deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:35.373699
+I am averaging...alpha = 168.28309366879313deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:35.579972
+I am averaging...alpha = 173.65720600575116deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:35.783685
+I am averaging...alpha = 177.4100720781483deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:35.985997
+I am averaging...alpha = 179.50749513290668deg
+beta: 144.0deg - theta: 18.00000000000001deg
+15:17:36.192172
+
+theta: 18.00000000000001deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 144.0deg - theta: 72.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 144.0deg - theta: 72.0deg
+15:17:36.415015
+I am averaging...alpha = -177.4100720781483deg
+beta: 144.0deg - theta: 72.0deg
+15:17:36.620391
+I am averaging...alpha = -173.65720600575116deg
+beta: 144.0deg - theta: 72.0deg
+15:17:36.825790
+I am averaging...alpha = -168.28309366879313deg
+beta: 144.0deg - theta: 72.0deg
+15:17:37.030772
+I am averaging...alpha = -161.33780803788937deg
+beta: 144.0deg - theta: 72.0deg
+15:17:37.236402
+I am averaging...alpha = -152.88617047186258deg
+beta: 144.0deg - theta: 72.0deg
+15:17:37.440838
+I am averaging...alpha = -143.00708327422964deg
+beta: 144.0deg - theta: 72.0deg
+15:17:37.645845
+I am averaging...alpha = -131.79278137325215deg
+beta: 144.0deg - theta: 72.0deg
+15:17:37.852396
+I am averaging...alpha = -119.34796804743874deg
+beta: 144.0deg - theta: 72.0deg
+15:17:38.056448
+I am averaging...alpha = -105.78883630333722deg
+beta: 144.0deg - theta: 72.0deg
+15:17:38.261501
+I am averaging...alpha = -91.24198360780129deg
+beta: 144.0deg - theta: 72.0deg
+15:17:38.466166
+I am averaging...alpha = -75.84322970351435deg
+beta: 144.0deg - theta: 72.0deg
+15:17:38.672887
+I am averaging...alpha = -59.73634841078298deg
+beta: 144.0deg - theta: 72.0deg
+15:17:38.880207
+I am averaging...alpha = -43.07172520538467deg
+beta: 144.0deg - theta: 72.0deg
+15:17:39.090384
+I am averaging...alpha = -26.004953084903367deg
+beta: 144.0deg - theta: 72.0deg
+15:17:39.296989
+I am averaging...alpha = -8.695379823792898deg
+beta: 144.0deg - theta: 72.0deg
+15:17:39.502178
+I am averaging...alpha = 8.695379823792898deg
+beta: 144.0deg - theta: 72.0deg
+15:17:39.712249
+I am averaging...alpha = 26.004953084903367deg
+beta: 144.0deg - theta: 72.0deg
+15:17:39.919112
+I am averaging...alpha = 43.07172520538467deg
+beta: 144.0deg - theta: 72.0deg
+15:17:40.124489
+I am averaging...alpha = 59.73634841078298deg
+beta: 144.0deg - theta: 72.0deg
+15:17:40.326722
+I am averaging...alpha = 75.84322970351435deg
+beta: 144.0deg - theta: 72.0deg
+15:17:40.529756
+I am averaging...alpha = 91.24198360780129deg
+beta: 144.0deg - theta: 72.0deg
+15:17:40.732543
+I am averaging...alpha = 105.78883630333722deg
+beta: 144.0deg - theta: 72.0deg
+15:17:40.936888
+I am averaging...alpha = 119.34796804743874deg
+beta: 144.0deg - theta: 72.0deg
+15:17:41.139857
+I am averaging...alpha = 131.79278137325215deg
+beta: 144.0deg - theta: 72.0deg
+15:17:41.342324
+I am averaging...alpha = 143.00708327422964deg
+beta: 144.0deg - theta: 72.0deg
+15:17:41.544584
+I am averaging...alpha = 152.88617047186258deg
+beta: 144.0deg - theta: 72.0deg
+15:17:41.747664
+I am averaging...alpha = 161.33780803788937deg
+beta: 144.0deg - theta: 72.0deg
+15:17:41.954342
+I am averaging...alpha = 168.28309366879313deg
+beta: 144.0deg - theta: 72.0deg
+15:17:42.158866
+I am averaging...alpha = 173.65720600575116deg
+beta: 144.0deg - theta: 72.0deg
+15:17:42.362876
+I am averaging...alpha = 177.4100720781483deg
+beta: 144.0deg - theta: 72.0deg
+15:17:42.571083
+I am averaging...alpha = 179.50749513290668deg
+beta: 144.0deg - theta: 72.0deg
+15:17:42.775299
+
+theta: 72.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 144.0deg - theta: 90.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 144.0deg - theta: 90.0deg
+15:17:42.998848
+I am averaging...alpha = -177.4100720781483deg
+beta: 144.0deg - theta: 90.0deg
+15:17:43.202768
+I am averaging...alpha = -173.65720600575116deg
+beta: 144.0deg - theta: 90.0deg
+15:17:43.407620
+I am averaging...alpha = -168.28309366879313deg
+beta: 144.0deg - theta: 90.0deg
+15:17:43.614246
+I am averaging...alpha = -161.33780803788937deg
+beta: 144.0deg - theta: 90.0deg
+15:17:43.818528
+I am averaging...alpha = -152.88617047186258deg
+beta: 144.0deg - theta: 90.0deg
+15:17:44.021407
+I am averaging...alpha = -143.00708327422964deg
+beta: 144.0deg - theta: 90.0deg
+15:17:44.226549
+I am averaging...alpha = -131.79278137325215deg
+beta: 144.0deg - theta: 90.0deg
+15:17:44.431478
+I am averaging...alpha = -119.34796804743874deg
+beta: 144.0deg - theta: 90.0deg
+15:17:44.634275
+I am averaging...alpha = -105.78883630333722deg
+beta: 144.0deg - theta: 90.0deg
+15:17:44.838543
+I am averaging...alpha = -91.24198360780129deg
+beta: 144.0deg - theta: 90.0deg
+15:17:45.044078
+I am averaging...alpha = -75.84322970351435deg
+beta: 144.0deg - theta: 90.0deg
+15:17:45.251045
+I am averaging...alpha = -59.73634841078298deg
+beta: 144.0deg - theta: 90.0deg
+15:17:45.455098
+I am averaging...alpha = -43.07172520538467deg
+beta: 144.0deg - theta: 90.0deg
+15:17:45.660175
+I am averaging...alpha = -26.004953084903367deg
+beta: 144.0deg - theta: 90.0deg
+15:17:45.866147
+I am averaging...alpha = -8.695379823792898deg
+beta: 144.0deg - theta: 90.0deg
+15:17:46.071859
+I am averaging...alpha = 8.695379823792898deg
+beta: 144.0deg - theta: 90.0deg
+15:17:46.275411
+I am averaging...alpha = 26.004953084903367deg
+beta: 144.0deg - theta: 90.0deg
+15:17:46.480033
+I am averaging...alpha = 43.07172520538467deg
+beta: 144.0deg - theta: 90.0deg
+15:17:46.682012
+I am averaging...alpha = 59.73634841078298deg
+beta: 144.0deg - theta: 90.0deg
+15:17:46.885104
+I am averaging...alpha = 75.84322970351435deg
+beta: 144.0deg - theta: 90.0deg
+15:17:47.087856
+I am averaging...alpha = 91.24198360780129deg
+beta: 144.0deg - theta: 90.0deg
+15:17:47.290516
+I am averaging...alpha = 105.78883630333722deg
+beta: 144.0deg - theta: 90.0deg
+15:17:47.491114
+I am averaging...alpha = 119.34796804743874deg
+beta: 144.0deg - theta: 90.0deg
+15:17:47.693257
+I am averaging...alpha = 131.79278137325215deg
+beta: 144.0deg - theta: 90.0deg
+15:17:47.895726
+I am averaging...alpha = 143.00708327422964deg
+beta: 144.0deg - theta: 90.0deg
+15:17:48.096943
+I am averaging...alpha = 152.88617047186258deg
+beta: 144.0deg - theta: 90.0deg
+15:17:48.299079
+I am averaging...alpha = 161.33780803788937deg
+beta: 144.0deg - theta: 90.0deg
+15:17:48.501711
+I am averaging...alpha = 168.28309366879313deg
+beta: 144.0deg - theta: 90.0deg
+15:17:48.703295
+I am averaging...alpha = 173.65720600575116deg
+beta: 144.0deg - theta: 90.0deg
+15:17:48.909094
+I am averaging...alpha = 177.4100720781483deg
+beta: 144.0deg - theta: 90.0deg
+15:17:49.112253
+I am averaging...alpha = 179.50749513290668deg
+beta: 144.0deg - theta: 90.0deg
+15:17:49.314990
+
+theta: 90.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 144.0deg - theta: 108.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 144.0deg - theta: 108.0deg
+15:17:49.546824
+I am averaging...alpha = -177.4100720781483deg
+beta: 144.0deg - theta: 108.0deg
+15:17:49.754841
+I am averaging...alpha = -173.65720600575116deg
+beta: 144.0deg - theta: 108.0deg
+15:17:49.959497
+I am averaging...alpha = -168.28309366879313deg
+beta: 144.0deg - theta: 108.0deg
+15:17:50.162936
+I am averaging...alpha = -161.33780803788937deg
+beta: 144.0deg - theta: 108.0deg
+15:17:50.368152
+I am averaging...alpha = -152.88617047186258deg
+beta: 144.0deg - theta: 108.0deg
+15:17:50.573758
+I am averaging...alpha = -143.00708327422964deg
+beta: 144.0deg - theta: 108.0deg
+15:17:50.776106
+I am averaging...alpha = -131.79278137325215deg
+beta: 144.0deg - theta: 108.0deg
+15:17:50.980139
+I am averaging...alpha = -119.34796804743874deg
+beta: 144.0deg - theta: 108.0deg
+15:17:51.187190
+I am averaging...alpha = -105.78883630333722deg
+beta: 144.0deg - theta: 108.0deg
+15:17:51.390243
+I am averaging...alpha = -91.24198360780129deg
+beta: 144.0deg - theta: 108.0deg
+15:17:51.594206
+I am averaging...alpha = -75.84322970351435deg
+beta: 144.0deg - theta: 108.0deg
+15:17:51.801764
+I am averaging...alpha = -59.73634841078298deg
+beta: 144.0deg - theta: 108.0deg
+15:17:52.005186
+I am averaging...alpha = -43.07172520538467deg
+beta: 144.0deg - theta: 108.0deg
+15:17:52.209081
+I am averaging...alpha = -26.004953084903367deg
+beta: 144.0deg - theta: 108.0deg
+15:17:52.414980
+I am averaging...alpha = -8.695379823792898deg
+beta: 144.0deg - theta: 108.0deg
+15:17:52.618060
+I am averaging...alpha = 8.695379823792898deg
+beta: 144.0deg - theta: 108.0deg
+15:17:52.820547
+I am averaging...alpha = 26.004953084903367deg
+beta: 144.0deg - theta: 108.0deg
+15:17:53.021782
+I am averaging...alpha = 43.07172520538467deg
+beta: 144.0deg - theta: 108.0deg
+15:17:53.223856
+I am averaging...alpha = 59.73634841078298deg
+beta: 144.0deg - theta: 108.0deg
+15:17:53.426514
+I am averaging...alpha = 75.84322970351435deg
+beta: 144.0deg - theta: 108.0deg
+15:17:53.629952
+I am averaging...alpha = 91.24198360780129deg
+beta: 144.0deg - theta: 108.0deg
+15:17:53.833716
+I am averaging...alpha = 105.78883630333722deg
+beta: 144.0deg - theta: 108.0deg
+15:17:54.036770
+I am averaging...alpha = 119.34796804743874deg
+beta: 144.0deg - theta: 108.0deg
+15:17:54.242203
+I am averaging...alpha = 131.79278137325215deg
+beta: 144.0deg - theta: 108.0deg
+15:17:54.448460
+I am averaging...alpha = 143.00708327422964deg
+beta: 144.0deg - theta: 108.0deg
+15:17:54.653280
+I am averaging...alpha = 152.88617047186258deg
+beta: 144.0deg - theta: 108.0deg
+15:17:54.856205
+I am averaging...alpha = 161.33780803788937deg
+beta: 144.0deg - theta: 108.0deg
+15:17:55.061050
+I am averaging...alpha = 168.28309366879313deg
+beta: 144.0deg - theta: 108.0deg
+15:17:55.264202
+I am averaging...alpha = 173.65720600575116deg
+beta: 144.0deg - theta: 108.0deg
+15:17:55.467248
+I am averaging...alpha = 177.4100720781483deg
+beta: 144.0deg - theta: 108.0deg
+15:17:55.669974
+I am averaging...alpha = 179.50749513290668deg
+beta: 144.0deg - theta: 108.0deg
+15:17:55.873599
+
+theta: 108.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 144.0deg - theta: 162.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 144.0deg - theta: 162.0deg
+15:17:56.096538
+I am averaging...alpha = -177.4100720781483deg
+beta: 144.0deg - theta: 162.0deg
+15:17:56.300650
+I am averaging...alpha = -173.65720600575116deg
+beta: 144.0deg - theta: 162.0deg
+15:17:56.505598
+I am averaging...alpha = -168.28309366879313deg
+beta: 144.0deg - theta: 162.0deg
+15:17:56.709024
+I am averaging...alpha = -161.33780803788937deg
+beta: 144.0deg - theta: 162.0deg
+15:17:56.912315
+I am averaging...alpha = -152.88617047186258deg
+beta: 144.0deg - theta: 162.0deg
+15:17:57.118975
+I am averaging...alpha = -143.00708327422964deg
+beta: 144.0deg - theta: 162.0deg
+15:17:57.322286
+I am averaging...alpha = -131.79278137325215deg
+beta: 144.0deg - theta: 162.0deg
+15:17:57.525835
+I am averaging...alpha = -119.34796804743874deg
+beta: 144.0deg - theta: 162.0deg
+15:17:57.731325
+I am averaging...alpha = -105.78883630333722deg
+beta: 144.0deg - theta: 162.0deg
+15:17:57.937458
+I am averaging...alpha = -91.24198360780129deg
+beta: 144.0deg - theta: 162.0deg
+15:17:58.142054
+I am averaging...alpha = -75.84322970351435deg
+beta: 144.0deg - theta: 162.0deg
+15:17:58.345823
+I am averaging...alpha = -59.73634841078298deg
+beta: 144.0deg - theta: 162.0deg
+15:17:58.548331
+I am averaging...alpha = -43.07172520538467deg
+beta: 144.0deg - theta: 162.0deg
+15:17:58.751832
+I am averaging...alpha = -26.004953084903367deg
+beta: 144.0deg - theta: 162.0deg
+15:17:58.955188
+I am averaging...alpha = -8.695379823792898deg
+beta: 144.0deg - theta: 162.0deg
+15:17:59.158106
+I am averaging...alpha = 8.695379823792898deg
+beta: 144.0deg - theta: 162.0deg
+15:17:59.358775
+I am averaging...alpha = 26.004953084903367deg
+beta: 144.0deg - theta: 162.0deg
+15:17:59.559266
+I am averaging...alpha = 43.07172520538467deg
+beta: 144.0deg - theta: 162.0deg
+15:17:59.760718
+I am averaging...alpha = 59.73634841078298deg
+beta: 144.0deg - theta: 162.0deg
+15:17:59.962721
+I am averaging...alpha = 75.84322970351435deg
+beta: 144.0deg - theta: 162.0deg
+15:18:00.163487
+I am averaging...alpha = 91.24198360780129deg
+beta: 144.0deg - theta: 162.0deg
+15:18:00.365542
+I am averaging...alpha = 105.78883630333722deg
+beta: 144.0deg - theta: 162.0deg
+15:18:00.567886
+I am averaging...alpha = 119.34796804743874deg
+beta: 144.0deg - theta: 162.0deg
+15:18:00.771261
+I am averaging...alpha = 131.79278137325215deg
+beta: 144.0deg - theta: 162.0deg
+15:18:00.980001
+I am averaging...alpha = 143.00708327422964deg
+beta: 144.0deg - theta: 162.0deg
+15:18:01.188363
+I am averaging...alpha = 152.88617047186258deg
+beta: 144.0deg - theta: 162.0deg
+15:18:01.395089
+I am averaging...alpha = 161.33780803788937deg
+beta: 144.0deg - theta: 162.0deg
+15:18:01.604095
+I am averaging...alpha = 168.28309366879313deg
+beta: 144.0deg - theta: 162.0deg
+15:18:01.813587
+I am averaging...alpha = 173.65720600575116deg
+beta: 144.0deg - theta: 162.0deg
+15:18:02.019957
+I am averaging...alpha = 177.4100720781483deg
+beta: 144.0deg - theta: 162.0deg
+15:18:02.224357
+I am averaging...alpha = 179.50749513290668deg
+beta: 144.0deg - theta: 162.0deg
+15:18:02.432202
+
+theta: 162.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 144.0deg - theta: 180.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 144.0deg - theta: 180.0deg
+15:18:02.658060
+I am averaging...alpha = -177.4100720781483deg
+beta: 144.0deg - theta: 180.0deg
+15:18:02.861664
+I am averaging...alpha = -173.65720600575116deg
+beta: 144.0deg - theta: 180.0deg
+15:18:03.065133
+I am averaging...alpha = -168.28309366879313deg
+beta: 144.0deg - theta: 180.0deg
+15:18:03.270802
+I am averaging...alpha = -161.33780803788937deg
+beta: 144.0deg - theta: 180.0deg
+15:18:03.474344
+I am averaging...alpha = -152.88617047186258deg
+beta: 144.0deg - theta: 180.0deg
+15:18:03.677388
+I am averaging...alpha = -143.00708327422964deg
+beta: 144.0deg - theta: 180.0deg
+15:18:03.880330
+I am averaging...alpha = -131.79278137325215deg
+beta: 144.0deg - theta: 180.0deg
+15:18:04.083926
+I am averaging...alpha = -119.34796804743874deg
+beta: 144.0deg - theta: 180.0deg
+15:18:04.285697
+I am averaging...alpha = -105.78883630333722deg
+beta: 144.0deg - theta: 180.0deg
+15:18:04.488990
+I am averaging...alpha = -91.24198360780129deg
+beta: 144.0deg - theta: 180.0deg
+15:18:04.695057
+I am averaging...alpha = -75.84322970351435deg
+beta: 144.0deg - theta: 180.0deg
+15:18:04.897325
+I am averaging...alpha = -59.73634841078298deg
+beta: 144.0deg - theta: 180.0deg
+15:18:05.101148
+I am averaging...alpha = -43.07172520538467deg
+beta: 144.0deg - theta: 180.0deg
+15:18:05.304041
+I am averaging...alpha = -26.004953084903367deg
+beta: 144.0deg - theta: 180.0deg
+15:18:05.507098
+I am averaging...alpha = -8.695379823792898deg
+beta: 144.0deg - theta: 180.0deg
+15:18:05.704875
+I am averaging...alpha = 8.695379823792898deg
+beta: 144.0deg - theta: 180.0deg
+15:18:05.903553
+I am averaging...alpha = 26.004953084903367deg
+beta: 144.0deg - theta: 180.0deg
+15:18:06.102055
+I am averaging...alpha = 43.07172520538467deg
+beta: 144.0deg - theta: 180.0deg
+15:18:06.301717
+I am averaging...alpha = 59.73634841078298deg
+beta: 144.0deg - theta: 180.0deg
+15:18:06.500348
+I am averaging...alpha = 75.84322970351435deg
+beta: 144.0deg - theta: 180.0deg
+15:18:06.700727
+I am averaging...alpha = 91.24198360780129deg
+beta: 144.0deg - theta: 180.0deg
+15:18:06.899945
+I am averaging...alpha = 105.78883630333722deg
+beta: 144.0deg - theta: 180.0deg
+15:18:07.100148
+I am averaging...alpha = 119.34796804743874deg
+beta: 144.0deg - theta: 180.0deg
+15:18:07.299446
+I am averaging...alpha = 131.79278137325215deg
+beta: 144.0deg - theta: 180.0deg
+15:18:07.497135
+I am averaging...alpha = 143.00708327422964deg
+beta: 144.0deg - theta: 180.0deg
+15:18:07.697055
+I am averaging...alpha = 152.88617047186258deg
+beta: 144.0deg - theta: 180.0deg
+15:18:07.897517
+I am averaging...alpha = 161.33780803788937deg
+beta: 144.0deg - theta: 180.0deg
+15:18:08.098050
+I am averaging...alpha = 168.28309366879313deg
+beta: 144.0deg - theta: 180.0deg
+15:18:08.300230
+I am averaging...alpha = 173.65720600575116deg
+beta: 144.0deg - theta: 180.0deg
+15:18:08.506989
+I am averaging...alpha = 177.4100720781483deg
+beta: 144.0deg - theta: 180.0deg
+15:18:08.706107
+I am averaging...alpha = 179.50749513290668deg
+beta: 144.0deg - theta: 180.0deg
+15:18:08.908807
+
+theta: 180.0deg
+Yeah, it is done!
+elapsed time: 0:00:45.748661
+
+n_beta: 5
+beta: 180.0 deg
+Parallel computing is not working!
+Then I switch to serial computing.
+/bin/sh: free: command not found
+Before ori-avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 180.0deg - theta: 0.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 180.0deg - theta: 0.0deg
+15:18:09.145664
+I am averaging...alpha = -177.4100720781483deg
+beta: 180.0deg - theta: 0.0deg
+15:18:09.350369
+I am averaging...alpha = -173.65720600575116deg
+beta: 180.0deg - theta: 0.0deg
+15:18:09.554936
+I am averaging...alpha = -168.28309366879313deg
+beta: 180.0deg - theta: 0.0deg
+15:18:09.759708
+I am averaging...alpha = -161.33780803788937deg
+beta: 180.0deg - theta: 0.0deg
+15:18:09.965158
+I am averaging...alpha = -152.88617047186258deg
+beta: 180.0deg - theta: 0.0deg
+15:18:10.169014
+I am averaging...alpha = -143.00708327422964deg
+beta: 180.0deg - theta: 0.0deg
+15:18:10.373066
+I am averaging...alpha = -131.79278137325215deg
+beta: 180.0deg - theta: 0.0deg
+15:18:10.575571
+I am averaging...alpha = -119.34796804743874deg
+beta: 180.0deg - theta: 0.0deg
+15:18:10.779924
+I am averaging...alpha = -105.78883630333722deg
+beta: 180.0deg - theta: 0.0deg
+15:18:10.983471
+I am averaging...alpha = -91.24198360780129deg
+beta: 180.0deg - theta: 0.0deg
+15:18:11.189387
+I am averaging...alpha = -75.84322970351435deg
+beta: 180.0deg - theta: 0.0deg
+15:18:11.395057
+I am averaging...alpha = -59.73634841078298deg
+beta: 180.0deg - theta: 0.0deg
+15:18:11.599028
+I am averaging...alpha = -43.07172520538467deg
+beta: 180.0deg - theta: 0.0deg
+15:18:11.803018
+I am averaging...alpha = -26.004953084903367deg
+beta: 180.0deg - theta: 0.0deg
+15:18:12.003974
+I am averaging...alpha = -8.695379823792898deg
+beta: 180.0deg - theta: 0.0deg
+15:18:12.206437
+I am averaging...alpha = 8.695379823792898deg
+beta: 180.0deg - theta: 0.0deg
+15:18:12.409198
+I am averaging...alpha = 26.004953084903367deg
+beta: 180.0deg - theta: 0.0deg
+15:18:12.612895
+I am averaging...alpha = 43.07172520538467deg
+beta: 180.0deg - theta: 0.0deg
+15:18:12.815996
+I am averaging...alpha = 59.73634841078298deg
+beta: 180.0deg - theta: 0.0deg
+15:18:13.018804
+I am averaging...alpha = 75.84322970351435deg
+beta: 180.0deg - theta: 0.0deg
+15:18:13.221432
+I am averaging...alpha = 91.24198360780129deg
+beta: 180.0deg - theta: 0.0deg
+15:18:13.424161
+I am averaging...alpha = 105.78883630333722deg
+beta: 180.0deg - theta: 0.0deg
+15:18:13.628460
+I am averaging...alpha = 119.34796804743874deg
+beta: 180.0deg - theta: 0.0deg
+15:18:13.832967
+I am averaging...alpha = 131.79278137325215deg
+beta: 180.0deg - theta: 0.0deg
+15:18:14.035805
+I am averaging...alpha = 143.00708327422964deg
+beta: 180.0deg - theta: 0.0deg
+15:18:14.239976
+I am averaging...alpha = 152.88617047186258deg
+beta: 180.0deg - theta: 0.0deg
+15:18:14.445990
+I am averaging...alpha = 161.33780803788937deg
+beta: 180.0deg - theta: 0.0deg
+15:18:14.651826
+I am averaging...alpha = 168.28309366879313deg
+beta: 180.0deg - theta: 0.0deg
+15:18:14.854105
+I am averaging...alpha = 173.65720600575116deg
+beta: 180.0deg - theta: 0.0deg
+15:18:15.058007
+I am averaging...alpha = 177.4100720781483deg
+beta: 180.0deg - theta: 0.0deg
+15:18:15.263006
+I am averaging...alpha = 179.50749513290668deg
+beta: 180.0deg - theta: 0.0deg
+15:18:15.466477
+
+theta: 0.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 180.0deg - theta: 18.00000000000001deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:15.688431
+I am averaging...alpha = -177.4100720781483deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:15.896488
+I am averaging...alpha = -173.65720600575116deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:16.101848
+I am averaging...alpha = -168.28309366879313deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:16.300984
+I am averaging...alpha = -161.33780803788937deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:16.504194
+I am averaging...alpha = -152.88617047186258deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:16.708857
+I am averaging...alpha = -143.00708327422964deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:16.908550
+I am averaging...alpha = -131.79278137325215deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:17.108496
+I am averaging...alpha = -119.34796804743874deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:17.313166
+I am averaging...alpha = -105.78883630333722deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:17.515821
+I am averaging...alpha = -91.24198360780129deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:17.720403
+I am averaging...alpha = -75.84322970351435deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:17.925509
+I am averaging...alpha = -59.73634841078298deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:18.128653
+I am averaging...alpha = -43.07172520538467deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:18.328304
+I am averaging...alpha = -26.004953084903367deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:18.525815
+I am averaging...alpha = -8.695379823792898deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:18.723892
+I am averaging...alpha = 8.695379823792898deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:18.923470
+I am averaging...alpha = 26.004953084903367deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:19.124214
+I am averaging...alpha = 43.07172520538467deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:19.323542
+I am averaging...alpha = 59.73634841078298deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:19.521635
+I am averaging...alpha = 75.84322970351435deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:19.721898
+I am averaging...alpha = 91.24198360780129deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:19.919893
+I am averaging...alpha = 105.78883630333722deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:20.119745
+I am averaging...alpha = 119.34796804743874deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:20.320973
+I am averaging...alpha = 131.79278137325215deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:20.520435
+I am averaging...alpha = 143.00708327422964deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:20.717755
+I am averaging...alpha = 152.88617047186258deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:20.918760
+I am averaging...alpha = 161.33780803788937deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:21.121852
+I am averaging...alpha = 168.28309366879313deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:21.323696
+I am averaging...alpha = 173.65720600575116deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:21.525411
+I am averaging...alpha = 177.4100720781483deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:21.727689
+I am averaging...alpha = 179.50749513290668deg
+beta: 180.0deg - theta: 18.00000000000001deg
+15:18:21.928210
+
+theta: 18.00000000000001deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 180.0deg - theta: 72.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 180.0deg - theta: 72.0deg
+15:18:22.150562
+I am averaging...alpha = -177.4100720781483deg
+beta: 180.0deg - theta: 72.0deg
+15:18:22.353899
+I am averaging...alpha = -173.65720600575116deg
+beta: 180.0deg - theta: 72.0deg
+15:18:22.555991
+I am averaging...alpha = -168.28309366879313deg
+beta: 180.0deg - theta: 72.0deg
+15:18:22.758008
+I am averaging...alpha = -161.33780803788937deg
+beta: 180.0deg - theta: 72.0deg
+15:18:22.960277
+I am averaging...alpha = -152.88617047186258deg
+beta: 180.0deg - theta: 72.0deg
+15:18:23.161529
+I am averaging...alpha = -143.00708327422964deg
+beta: 180.0deg - theta: 72.0deg
+15:18:23.362850
+I am averaging...alpha = -131.79278137325215deg
+beta: 180.0deg - theta: 72.0deg
+15:18:23.563985
+I am averaging...alpha = -119.34796804743874deg
+beta: 180.0deg - theta: 72.0deg
+15:18:23.765484
+I am averaging...alpha = -105.78883630333722deg
+beta: 180.0deg - theta: 72.0deg
+15:18:23.968441
+I am averaging...alpha = -91.24198360780129deg
+beta: 180.0deg - theta: 72.0deg
+15:18:24.172067
+I am averaging...alpha = -75.84322970351435deg
+beta: 180.0deg - theta: 72.0deg
+15:18:24.374160
+I am averaging...alpha = -59.73634841078298deg
+beta: 180.0deg - theta: 72.0deg
+15:18:24.578032
+I am averaging...alpha = -43.07172520538467deg
+beta: 180.0deg - theta: 72.0deg
+15:18:24.777041
+I am averaging...alpha = -26.004953084903367deg
+beta: 180.0deg - theta: 72.0deg
+15:18:24.977610
+I am averaging...alpha = -8.695379823792898deg
+beta: 180.0deg - theta: 72.0deg
+15:18:25.178564
+I am averaging...alpha = 8.695379823792898deg
+beta: 180.0deg - theta: 72.0deg
+15:18:25.378152
+I am averaging...alpha = 26.004953084903367deg
+beta: 180.0deg - theta: 72.0deg
+15:18:25.579289
+I am averaging...alpha = 43.07172520538467deg
+beta: 180.0deg - theta: 72.0deg
+15:18:25.779023
+I am averaging...alpha = 59.73634841078298deg
+beta: 180.0deg - theta: 72.0deg
+15:18:25.978864
+I am averaging...alpha = 75.84322970351435deg
+beta: 180.0deg - theta: 72.0deg
+15:18:26.179085
+I am averaging...alpha = 91.24198360780129deg
+beta: 180.0deg - theta: 72.0deg
+15:18:26.379441
+I am averaging...alpha = 105.78883630333722deg
+beta: 180.0deg - theta: 72.0deg
+15:18:26.579941
+I am averaging...alpha = 119.34796804743874deg
+beta: 180.0deg - theta: 72.0deg
+15:18:26.779673
+I am averaging...alpha = 131.79278137325215deg
+beta: 180.0deg - theta: 72.0deg
+15:18:26.981603
+I am averaging...alpha = 143.00708327422964deg
+beta: 180.0deg - theta: 72.0deg
+15:18:27.181444
+I am averaging...alpha = 152.88617047186258deg
+beta: 180.0deg - theta: 72.0deg
+15:18:27.383050
+I am averaging...alpha = 161.33780803788937deg
+beta: 180.0deg - theta: 72.0deg
+15:18:27.589823
+I am averaging...alpha = 168.28309366879313deg
+beta: 180.0deg - theta: 72.0deg
+15:18:27.799334
+I am averaging...alpha = 173.65720600575116deg
+beta: 180.0deg - theta: 72.0deg
+15:18:28.004497
+I am averaging...alpha = 177.4100720781483deg
+beta: 180.0deg - theta: 72.0deg
+15:18:28.209059
+I am averaging...alpha = 179.50749513290668deg
+beta: 180.0deg - theta: 72.0deg
+15:18:28.411990
+
+theta: 72.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 180.0deg - theta: 90.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 180.0deg - theta: 90.0deg
+15:18:28.632442
+I am averaging...alpha = -177.4100720781483deg
+beta: 180.0deg - theta: 90.0deg
+15:18:28.838299
+I am averaging...alpha = -173.65720600575116deg
+beta: 180.0deg - theta: 90.0deg
+15:18:29.045181
+I am averaging...alpha = -168.28309366879313deg
+beta: 180.0deg - theta: 90.0deg
+15:18:29.249774
+I am averaging...alpha = -161.33780803788937deg
+beta: 180.0deg - theta: 90.0deg
+15:18:29.454382
+I am averaging...alpha = -152.88617047186258deg
+beta: 180.0deg - theta: 90.0deg
+15:18:29.660396
+I am averaging...alpha = -143.00708327422964deg
+beta: 180.0deg - theta: 90.0deg
+15:18:29.864135
+I am averaging...alpha = -131.79278137325215deg
+beta: 180.0deg - theta: 90.0deg
+15:18:30.067850
+I am averaging...alpha = -119.34796804743874deg
+beta: 180.0deg - theta: 90.0deg
+15:18:30.273295
+I am averaging...alpha = -105.78883630333722deg
+beta: 180.0deg - theta: 90.0deg
+15:18:30.479364
+I am averaging...alpha = -91.24198360780129deg
+beta: 180.0deg - theta: 90.0deg
+15:18:30.684323
+I am averaging...alpha = -75.84322970351435deg
+beta: 180.0deg - theta: 90.0deg
+15:18:30.888302
+I am averaging...alpha = -59.73634841078298deg
+beta: 180.0deg - theta: 90.0deg
+15:18:31.090384
+I am averaging...alpha = -43.07172520538467deg
+beta: 180.0deg - theta: 90.0deg
+15:18:31.293905
+I am averaging...alpha = -26.004953084903367deg
+beta: 180.0deg - theta: 90.0deg
+15:18:31.496588
+I am averaging...alpha = -8.695379823792898deg
+beta: 180.0deg - theta: 90.0deg
+15:18:31.698481
+I am averaging...alpha = 8.695379823792898deg
+beta: 180.0deg - theta: 90.0deg
+15:18:31.902791
+I am averaging...alpha = 26.004953084903367deg
+beta: 180.0deg - theta: 90.0deg
+15:18:32.106231
+I am averaging...alpha = 43.07172520538467deg
+beta: 180.0deg - theta: 90.0deg
+15:18:32.309486
+I am averaging...alpha = 59.73634841078298deg
+beta: 180.0deg - theta: 90.0deg
+15:18:32.512200
+I am averaging...alpha = 75.84322970351435deg
+beta: 180.0deg - theta: 90.0deg
+15:18:32.715326
+I am averaging...alpha = 91.24198360780129deg
+beta: 180.0deg - theta: 90.0deg
+15:18:32.925203
+I am averaging...alpha = 105.78883630333722deg
+beta: 180.0deg - theta: 90.0deg
+15:18:33.130982
+I am averaging...alpha = 119.34796804743874deg
+beta: 180.0deg - theta: 90.0deg
+15:18:33.337906
+I am averaging...alpha = 131.79278137325215deg
+beta: 180.0deg - theta: 90.0deg
+15:18:33.543849
+I am averaging...alpha = 143.00708327422964deg
+beta: 180.0deg - theta: 90.0deg
+15:18:33.748708
+I am averaging...alpha = 152.88617047186258deg
+beta: 180.0deg - theta: 90.0deg
+15:18:33.954489
+I am averaging...alpha = 161.33780803788937deg
+beta: 180.0deg - theta: 90.0deg
+15:18:34.160749
+I am averaging...alpha = 168.28309366879313deg
+beta: 180.0deg - theta: 90.0deg
+15:18:34.365892
+I am averaging...alpha = 173.65720600575116deg
+beta: 180.0deg - theta: 90.0deg
+15:18:34.570186
+I am averaging...alpha = 177.4100720781483deg
+beta: 180.0deg - theta: 90.0deg
+15:18:34.776202
+I am averaging...alpha = 179.50749513290668deg
+beta: 180.0deg - theta: 90.0deg
+15:18:34.982473
+
+theta: 90.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 180.0deg - theta: 108.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 180.0deg - theta: 108.0deg
+15:18:35.208304
+I am averaging...alpha = -177.4100720781483deg
+beta: 180.0deg - theta: 108.0deg
+15:18:35.416169
+I am averaging...alpha = -173.65720600575116deg
+beta: 180.0deg - theta: 108.0deg
+15:18:35.620285
+I am averaging...alpha = -168.28309366879313deg
+beta: 180.0deg - theta: 108.0deg
+15:18:35.824840
+I am averaging...alpha = -161.33780803788937deg
+beta: 180.0deg - theta: 108.0deg
+15:18:36.029111
+I am averaging...alpha = -152.88617047186258deg
+beta: 180.0deg - theta: 108.0deg
+15:18:36.234255
+I am averaging...alpha = -143.00708327422964deg
+beta: 180.0deg - theta: 108.0deg
+15:18:36.438440
+I am averaging...alpha = -131.79278137325215deg
+beta: 180.0deg - theta: 108.0deg
+15:18:36.642655
+I am averaging...alpha = -119.34796804743874deg
+beta: 180.0deg - theta: 108.0deg
+15:18:36.847598
+I am averaging...alpha = -105.78883630333722deg
+beta: 180.0deg - theta: 108.0deg
+15:18:37.053900
+I am averaging...alpha = -91.24198360780129deg
+beta: 180.0deg - theta: 108.0deg
+15:18:37.260476
+I am averaging...alpha = -75.84322970351435deg
+beta: 180.0deg - theta: 108.0deg
+15:18:37.461344
+I am averaging...alpha = -59.73634841078298deg
+beta: 180.0deg - theta: 108.0deg
+15:18:37.663452
+I am averaging...alpha = -43.07172520538467deg
+beta: 180.0deg - theta: 108.0deg
+15:18:37.865581
+I am averaging...alpha = -26.004953084903367deg
+beta: 180.0deg - theta: 108.0deg
+15:18:38.067843
+I am averaging...alpha = -8.695379823792898deg
+beta: 180.0deg - theta: 108.0deg
+15:18:38.268337
+I am averaging...alpha = 8.695379823792898deg
+beta: 180.0deg - theta: 108.0deg
+15:18:38.468824
+I am averaging...alpha = 26.004953084903367deg
+beta: 180.0deg - theta: 108.0deg
+15:18:38.670491
+I am averaging...alpha = 43.07172520538467deg
+beta: 180.0deg - theta: 108.0deg
+15:18:38.872345
+I am averaging...alpha = 59.73634841078298deg
+beta: 180.0deg - theta: 108.0deg
+15:18:39.075831
+I am averaging...alpha = 75.84322970351435deg
+beta: 180.0deg - theta: 108.0deg
+15:18:39.276947
+I am averaging...alpha = 91.24198360780129deg
+beta: 180.0deg - theta: 108.0deg
+15:18:39.481128
+I am averaging...alpha = 105.78883630333722deg
+beta: 180.0deg - theta: 108.0deg
+15:18:39.686372
+I am averaging...alpha = 119.34796804743874deg
+beta: 180.0deg - theta: 108.0deg
+15:18:39.890296
+I am averaging...alpha = 131.79278137325215deg
+beta: 180.0deg - theta: 108.0deg
+15:18:40.092971
+I am averaging...alpha = 143.00708327422964deg
+beta: 180.0deg - theta: 108.0deg
+15:18:40.299096
+I am averaging...alpha = 152.88617047186258deg
+beta: 180.0deg - theta: 108.0deg
+15:18:40.505331
+I am averaging...alpha = 161.33780803788937deg
+beta: 180.0deg - theta: 108.0deg
+15:18:40.710184
+I am averaging...alpha = 168.28309366879313deg
+beta: 180.0deg - theta: 108.0deg
+15:18:40.914998
+I am averaging...alpha = 173.65720600575116deg
+beta: 180.0deg - theta: 108.0deg
+15:18:41.121791
+I am averaging...alpha = 177.4100720781483deg
+beta: 180.0deg - theta: 108.0deg
+15:18:41.326751
+I am averaging...alpha = 179.50749513290668deg
+beta: 180.0deg - theta: 108.0deg
+15:18:41.531104
+
+theta: 108.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 180.0deg - theta: 162.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 180.0deg - theta: 162.0deg
+15:18:41.755302
+I am averaging...alpha = -177.4100720781483deg
+beta: 180.0deg - theta: 162.0deg
+15:18:41.959168
+I am averaging...alpha = -173.65720600575116deg
+beta: 180.0deg - theta: 162.0deg
+15:18:42.162402
+I am averaging...alpha = -168.28309366879313deg
+beta: 180.0deg - theta: 162.0deg
+15:18:42.365185
+I am averaging...alpha = -161.33780803788937deg
+beta: 180.0deg - theta: 162.0deg
+15:18:42.566535
+I am averaging...alpha = -152.88617047186258deg
+beta: 180.0deg - theta: 162.0deg
+15:18:42.768736
+I am averaging...alpha = -143.00708327422964deg
+beta: 180.0deg - theta: 162.0deg
+15:18:42.969677
+I am averaging...alpha = -131.79278137325215deg
+beta: 180.0deg - theta: 162.0deg
+15:18:43.172027
+I am averaging...alpha = -119.34796804743874deg
+beta: 180.0deg - theta: 162.0deg
+15:18:43.372828
+I am averaging...alpha = -105.78883630333722deg
+beta: 180.0deg - theta: 162.0deg
+15:18:43.576658
+I am averaging...alpha = -91.24198360780129deg
+beta: 180.0deg - theta: 162.0deg
+15:18:43.775291
+I am averaging...alpha = -75.84322970351435deg
+beta: 180.0deg - theta: 162.0deg
+15:18:43.973877
+I am averaging...alpha = -59.73634841078298deg
+beta: 180.0deg - theta: 162.0deg
+15:18:44.171992
+I am averaging...alpha = -43.07172520538467deg
+beta: 180.0deg - theta: 162.0deg
+15:18:44.372764
+I am averaging...alpha = -26.004953084903367deg
+beta: 180.0deg - theta: 162.0deg
+15:18:44.571656
+I am averaging...alpha = -8.695379823792898deg
+beta: 180.0deg - theta: 162.0deg
+15:18:44.768247
+I am averaging...alpha = 8.695379823792898deg
+beta: 180.0deg - theta: 162.0deg
+15:18:44.967097
+I am averaging...alpha = 26.004953084903367deg
+beta: 180.0deg - theta: 162.0deg
+15:18:45.166230
+I am averaging...alpha = 43.07172520538467deg
+beta: 180.0deg - theta: 162.0deg
+15:18:45.364934
+I am averaging...alpha = 59.73634841078298deg
+beta: 180.0deg - theta: 162.0deg
+15:18:45.563717
+I am averaging...alpha = 75.84322970351435deg
+beta: 180.0deg - theta: 162.0deg
+15:18:45.763274
+I am averaging...alpha = 91.24198360780129deg
+beta: 180.0deg - theta: 162.0deg
+15:18:45.964091
+I am averaging...alpha = 105.78883630333722deg
+beta: 180.0deg - theta: 162.0deg
+15:18:46.163792
+I am averaging...alpha = 119.34796804743874deg
+beta: 180.0deg - theta: 162.0deg
+15:18:46.363546
+I am averaging...alpha = 131.79278137325215deg
+beta: 180.0deg - theta: 162.0deg
+15:18:46.564068
+I am averaging...alpha = 143.00708327422964deg
+beta: 180.0deg - theta: 162.0deg
+15:18:46.765405
+I am averaging...alpha = 152.88617047186258deg
+beta: 180.0deg - theta: 162.0deg
+15:18:46.965496
+I am averaging...alpha = 161.33780803788937deg
+beta: 180.0deg - theta: 162.0deg
+15:18:47.166804
+I am averaging...alpha = 168.28309366879313deg
+beta: 180.0deg - theta: 162.0deg
+15:18:47.366823
+I am averaging...alpha = 173.65720600575116deg
+beta: 180.0deg - theta: 162.0deg
+15:18:47.566570
+I am averaging...alpha = 177.4100720781483deg
+beta: 180.0deg - theta: 162.0deg
+15:18:47.766454
+I am averaging...alpha = 179.50749513290668deg
+beta: 180.0deg - theta: 162.0deg
+15:18:47.965878
+
+theta: 162.0deg
+Yeah, it is done!
+/bin/sh: free: command not found
+  
+Before avg: VmSize: 0.00 GiB, VmRSS: 0.00 GiB
+now do averaging...
+beta: 180.0deg - theta: 180.0deg
+   
+I am averaging...alpha = -179.50749513290668deg
+beta: 180.0deg - theta: 180.0deg
+15:18:48.186274
+I am averaging...alpha = -177.4100720781483deg
+beta: 180.0deg - theta: 180.0deg
+15:18:48.389191
+I am averaging...alpha = -173.65720600575116deg
+beta: 180.0deg - theta: 180.0deg
+15:18:48.591462
+I am averaging...alpha = -168.28309366879313deg
+beta: 180.0deg - theta: 180.0deg
+15:18:48.794157
+I am averaging...alpha = -161.33780803788937deg
+beta: 180.0deg - theta: 180.0deg
+15:18:48.996004
+I am averaging...alpha = -152.88617047186258deg
+beta: 180.0deg - theta: 180.0deg
+15:18:49.198645
+I am averaging...alpha = -143.00708327422964deg
+beta: 180.0deg - theta: 180.0deg
+15:18:49.401916
+I am averaging...alpha = -131.79278137325215deg
+beta: 180.0deg - theta: 180.0deg
+15:18:49.602850
+I am averaging...alpha = -119.34796804743874deg
+beta: 180.0deg - theta: 180.0deg
+15:18:49.804560
+I am averaging...alpha = -105.78883630333722deg
+beta: 180.0deg - theta: 180.0deg
+15:18:50.006052
+I am averaging...alpha = -91.24198360780129deg
+beta: 180.0deg - theta: 180.0deg
+15:18:50.206324
+I am averaging...alpha = -75.84322970351435deg
+beta: 180.0deg - theta: 180.0deg
+15:18:50.407327
+I am averaging...alpha = -59.73634841078298deg
+beta: 180.0deg - theta: 180.0deg
+15:18:50.609096
+I am averaging...alpha = -43.07172520538467deg
+beta: 180.0deg - theta: 180.0deg
+15:18:50.810684
+I am averaging...alpha = -26.004953084903367deg
+beta: 180.0deg - theta: 180.0deg
+15:18:51.011767
+I am averaging...alpha = -8.695379823792898deg
+beta: 180.0deg - theta: 180.0deg
+15:18:51.213808
+I am averaging...alpha = 8.695379823792898deg
+beta: 180.0deg - theta: 180.0deg
+15:18:51.414779
+I am averaging...alpha = 26.004953084903367deg
+beta: 180.0deg - theta: 180.0deg
+15:18:51.616770
+I am averaging...alpha = 43.07172520538467deg
+beta: 180.0deg - theta: 180.0deg
+15:18:51.820395
+I am averaging...alpha = 59.73634841078298deg
+beta: 180.0deg - theta: 180.0deg
+15:18:52.022620
+I am averaging...alpha = 75.84322970351435deg
+beta: 180.0deg - theta: 180.0deg
+15:18:52.223825
+I am averaging...alpha = 91.24198360780129deg
+beta: 180.0deg - theta: 180.0deg
+15:18:52.426354
+I am averaging...alpha = 105.78883630333722deg
+beta: 180.0deg - theta: 180.0deg
+15:18:52.628206
+I am averaging...alpha = 119.34796804743874deg
+beta: 180.0deg - theta: 180.0deg
+15:18:52.829111
+I am averaging...alpha = 131.79278137325215deg
+beta: 180.0deg - theta: 180.0deg
+15:18:53.030014
+I am averaging...alpha = 143.00708327422964deg
+beta: 180.0deg - theta: 180.0deg
+15:18:53.234810
+I am averaging...alpha = 152.88617047186258deg
+beta: 180.0deg - theta: 180.0deg
+15:18:53.441950
+I am averaging...alpha = 161.33780803788937deg
+beta: 180.0deg - theta: 180.0deg
+15:18:53.644314
+I am averaging...alpha = 168.28309366879313deg
+beta: 180.0deg - theta: 180.0deg
+15:18:53.850141
+I am averaging...alpha = 173.65720600575116deg
+beta: 180.0deg - theta: 180.0deg
+15:18:54.052904
+I am averaging...alpha = 177.4100720781483deg
+beta: 180.0deg - theta: 180.0deg
+15:18:54.256405
+I am averaging...alpha = 179.50749513290668deg
+beta: 180.0deg - theta: 180.0deg
+15:18:54.461813
+
+theta: 180.0deg
+Yeah, it is done!
+elapsed time: 0:00:45.559663
+   
+===============================================================
+shape = HongPlate_Id9
+Temperature = 190.0 K
+Frequency = 228000000000.0 GHz
+Size = 9.999999999999999e-06 m
+===============================================================
+   
+beta  pair (b -> 180-b): ext 2.266e-03   mueller 1.254e-03
+theta pair (t -> 180-t): ext 2.266e-03   mueller 7.235e-02
+(solver noise reference is ~1e-11; mismatch >> noise => naive half-range reuse would be a real error)
