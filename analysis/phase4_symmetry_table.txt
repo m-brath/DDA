@@ -1,13 +1,13 @@
-habit                        shape file                   XY     XZ     YZ   Cn scores (strict: score>=0.999)
-HongPlate_Id9                Dmax00013um_Dveq00010um_ N=   1015  1.000  1.000  0.986   n2=0.986/  0.9 n3=1.000/  0.7 n4=0.945/  1.1 n6=1.000/  0.7 n12=0.972/  1.3  sym_Zobj=6
-HongPlate_Id9                Dmax10000um_Dveq02596um_ N=2956210  1.000  1.000  1.000   n2=1.000/  0.9 n3=1.000/  1.0 n4=0.930/ 45.7 n6=1.000/  0.8 n12=0.929/ 45.5  sym_Zobj=6
-HongColumn_Id7               Dmax00014um_Dveq00010um_ N=   1035  0.986  0.957  1.000   n2=1.000/  0.6 n3=0.656/  4.3 n4=0.595/  4.0 n6=0.657/  4.2 n12=0.825/  3.0  sym_Zobj=2
-HongColumn_Id7               Dmax10000um_Dveq01815um_ N= 917532  1.000  0.996  1.000   n2=1.000/  0.9 n3=0.064/275.1 n4=0.054/308.7 n6=0.064/275.0 n12=0.111/162.2  sym_Zobj=2
-IconSnow_Id28                Dmax00120um_Dveq00094um_ N=      2  0.000  0.000  0.000   n2=1.000/  0.0 n3=1.000/  0.0 n4=1.000/  0.0 n6=1.000/  0.0 n12=1.000/  0.0  sym_Zobj=12
-IconSnow_Id28                Dmax20000um_Dveq03219um_ N=5173568  0.069  0.051  0.045   n2=0.021/302.9 n3=0.008/533.7 n4=0.007/516.9 n6=0.013/492.4 n12=0.008/318.4  sym_Zobj=None
-LiuSectorSnowflake_Id3       Dmax00020um_Dveq00020um_ N=   1177  0.990  0.993  0.997   n2=0.990/  1.0 n3=0.993/  1.0 n4=0.993/  1.0 n6=0.993/  1.0 n12=0.992/  1.0  sym_Zobj=None
-LiuSectorSnowflake_Id3       Dmax12000um_Dveq01415um_ N= 514350  0.999  0.872  0.838   n2=0.999/  1.0 n3=1.000/  1.1 n4=0.240/180.7 n6=1.000/  1.1 n12=0.242/180.8  sym_Zobj=6
-HexPlaAggCrystal_Id20        Dmax00349um_Dveq00197um_ N=   1020  1.000  0.988  0.988   n2=1.000/  0.8 n3=1.000/  0.8 n4=0.976/  1.7 n6=0.997/  0.9 n12=0.956/  1.8  sym_Zobj=3
-HexPlaAggCrystal_Id20        Dmax22712um_Dveq04563um_ N=14559120  0.068  0.049  0.027   n2=0.012/319.3 n3=0.009/332.0 n4=0.009/394.1 n6=0.012/268.3 n12=0.018/319.0  sym_Zobj=None
-HongPlate_Id9_TOR_sizegrid   Dmax00013um_Dveq00010um_ N=   1015  1.000  1.000  0.986   n2=0.986/  0.9 n3=1.000/  0.7 n4=0.945/  1.1 n6=1.000/  0.7 n12=0.972/  1.3  sym_Zobj=6
-HongPlate_Id9_TOR_sizegrid   Dmax10000um_Dveq02596um_ N=2956210  1.000  1.000  1.000   n2=1.000/  0.9 n3=1.000/  1.0 n4=0.930/ 45.7 n6=1.000/  0.8 n12=0.929/ 45.5  sym_Zobj=6
+habit                        shape file                   XY     XZ     YZ    C2z   C4z   ideal-shape Cn scores (geometric, sub-voxel — model-level impossible for n≠2,4 about z)
+HongPlate_Id9                Dmax00013um_Dveq00010um_ N=   1015  1.000  1.000  0.986  0.986 0.731   n2=0.986/  0.9 n3=1.000/  0.7 n4=0.945/  1.1 n6=1.000/  0.7 n12=0.972/  1.3  ideal-Cn=6
+HongPlate_Id9                Dmax10000um_Dveq02596um_ N=2956210  1.000  1.000  1.000  1.000 0.735   n2=1.000/  0.9 n3=1.000/  1.0 n4=0.930/ 45.7 n6=1.000/  0.8 n12=0.929/ 45.5  ideal-Cn=6
+HongColumn_Id7               Dmax00014um_Dveq00010um_ N=   1035  0.986  0.957  1.000  0.957 0.432   n2=1.000/  0.6 n3=0.656/  4.3 n4=0.595/  4.0 n6=0.657/  4.2 n12=0.825/  3.0  ideal-Cn=2
+HongColumn_Id7               Dmax10000um_Dveq01815um_ N= 917532  1.000  0.996  1.000  0.996 0.000   n2=1.000/  0.9 n3=0.064/275.1 n4=0.054/308.7 n6=0.064/275.0 n12=0.111/162.2  ideal-Cn=2
+IconSnow_Id28                Dmax00120um_Dveq00094um_ N=      2  0.000  0.000  0.000  0.000 0.000   n2=1.000/  0.0 n3=1.000/  0.0 n4=1.000/  0.0 n6=1.000/  0.0 n12=1.000/  0.0  ideal-Cn=12
+IconSnow_Id28                Dmax20000um_Dveq03219um_ N=5173568  0.069  0.051  0.045  0.012 0.011   n2=0.021/302.9 n3=0.008/533.7 n4=0.007/516.9 n6=0.013/492.4 n12=0.008/318.4  ideal-Cn=None
+LiuSectorSnowflake_Id3       Dmax00020um_Dveq00020um_ N=   1177  0.990  0.993  0.997  0.990 0.993   n2=0.990/  1.0 n3=0.993/  1.0 n4=0.993/  1.0 n6=0.993/  1.0 n12=0.992/  1.0  ideal-Cn=None
+LiuSectorSnowflake_Id3       Dmax12000um_Dveq01415um_ N= 514350  0.999  0.872  0.838  0.784 0.351   n2=0.999/  1.0 n3=1.000/  1.1 n4=0.240/180.7 n6=1.000/  1.1 n12=0.242/180.8  ideal-Cn=6
+HexPlaAggCrystal_Id20        Dmax00349um_Dveq00197um_ N=   1020  1.000  0.988  0.988  0.988 0.732   n2=1.000/  0.8 n3=1.000/  0.8 n4=0.976/  1.7 n6=0.997/  0.9 n12=0.956/  1.8  ideal-Cn=3
+HexPlaAggCrystal_Id20        Dmax22712um_Dveq04563um_ N=14559120  0.068  0.049  0.027  0.028 0.020   n2=0.012/319.3 n3=0.009/332.0 n4=0.009/394.1 n6=0.012/268.3 n12=0.018/319.0  ideal-Cn=None
+HongPlate_Id9_TOR_sizegrid   Dmax00013um_Dveq00010um_ N=   1015  1.000  1.000  0.986  0.986 0.731   n2=0.986/  0.9 n3=1.000/  0.7 n4=0.945/  1.1 n6=1.000/  0.7 n12=0.972/  1.3  ideal-Cn=6
+HongPlate_Id9_TOR_sizegrid   Dmax10000um_Dveq02596um_ N=2956210  1.000  1.000  1.000  1.000 0.735   n2=1.000/  0.9 n3=1.000/  1.0 n4=0.930/ 45.7 n6=1.000/  0.8 n12=0.929/ 45.5  ideal-Cn=6
