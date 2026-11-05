@@ -1085,12 +1085,6 @@ def construct_by_symmetry(mueller_mat,ext_mat,V_sym):
     mueller_array_local=mueller_mat.copy()
     ext_mat_array_local=ext_mat.copy()
     
-    #shape of mueller
-    qm=np.shape(mueller_array_local)
-    
-    #rad per bin
-    rpb=np.pi*2/qm[2]
-    
     Sym_logic=np.abs((V_sym-1)/2)
     Sym_logic=Sym_logic.astype(bool)
     
@@ -1102,6 +1096,14 @@ def construct_by_symmetry(mueller_mat,ext_mat,V_sym):
             
     
     if len(mueller_array_local)!=0:
+        
+        #shape of mueller (mueller-grid representation only; the extinction-
+        #only call passes np.empty(0) - Phase 4 fix: this shape math used to
+        #run unconditionally and crashed the ext-only path)
+        qm=np.shape(mueller_array_local)
+        
+        #rad per bin
+        rpb=np.pi*2/qm[2]
         
         M_m=np.reshape(M,(1,1,qm[3]))
         M_m=np.tile(M_m,(qm[1],qm[2],1))
@@ -1308,7 +1310,9 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
                     
                     VTEST[i,:]=vt
                     
-                    [idx_sym[i],bla]=ico.find_nearest_Nvertices(vertices,vt,N=1)
+                    # numpy 2: find_nearest returns a size-1 array -> index it
+                    r_idx=ico.find_nearest_Nvertices(vertices,vt,N=1)
+                    idx_sym[i]=int(np.asarray(r_idx[0])[0])
                     
             logic=(idx_sym!=idx)
             use_symmetry=int(np.ceil(np.sum(logic)/len(logic)))
@@ -1316,9 +1320,26 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
             
             
             if use_symmetry==1:
-                
-                raise Exception('Symmetry is still under construction...sorry!');                
-                
+
+                # Phase 4: the modern pipeline (adda_sub_control_spharmonics.py)
+                # mirror-fill-in-writes every skipped vertex at ADDA-run time, so
+                # complete Mueller data is available at all vertices and plain
+                # averaging below is exact. A store with vertex holes predates the
+                # fill-in and cannot be completed here (reconstructing Mueller
+                # spherical-harmonic expansions under mirror symmetry was never
+                # implemented — the old 'under construction' state):
+                if any(mueller_array[i] is None for i in idx):
+                    raise RuntimeError(
+                        'orientational_avg: symmetry-flagged store is missing '
+                        'Mueller data at some vertices (predates the Phase-4 '
+                        "write-time mirror fill-in) — regenerate with the "
+                        'current adda_sub_control_spharmonics.py')
+                print('  symmetry flags set but complete vertex data present:'
+                      ' using plain averaging')
+                use_symmetry=0
+
+            if use_symmetry==1:
+                pass  # unreachable since the check above; legacy branch commented
 #                #construct mueller and extinction by symmetry
 #                [mueller_mat_sym,ext_mat_sym]=construct_by_symmetry(
 #                        mueller_array_temp[idx_sym,:,:,:],

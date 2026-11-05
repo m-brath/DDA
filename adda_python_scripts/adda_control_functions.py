@@ -1250,6 +1250,46 @@ def _todict(matobj):
 
 
 #==============================================================================
+#  ADDA mirror-symmetry transforms (Phase 4)
+#  Empirically verified for ADDA 1.2 by analysis/phase4_grid_symmetry.py
+#  (generic oblique propagation pairs (p, S p) on an oblate spheroid,
+#  residuals <=3e-11 at -eps 3, i.e. solver noise). ADDA's mueller_scatgrid
+#  lives on a propagation-ATTACHED (theta,phi) angle grid, so theta is NEVER
+#  remapped; each particle mirror plane S contributes
+#     mueller_S(theta,phi) = mueller(theta, phi_map(phi)) * sgn16
+#     ext_matrix_S         = ext_matrix * sgn4             (elementwise)
+#  with per-mirror phi maps listed below and the sign matrix outer(D,D),
+#  D = diag(1,1,-1,-1) (attached-frame linear polarization basis relabelling;
+#  composing two mirrors cancels the signs, D^2=1). This matches the sign
+#  convention already used by aoa.construct_by_symmetry's extinction branch.
+#==============================================================================
+MIRROR_AXES = {'XY': 2, 'XZ': 1, 'YZ': 0}
+MIRROR_PHIMAP = {'XY': lambda p: 180.0 - p, 'XZ': lambda p: -p, 'YZ': lambda p: -p}
+MIRROR_D = np.array([1.0, 1.0, -1.0, -1.0])
+
+def mirror_signs(nmirrors):
+    """16-component (row-major) sign pattern of nmirrors composed mirrors"""
+    if nmirrors % 2:
+        return np.outer(MIRROR_D, MIRROR_D).reshape(16)
+    return np.ones(16)
+
+def mirror_phi_index_map(phis, subset, tol=1e-6):
+    """column index map j -> source column implementing the composed phi maps
+    of `subset` (iterable over 'XY'/'XZ'/'YZ') on the phi grid `phis` (deg);
+    raises if the grid cannot represent a mapped value exactly"""
+    phis = np.asarray(phis, dtype=float)
+    idx = np.arange(phis.size)
+    for f in subset:
+        m = MIRROR_PHIMAP[f](phis) % 360.0
+        j = np.abs(phis[None, :] - m[:, None]).argmin(axis=1)
+        if np.max(np.abs(phis[j] - m)) > tol:
+            raise ValueError('phi grid cannot represent mirror %s (max dev %.3g deg)'
+                             % (f, np.max(np.abs(phis[j] - m))))
+        idx = idx[j]
+    return idx
+
+
+#==============================================================================
 #  NetCDF routines
 #==============================================================================
 

@@ -183,12 +183,16 @@ shape=shape_name
 #sym_Zobj=0
 
 #mirror symmetry of particle relative to the X-Y-plane of its own coordinate system
-sym_XYobj=False
+# Phase 4: voxel-set closure measured by analysis/phase4_symmetry.py — exact
+# at ALL resolutions of the size grid (see report Phase-4 table)
+sym_XYobj=True
 
 #mirror symmetry of particle relative to the X-Z-plane of its own coordinate system
-sym_XZobj=False
+sym_XZobj=True
 
 #mirror symmetry of particle relative to the Y-Z-plane of its own coordinate system
+# NOT enabled: closure exact only at fine resolution, 0.986 at the coarse
+# (192 GHz-class) files -> real field errors ~1.5e-4 measured there
 sym_YZobj=False
 
 

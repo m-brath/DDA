@@ -19,6 +19,7 @@ import os
 import numpy as np
 import scipy.io as sio
 import sys
+import itertools
 import pickle
 import typhon as ty
 #import zipfile
@@ -251,6 +252,75 @@ netcdf_tempname=os.path.join(storage_path,shape_name+'_temp_data_')
 print(f"NetCDF path: {netcdf_tempname}")
 
 filenum=0
+
+# Phase 4: mirror-symmetry write-time fill-in.
+# A particle mirror maps the just-computed raw ADDA grid of a run-vertex to
+# all its mirror-image vertices on the SAME propagation-attached angle grid
+# (transform empirically verified by analysis/phase4_grid_symmetry.py, and
+# the icosahedron grid is exactly closed under coordinate mirrors). Filled
+# vertices get identical NetCDF cache entries, so all later refinement
+# passes, averaging and post-processing see a complete dataset and need no
+# symmetry branch at all. Mirrors only need to be RUN for one symmetry-
+# reduced octant of the grid (see the _runfirst ordering below).
+_mirror_flags=[f for f,s in (('XY',sym_XYobj),('XZ',sym_XZobj),('YZ',sym_YZobj))
+               if s]
+
+
+def mirror_fill(point_i, particle_id, output_data, vertices, ext_mat_array,
+                mueller_array, rel_err_array, max_len_array, max_ntrunc_array):
+
+    if not _mirror_flags or 'mueller_array' not in output_data:
+        return
+
+    for nsub in range(1, len(_mirror_flags)+1):
+
+        for subset in itertools.combinations(_mirror_flags, nsub):
+
+            img=vertices[point_i,:].copy()
+            for f in subset:
+                img[acf.MIRROR_AXES[f]]=-img[acf.MIRROR_AXES[f]]
+
+            r_near=ico.find_nearest_Nvertices(vertices,img,N=1)
+            jj=int(np.asarray(r_near[0])[0])
+            snap=float(np.asarray(r_near[1])[0])
+
+            if jj==point_i or mueller_array[jj] is not None:
+                continue
+
+            if snap>1e-3:
+                print('WARNING: mirror snap %.1e rad (subset %s)'
+                      %(snap,'+'.join(subset)))
+
+            jmap=acf.mirror_phi_index_map(output_data['phis_grid'],subset)
+            mir_data={}
+            mir_data['mueller_array']=output_data['mueller_array'][:,jmap,:]\
+                                      *acf.mirror_signs(len(subset))
+            mir_data['thetas_grid']=output_data['thetas_grid']
+            mir_data['phis_grid']=output_data['phis_grid']
+
+            extm=output_data['ext_matrix']\
+                 *acf.mirror_signs(len(subset)).reshape((4,4))
+
+            [sphj,relj,lenj,ntrj]=spha.expand_mueller_2_spharmonics(
+                    mir_data,eps_sphexp,diagnostics=False)
+
+            pid_j=zipname_vid(**{'XV':(vertices[jj,0]*1e5),
+                                 'YV':(vertices[jj,1]*1e5),
+                                 'ZV':(vertices[jj,2]*1e5)})
+
+            acf.write_data_to_separate_netcdf(netcdf_tempname, pid_j,
+                                              sphj, relj, lenj, ntrj, extm)
+
+            ext_mat_array[jj,:,:]=extm
+            mueller_array[jj]=sphj
+            rel_err_array[jj,:]=relj
+            max_len_array[jj]=lenj
+            max_ntrunc_array[jj]=ntrj
+
+            print('  mirror-filled %s (%s) from %s'
+                  %(pid_j,'+'.join(subset),particle_id))
+
+
 while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
 
@@ -267,7 +337,23 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
     allocate_flag=False
 
-    for point_i in range(0,np.size(vertices,axis=0)):
+    # Phase 4: with mirror symmetries enabled, process the run-vertices (all
+    # flag-coordinates non-negative) FIRST, so every skipped vertex has already
+    # been mirror-filled by the time the loop reaches it
+    if _mirror_flags:
+
+        def _runfirst(v):
+            for f in _mirror_flags:
+                if v[acf.MIRROR_AXES[f]]<0:
+                    return 1
+            return 0
+
+        _order=sorted(range(0,np.size(vertices,axis=0)),
+                      key=lambda i: _runfirst(vertices[i,:]))
+    else:
+        _order=range(0,np.size(vertices,axis=0))
+
+    for point_i in _order:
 
         ##Name of zipfile
         zipstrings={'XV':(vertices[point_i,0]*1e5), 'YV':(vertices[point_i,1]*1e5),
@@ -322,16 +408,15 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
 
 
-        #Use symmetry if existent
+        #Use symmetry if existent (Phase 4: skip only when the mirror fill-in
+        #has already provided this vertex; otherwise run ADDA normally, so a
+        #missing fill can never produce NaN data silently)
         if ((vertices[point_i,2]<0-1e-10  and  sym_XYobj==True) or
             (vertices[point_i,1]<0-1e-10  and  sym_XZobj==True) or
             (vertices[point_i,0]<0-1e-10  and  sym_YZobj==True)):
 
-#            print('symmetry used')
-
-            continue
-#        else:
-#            print('symmetry not used')
+            if allocate_flag and mueller_array[point_i] is not None:
+                continue
 
 
         filenum+=1
@@ -420,6 +505,11 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
             #max number of truncation
             max_ntrunc_array[point_i]=max_ntrunc
+
+            # ---- Phase 4: mirror-symmetry write-time fill-in ---------------
+            mirror_fill(point_i, particle_id, output_data, vertices,
+                        ext_mat_array, mueller_array, rel_err_array,
+                        max_len_array, max_ntrunc_array)
 
 #            phis_grid=output_data['phis_grid']
 #            thetas_grid=output_data['thetas_grid']
@@ -524,6 +614,11 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
                 #max number of truncation
                 max_ntrunc_array[point_i]=max_ntrunc
+
+                # Phase 4: mirror-symmetry write-time fill-in (refined passes)
+                mirror_fill(point_i, particle_id, output_data, vertices,
+                            ext_mat_array, mueller_array, rel_err_array,
+                            max_len_array, max_ntrunc_array)
 
     q_ext=ext_mat_array.shape
 
@@ -637,7 +732,9 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                                 V_sym[i,0]=-V_sym[i,0]
 
 
-                            [idx_sym[i],bla]=ico.find_nearest_Nvertices(vertices,vt,N=1)
+                            # numpy 2: find_nearest returns a size-1 array -> index it
+                            r_idx=ico.find_nearest_Nvertices(vertices,vt,N=1)
+                            idx_sym[i]=int(np.asarray(r_idx[0])[0])
 
                     logic=(idx_sym!=idx)
                     use_symmetry=int(np.ceil(np.sum(logic)/len(logic)))

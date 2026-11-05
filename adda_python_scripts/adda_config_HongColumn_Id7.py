@@ -200,13 +200,17 @@ shape=shape_name
 #sym_Zobj=0
 
 #mirror symmetry of particle relative to the X-Y-plane of its own coordinate system
+# Phase 4 (analysis/phase4_symmetry.py): closure exact at fine resolution
+# only (0.986 at the coarse files) -> keep disabled
 sym_XYobj=False
 
 #mirror symmetry of particle relative to the X-Z-plane of its own coordinate system
+# (0.957 coarse / 0.996 fine) -> keep disabled
 sym_XZobj=False
 
 #mirror symmetry of particle relative to the Y-Z-plane of its own coordinate system
-sym_YZobj=False
+# exact voxel closure at ALL resolutions
+sym_YZobj=True
 
 
 #==============================================================================
