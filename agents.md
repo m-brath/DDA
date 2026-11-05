@@ -220,7 +220,14 @@ notes; do not extend — report §1.6-9).
   the coarse (192 GHz-class) files of the size grid (e.g. HongPlate YZ 0.986 coarse) —
   flags must use the **coarsest** class; a not-closed mirror fill is a real shape error
   (~1.5e-4 Mueller field error, NOT solver noise). `sym_Zobj` (Cn rotation) still has no
-  pipeline implementation — HongPlate has true C6 (potential further ~6×), parked.
+  **Shape-model caveat:** the model is cubes on a cubic lattice — mirrors map
+  the lattice to itself (exact closure is what the flags test), but rotations
+  other than 90/180° never do, so a voxelized hexagon is never an exactly C6
+  *model* (ideal-shape C6 is sub-voxel only; exploiting it costs a boundary-
+  layer discretization error). Exact C2z is itself resolution-dependent
+  (HongPlate: 1.000 fine, 0.986 coarse) → `sym_Zobj` rotation reduction is
+  not exactly available for the production size grid; the XY+XZ fill-in
+  already implies exact C2x (mirror composition).
 - **ADDA 1.2 → 1.4/1.5 compatibility** (checked against upstream changelog + `param.c` of
   the 1.5.0-alpha3 tree in `adda/`): `-eps <n>` semantics unchanged (residual exponent),
   `-orient`, `-m`, `-lambda`, `-eq_rad`, `-store_scat_grid`, `-scat_grid_inp`, `-scat_matr`,

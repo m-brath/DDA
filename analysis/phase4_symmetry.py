@@ -75,12 +75,38 @@ def mirror_exact(idx, axis):
     return inter / min(len(A), len(B))  # 1.0 -> exact
 
 
+def rot_exact_z(idx, n):
+    """exact voxel-grid closure test for lattice-preserving rotations about z
+    (n=2: 180 deg, n=4: 90 deg). CRITICAL (voxel shapes are cubes on a CUBIC
+    lattice): rotations by other angles (n=3, 6, ...) do NOT map the lattice
+    onto itself, so a discretized hexagonal habit can never be exactly C6 as
+    a SHAPE MODEL — its voxelization under 60 deg rotation is a different
+    voxel set differing by an O(1-voxel) boundary layer. Only C2/C4 about
+    z (and compositions of exact mirrors, which are implied exactly) can ever
+    be exact; use rot_score() to detect ideal-shape Cn at sub-voxel level."""
+    if n == 2:
+        s = idx.copy().astype(int)
+        s[:, 0] = idx.max(axis=0)[0] - s[:, 0]
+        s[:, 1] = idx.max(axis=0)[1] - s[:, 1]
+    elif n == 4:
+        s = np.stack([idx[:, 1], idx.max(axis=0)[0] - idx[:, 0], idx[:, 2]],
+                     axis=1).astype(int)
+    else:
+        raise ValueError('only n=2,4 preserve the cubic lattice about z')
+    t = np.round(s.mean(axis=0) - idx.mean(axis=0)).astype(int)
+    A = _rows(idx)
+    B = _rows(s + t)
+    inter = np.intersect1d(A, B, assume_unique=True).shape[0]
+    return inter / min(len(A), len(B))  # 1.0 -> exact
+
+
 def rot_score(pos, n, maxpts=3_000_000):
-    """(score, max_dev) of rotated point set vs itself, tolerance = cubic
-    lattice covering radius sqrt(3)/2 (rotated voxels legitimately land up to
-    that far from a voxel centre; mirrors are exact on the grid, rotations
-    are NOT). True Cn: score=1, max_dev<=0.87. False Cn: score<1, max_dev
-    up to shape-size. NOTE: only meaningful for well-resolved shapes
+    """IDEAL-SHAPE Cn test (geometric, NOT model-level): (score, max_dev) of
+    rotated point set vs itself, tolerance = cubic lattice covering radius
+    sqrt(3)/2. score=1 means the rotation of the shape differs from the
+    voxel model only sub-voxel-wide (boundary-layer discretization error),
+    NOT that the voxel set is invariant — see rot_exact_z. False Cn: score<1,
+    max_dev up to shape-size. NOTE: only meaningful for well-resolved shapes
     (>>10 voxels across); large sets are randomly subsampled, which dilutes
     the score (sampled tree = inflated NN distances) — keep the cap above the
     production-habit sizes so strict gates stay valid."""
@@ -98,7 +124,7 @@ def rot_score(pos, n, maxpts=3_000_000):
 
 
 def main(habits=HABITS):
-    print(f"{'habit':28s} {'shape file':24s} {'XY':>6s} {'XZ':>6s} {'YZ':>6s}   Cn scores (strict: score>=0.999)")
+    print(f"{'habit':28s} {'shape file':24s} {'XY':>6s} {'XZ':>6s} {'YZ':>6s}  {'C2z':>5s} {'C4z':>5s}   ideal-shape Cn scores (geometric, sub-voxel — model-level impossible for n≠2,4 about z)")
     for habit in habits:
         files = sorted(glob.glob(os.path.join(SHAPE_MAIN, habit, "*.adda")))
         if not files:
@@ -113,14 +139,16 @@ def main(habits=HABITS):
             # mirror test on the FULL voxel set (a random subsample of a
             # mirror-closed set is NOT closed); rot_score samples internally
             fr = [mirror_exact(idx, ax) for ax in (2, 1, 0)]  # XY, XZ, YZ
+            e2, e4 = rot_exact_z(idx, 2), rot_exact_z(idx, 4)
             pos = idx.astype(float)  # voxel units (isotropic step in meta)
             scores = {n: rot_score(pos, n) for n in (2, 3, 4, 6, 12)}
             symZ = next((n for n in (12, 6, 4, 3, 2) if scores[n][0] >= 0.999), None)
             name = os.path.basename(path).split(".")[0][:24]
             print(f"{habit:28s} {name:24s} N={len(idx):7d} "
-                  f"{fr[0]:6.3f} {fr[1]:6.3f} {fr[2]:6.3f}   "
+                  f"{fr[0]:6.3f} {fr[1]:6.3f} {fr[2]:6.3f}  "
+                  f"{e2:5.3f} {e4:5.3f}   "
                   + " ".join(f"n{n}={scores[n][0]:.3f}/{scores[n][1]:5.1f}" for n in (2, 3, 4, 6, 12))
-                  + f"  sym_Zobj={symZ}", flush=True)
+                  + f"  ideal-Cn={symZ}", flush=True)
 
 
 if __name__ == "__main__":

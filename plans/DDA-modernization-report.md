@@ -642,22 +642,43 @@ habits stay un-diluted).
 
 ## 4.6 Measured habit symmetries (strict gate)
 
-| habit | XY | XZ | YZ | Cn |
-|---|---|---|---|---|
-| HongPlate_Id9 (coarse→fine) | 1.000/1.000 | 1.000/1.000 | **0.986**/1.000 | true C6 at fine (max dev 0.77 vox) |
-| HongPlate_Id9_TOR_sizegrid | 1.000/1.000 | 1.000/1.000 | 0.986/1.000 | true C6 at fine |
-| HongColumn_Id7 | 0.986/1.000 | 0.957/0.996 | **1.000/1.000** | C2 only |
-| LiuSectorSnowflake_Id3 | 0.990/0.999 | 0.993/0.872 | 0.997/0.838 | C6-ish at fine, no exact mirror |
-| IconSnow_Id28 (fine, 5.17M) | 0.069 | 0.051 | 0.045 | none (random aggregate) |
-| HexPlaAggCrystal_Id20 (fine, 14.6M) | 0.068 | 0.049 | 0.027 | none (random aggregate) |
+Two symmetry notions must be separated (**the shape model is a union of
+cubes on a cubic lattice — its symmetry, not the ideal habit's, governs
+what is exact**; noted by the user, verified by exact lattice tests):
 
-**Key finding: mirror closure is resolution-dependent.** The coarse
+- **mirrors** map the cubic lattice onto itself → voxel-set closure is
+  exact-or-nothing and directly usable (it is what the pipeline exploits);
+- **rotations by n≠2,4 about z do NOT map the lattice onto itself** — a
+  voxelized hexagon can NEVER be an exactly C6 *model*; only C2/C4 about z
+  (or compositions of exact mirrors) admit exact closure. `rot_score`
+  measures the *ideal shape* at sub-voxel tolerance; using such a rotation
+  for orientation reduction compares two DIFFERENT voxelizations of the same
+  ideal habit, differing by an O(1-voxel) boundary layer → error at the
+  discretization level, not free.
+
+| habit | XY | XZ | YZ | C2z exact | C4z exact | ideal-shape Cn |
+|---|---|---|---|---|---|---|
+| HongPlate_Id9 (coarse→fine) | 1.000/1.000 | 1.000/1.000 | **0.986**/1.000 | 0.986/1.000 | 0.73/0.74 (never) | 6 (sub-voxel only) |
+| HongPlate_Id9_TOR_sizegrid | 1.000/1.000 | 1.000/1.000 | 0.986/1.000 | (as Id9) | — | 6 (sub-voxel only) |
+| HongColumn_Id7 | 0.986/1.000 | 0.957/0.996 | **1.000/1.000** | 0.957/0.996 | 0.43/0.00 | 2 |
+| LiuSectorSnowflake_Id3 | 0.990/0.999 | 0.993/0.872 | 0.997/0.838 | 0.990/0.784 | 0.993/0.35 | 6-ish (sub-voxel only) |
+| IconSnow_Id28 (fine, 5.17M) | 0.069 | 0.051 | 0.045 | n/a (mirrors already fail) | n/a | none |
+| HexPlaAggCrystal_Id20 (fine, 14.6M) | 0.068 | 0.049 | 0.027 | n/a | n/a | none |
+
+**Key finding 1: mirror closure is resolution-dependent.** The coarse
 (192-GHz-class) voxel discretizations break closures that are exact at fine
 resolution (HongPlate YZ 0.986, HongColumn XY/XZ). A filled mirror of a
 NOT-closed voxel set is not a bug in the transform but a real shape error:
 measured on HongPlate coarse YZ → `mueller` reldiff **1.5e-4**, `eps_vec` shift —
 vs 4.5e-12 with exact closures. Production flags must use the closure of the
 **coarsest** resolution class of the size grid.
+
+**Key finding 2 (per above): even the *exact* rotation C2z is
+resolution-dependent for the hex habits** (HongPlate 0.986 coarse — the
+voxelized hexagon's orientation w.r.t. the lattice varies across the size
+grid) → no production-size rotation reduction is available for HongPlate
+either. Its XY+XZ fill-in does however already imply the exact C2x
+(composition of the two enabled mirrors, closed under the fill subsets).
 
 ## 4.7 Production config flags (set in this phase)
 
@@ -666,9 +687,14 @@ vs 4.5e-12 with exact closures. Production flags must use the closure of the
 - `adda_config_HongColumn_Id7.py`: **YZ=True**, XY/XZ=False (1 mirror → ~2×).
 - `adda_config_LiuSectorSnowflake_Id3.py`, `IconSnow_Id28`,
   `HexPlaAggCrystal_Id20`: all False (no exact closure).
-- HongPlate C6 is real but `sym_Zobj` has **no pipeline implementation**
-  (rotation-group transform of attached grids + z-rotation caching is a much
-  bigger step; parked, potential further ~6×).
+- HongPlate's C6 is an **ideal-shape** property only — the voxel *model* is
+  exactly C2z only at fine resolution (0.986 coarse, §4.6), so rotation-based
+  orientation reduction (`sym_Zobj`, ~6× on paper) is **not exactly available
+  for the production size grid at all**; only a lossy sub-voxel-level version
+  (boundary-layer discretization error) would be. If ever revisited: the
+  expensive fine resolution classes ARE exactly C2z-closed (1.000 at the probed
+  fine file) — recovering this needs **per-shape-file symmetry flags** (today
+  they are per-config), and would halve the cost of the expensive classes only.
 
 ## 4.8 Speedup measurements
 
@@ -739,7 +765,9 @@ per-component normalization would punish near-zero components).
 - Step 18: ADDA-internal cost benchmark table on the ellipsoid probe
   (`-eps` ladder, dpl tuning) — feeds production cost models.
 - Step 19: job structure (one job per (T,f,size) is coarse for HPC backlog).
-- `sym_Zobj` Cn support for HongPlate (measured true C6, further ~6×).
+- `sym_Zobj` rotation support: **not exactly available at model level** for the
+  production size grid (§4.6, finding 2); a per-resolution-flag variant could
+  exploit exact C2z on the fine classes only (~2× there, not ~6×).
 - Phase-5 items unchanged (TRO `liste` temperature column, post-processing
   localization, regenerate baselines under 1.4.0, fix 5 GHz backlog stubs).
 
