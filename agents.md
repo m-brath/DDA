@@ -50,15 +50,18 @@ reference patterns only.**
 
 ## Current Status
 
-- **ARO done** for: `HexPlaAggCrystal_Id20` and `HongPlate_Id9` (plate habit).
-  Results lived on the HPC under `…/adda_results/` (not in this repo; see note below —
-  currently not accessible).
-- **TRO not yet done.** `adda_shape_files/HongPlate_Id9_TOR_sizegrid/` was prepared as
-  the first TRO size grid. Old TRO machinery exists (`adda_main_control_rndorient.py` +
-  `adda_sub_control_randomorient.py` + `acf.adda_call_randomorient` + `*_RndOrient`
-  configs using ADDA's `-orient avg`).
-- Next habits queued (configs + shape files ready, not yet processed): HongColumn_Id7,
-  IconSnow_Id28, LiuSectorSnowflake_Id3.
+- **ARO production runs done (old HPC)** for: `HexPlaAggCrystal_Id20` and `HongPlate_Id9`
+  (plate habit). Results lived on the HPC under `…/adda_results/` (not in this repo; see
+  note below — currently not accessible).
+- **TRO stack ready, runs pending.** `adda_shape_files/HongPlate_Id9_TOR_sizegrid/` is the
+  first TRO size grid; the modernized stack is `adda_main_control_rndorient.py` →
+  `adda_sub_control_randomorient.py` (9-row liste with temperature) + production config
+  `adda_config_HongPlate_Id9_TRO.py` (4608 jobs, `-orient avg` + XY-folded β input,
+  validated end-to-end + gate PASS — report §5.2/5.3).
+- **Backlog configs READY** (repaired frequency lists, symmetry flags set, smoke-tested;
+  HPC submission is the remaining step — runbook report §5.6): HongColumn_Id7,
+  IconSnow_Id28, LiuSectorSnowflake_Id3. Job/cost inventory:
+  `analysis/phase5_backlog_inventory.txt`.
 - Previous HPC ARO result files are **no longer accessible** — regression validation must
   rely on analytic tests (sphere/Mie, oblate ellipsoid) and 1.2-vs-1.4/1.5 cross-runs.
 - **Modernization plan approved** (see `plans/DDA-modernization-plan.md`): code analysis,
@@ -80,7 +83,16 @@ reference patterns only.**
   production x, anchors 12k dipoles→0.4s / 49k→9.5s single-core); vertex loop is
   process-level parallel — HPC recommendation: pool N_cores single-core `adda` solves
   inside the per-(T,f,size) job, keep adaptive refinement sequential).
-  `sym_Zobj` parked (not exactly available at model level, §4.6). Phase 5 pending.
+  `sym_Zobj` parked (not exactly available at model level, §4.6). **Phase 5 done —
+  plan complete**: TRO strategy settled (`-orient avg` gives cross sections AND
+  orientation-averaged Mueller; production config `adda_config_HongPlate_Id9_TRO`
+  with XY-folded β-range avg input, gate vs full-range twin PASS ≤1.35e-5 = Romberg
+  d); backlog configs repaired (5-GHz stubs → 35-channel list; inventory
+  `analysis/phase5_backlog_inventory.txt`: HC 1524 jobs/141 CPU-h, Icon 1276/1942,
+  Liu 1252/257, HongPlate 5235/377, TRO 4608 orient-avg jobs; smoke runs exit 0);
+  SSDB export localized + verified end-to-end (mat + full SSD NetCDF tree); golden
+  baselines re-anchored to `baselines/adda_1.4.0/`. Remaining is operational
+  (HPC submissions per runbook §5.6, optional published-DB cross-check).
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -108,7 +120,7 @@ reference patterns only.**
    (SSDB variable/attribute definitions, version `beta_0.9`, groups
    `SingleScatteringData` / `ShapeData` / `CalculationData`).
 
-### TRO pipeline (old, reference)
+### TRO pipeline (production-ready since Phase 5)
 
 `adda_main_control_rndorient.py` → `adda_sub_control_randomorient.py` →
 `acf.adda_call_randomorient`, using ADDA's built-in `-orient avg` with an
