@@ -63,7 +63,8 @@ reference patterns only.**
   rely on analytic tests (sphere/Mie, oblate ellipsoid) and 1.2-vs-1.4/1.5 cross-runs.
 - **Modernization plan approved** (see `plans/DDA-modernization-plan.md`): code analysis,
   numpy-2 migration, configurable ADDA binary (1.2 / 1.4 / 1.5.0-alpha3), symmetry-based
-  optimization, then production backlog. Status: **Phases 0+1+2+3 done** (Phase 2: pipeline
+  optimization, then production backlog. Status: **Phases 0+1+2+3 done, Phase 4 core done**
+  (Phase 2: pipeline
   runs natively on numpy 2 / scipy 1.18 / py3.12 / macOS, proven by `analysis/phase2_equiv.py`;
   internal Mueller artifact switched from ARTS-XML to **pickle**. Phase 3: config-driven ADDA
   binary + local no-queue mode + TRO repairs; equivalence suite `analysis/phase3_equiv.py`
@@ -71,7 +72,9 @@ reference patterns only.**
   cross sections bit-identical, auto dpl heuristic identical; **production binary decision:
   ADDA 1.4.0**) — findings in `plans/DDA-modernization-report.md` (read it before touching
   pipeline code; §1.5 breakages, §1.6 dormant bugs, §1.7 backlog reality check, Phase-2/3
-  sections list deferred items). Phase 4+ pending.
+  sections list deferred items). Phase 4 core complete (mirror machinery + flags,
+  gates passed); plan steps 17–19 (quadrature, ADDA benchmark table, job structure)
+  deferred; Phase 5 pending.
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -208,16 +211,16 @@ notes; do not extend — report §1.6-9).
   see report §1.7.
 - Size parameter x = π·D_veq/λ; default cap `size_parameter_limit = 10`.
 - ARO config symmetry flags (`sym_XYobj`, `sym_XZobj`, `sym_YZobj`) must reflect the actual
-  habit symmetry; wrong flags waste CPU or break averaging (ADDA assumes no symmetry itself).
-  Current configs set all flags `False` even for mirror-symmetric habits (Hong plates/columns
-  have an XY mirror plane) and `sym_Zobj` (n-fold rotation about the particle's own axis) is
-  commented out/unused — hexagonal habits are ~C6, a largely unused optimization potential
-  (up to ~12× fewer orientation samples; see modernization plan Phase 4).
-  **Blockers found (Phase 1)**: the symmetry code paths are *broken by construction* —
-  `adda_sub_control_spharmonics.py:572` `vt.flatten(1)` (ValueError) and
-  `adda_orientational_avg_spharmonics_functions.py:1320` unconditionally raises
-  "Symmetry is still under construction". These must be fixed before Phase 4 can measure
-  anything (report §1.6-1).
+  habit symmetry. **Phase 4 implemented the full mirror machinery** (write-time fill-in —
+  skipped vertices are reconstructed from the mirrored raw ADDA grid of the run vertex,
+  transform table + proof in report §4.2) and set the flags from measured voxel closure
+  (`analysis/phase4_symmetry.py`): **HongPlate_Id9 + TOR grid: XY+XZ True** (~3.6× fewer
+  solves), **HongColumn_Id7: YZ True** (~1.9×), LiuSector/Icon/HexPlaAgg: all False.
+  **Closure is resolution-dependent**: a mirror exact at fine resolution may be broken at
+  the coarse (192 GHz-class) files of the size grid (e.g. HongPlate YZ 0.986 coarse) —
+  flags must use the **coarsest** class; a not-closed mirror fill is a real shape error
+  (~1.5e-4 Mueller field error, NOT solver noise). `sym_Zobj` (Cn rotation) still has no
+  pipeline implementation — HongPlate has true C6 (potential further ~6×), parked.
 - **ADDA 1.2 → 1.4/1.5 compatibility** (checked against upstream changelog + `param.c` of
   the 1.5.0-alpha3 tree in `adda/`): `-eps <n>` semantics unchanged (residual exponent),
   `-orient`, `-m`, `-lambda`, `-eq_rad`, `-store_scat_grid`, `-scat_grid_inp`, `-scat_matr`,

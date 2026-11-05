@@ -1,0 +1,12 @@
+ext_mat_horiz_avg reldiff: 1.231e-15
+eps_vec          reldiff: 6.155e-17   (mueller coeffs 70586 vs 70586)
+mueller coeffs   reldiff: 1.147e-11
+exit=0  <- phase3_test phase3_test_sym 'rawdata/*freq183*'
+ext_mat_horiz_avg reldiff: 4.731e-14
+eps_vec          reldiff: 1.106e-15   (mueller coeffs 527800 vs 527800)
+mueller coeffs   reldiff: 4.520e-12
+exit=0  <- phase4_hp_asym phase4_hp_sym '*T0190K'
+ext_mat_horiz_avg reldiff: 1.690e-13
+eps_vec          reldiff: 1.634e-12   (mueller coeffs 630094 vs 630094)
+mueller coeffs   reldiff: 2.138e-11
+exit=0  <- phase4_hc_asym phase4_hc_sym '*T0230K'

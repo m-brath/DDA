@@ -553,5 +553,178 @@ recommended as a Phase-5 first step.
 
 ---
 
-*(next section will be appended at Phase 4 completion)*
+# Phase 4 — Symmetry exploitation 🔄 (2026-11-05, plan steps 16–20)
+
+Status: core machinery implemented + gated; aggregate-file detector rows and one
+more habit speedup pending in background runs (marked TBD). Steps 17–19
+(quadrature, ADDA-internal benchmark table, job-structure change) deliberately
+deferred — see §4.11.
+
+## 4.1 Blockers from §1.6-1 — resolved
+
+The two dead symmetry code paths (`adda_sub_control_spharmonics.py:572`
+`vt.flatten(1)` ValueError; `orientational_avg` unconditional
+'Symmetry is still under construction' raise) never worked and never execute
+now. The chosen scheme **sidesteps both**: instead of reconstructing missing
+Mueller data inside the averaging, missing vertices are **filled at ADDA-run
+time** (write-time fill-in). All downstream code — refinement passes, alpha/
+gamma averaging, post-processing, NetCDF export — sees a *complete* vertex
+dataset and needs no symmetry branch at all.
+
+## 4.2 Mueller-grid mirror transform — derived empirically (`analysis/phase4_grid_symmetry.py`)
+
+For a particle mirror plane S and ADDA runs with propagation pair (p, S·p) on a
+mirror-symmetric particle (oblate spheroid, **generic oblique p**, ADDA 1.2,
+`-eps 3`), the relation between the two `mueller_scatgrids` was FITTED
+(theta-map × phi-map × signed permutation over the 16 components):
+
+| mirror (particle) | theta | phi map | component signs |
+|---|---|---|---|
+| XY (z→−z) | unchanged | φ → 180°−φ | outer(D,D), D=diag(1,1,−1,−1) |
+| XZ (y→−y) | unchanged | φ → −φ | outer(D,D) |
+| YZ (x→−x) | unchanged | φ → −φ | outer(D,D) |
+
+- Residuals 2.9e-12 / 2.9e-13 / 2.9e-11 = solver noise; permutation is identity
+  (signs only). Composing k mirrors: composed phi-maps, signs cancel for even k.
+- ADDA's scat grid is propagation-**attached** — theta is never remapped.
+- `ext_matrix` gets the same sign pattern elementwise (`mirror_signs(k).reshape(4,4)`).
+- Cross-check: the legacy (never-executed) `construct_by_symmetry` uses exactly
+  this convention (flip→−φ, XY adds +180° roll, M=[[+1,−1],[−1,+1]] blocks).
+- Implemented as `acf.MIRROR_AXES / MIRROR_PHIMAP / MIRROR_D / mirror_signs() /
+  mirror_phi_index_map()` in `adda_control_functions.py`.
+
+## 4.3 Orientation-grid closure precondition
+
+Write-time fill-in requires the icosphere vertex set to be closed under
+coordinate mirrors. Verified exactly (nearest-vertex snap ≤ 1.5e-6 deg, i.e.
+float noise) for ref_lev 0–3 (12/42/162/642 vertices).
+
+## 4.4 Pipeline implementation (write-time fill-in)
+
+- `acf.mirror_*` helpers (above) — transform table for grids + ext matrix.
+- `adda_sub_control_spharmonics.py`:
+  - `_mirror_flags` from config; vertex loop iterates **run-vertices first**
+    (all flag-coordinates ≥ 0) so every skipped vertex is already filled;
+  - `mirror_fill()` module-level function called from BOTH the ref_lev==0 and
+    ref_lev>0 branches: for every nonempty mirror subset, map the just-run raw
+    grid → mirror vertex (`ico.find_nearest_Nvertices`, snap-warned), transform
+    grid + ext, re-expand to spherical harmonics, **write the same NetCDF cache
+    entry** as a normal run, and fill all in-memory arrays
+    (`ext_mat_array/mueller_array/rel_err_array/...`).
+  - skip condition hardened: a symmetry-flagged vertex is skipped **only if its
+    fill already exists** (`allocate_flag and mueller_array[point_i] is not
+    None`) — no silent NaN holes possible.
+- `adda_orientational_avg_spharmonics_functions.py`:
+  - `orientational_avg`: raise replaced by a hole check — complete symmetry
+    store → plain averaging (exact); store with None-holes → RuntimeError
+    telling the user to regenerate with the current sub_control (holes cannot
+    be repaired from cached *expansions*, only from live grids).
+  - latent numpy-2 fix: `idx_sym[i]=int(np.asarray(r_idx[0])[0])` (both this
+    file and sub_control; `find_nearest_Nvertices` returns size-1 arrays).
+  - `construct_by_symmetry`: mueller shape math (`qm/rpb`) moved inside the
+    mueller branch — it had run unconditionally and crashed the extinction-only
+    path (`np.empty(0)`), proving that path had never executed end-to-end.
+- Sub_control's own legacy symmetry branch in the alpha-averaging loop was left
+  in place (it reconstructs *complete* vertex values redundantly but
+  consistently — numerically proven, §4.9).
+
+## 4.5 Detector tool (`analysis/phase4_symmetry.py`)
+
+Exact voxel-set mirror closure (bbox-centred flip + best integer translation,
+row-void-set algebra — scales to 10^7 voxels) + geometric Cn test (rotate about
+particle z, nearest-neighbour ≤ cubic covering radius √3/2, strict gate
+score ≥ 0.999). Method traps found and fixed (all invalidated earlier tables):
+random **subsampling breaks exact-closure** (a sample of a closed set is not
+closed); `np.unique(a.view(np.void))` needs the **full-row itemsize** or it
+silently de-duplicates scalar coordinates; coarse (<20-voxel) files cannot
+resolve Cn; sampled KDTree dilutes Cn scores (cap raised to 3 M so production
+habits stay un-diluted).
+
+## 4.6 Measured habit symmetries (strict gate)
+
+| habit | XY | XZ | YZ | Cn |
+|---|---|---|---|---|
+| HongPlate_Id9 (coarse→fine) | 1.000/1.000 | 1.000/1.000 | **0.986**/1.000 | true C6 at fine (max dev 0.77 vox) |
+| HongPlate_Id9_TOR_sizegrid | 1.000/1.000 | 1.000/1.000 | 0.986/1.000 | true C6 at fine |
+| HongColumn_Id7 | 0.986/1.000 | 0.957/0.996 | **1.000/1.000** | C2 only |
+| LiuSectorSnowflake_Id3 | 0.990/0.999 | 0.993/0.872 | 0.997/0.838 | C6-ish at fine, no exact mirror |
+| IconSnow_Id28 (fine, 5.17M) | 0.069 | 0.051 | 0.045 | none (random aggregate) |
+| HexPlaAggCrystal_Id20 (fine, 14.6M) | 0.068 | 0.049 | 0.027 | none (random aggregate) |
+
+**Key finding: mirror closure is resolution-dependent.** The coarse
+(192-GHz-class) voxel discretizations break closures that are exact at fine
+resolution (HongPlate YZ 0.986, HongColumn XY/XZ). A filled mirror of a
+NOT-closed voxel set is not a bug in the transform but a real shape error:
+measured on HongPlate coarse YZ → `mueller` reldiff **1.5e-4**, `eps_vec` shift —
+vs 4.5e-12 with exact closures. Production flags must use the closure of the
+**coarsest** resolution class of the size grid.
+
+## 4.7 Production config flags (set in this phase)
+
+- `adda_config_HongPlate_Id9.py`: **XY=True, XZ=True, YZ=False** (2 mirrors →
+  expect ~4× fewer orientation solves).
+- `adda_config_HongColumn_Id7.py`: **YZ=True**, XY/XZ=False (1 mirror → ~2×).
+- `adda_config_LiuSectorSnowflake_Id3.py`, `IconSnow_Id28`,
+  `HexPlaAggCrystal_Id20`: all False (no exact closure).
+- HongPlate C6 is real but `sym_Zobj` has **no pipeline implementation**
+  (rotation-group transform of attached grids + z-rotation caching is a much
+  bigger step; parked, potential further ~6×).
+
+## 4.8 Speedup measurements
+
+| probe | ADDA solves | wall |
+|---|---|---|
+| ellipsoid gate (`phase3_test_sym`, 3 mirrors) | 162 → **27** (+135 fills) | 57.7 s → 19.5 s (**3.0×**) |
+| HongPlate_Id9 10 µm/228 GHz (XY+XZ) | 642 → **177** (+465 fills) | 13:10 → 7:37 (**1.73×**) |
+| HongColumn_Id7 20 µm/887 GHz (YZ) | 642 → **337** (+305 fills) | 12:29 → 8:59 (**1.39×**) |
+
+Solve counts drop 3.6× / 1.9× (near the ideal 4× / 2×; grid-boundary vertices
+lie on mirror planes and are never skipped). Wall-time gain is smaller at probe
+size because each vertex's spharmonic expansion + NetCDF write (now executed
+once per *vertex*, i.e. fills add cost while solves disappear) does not shrink —
+at production x≈10 the ADDA solve dominates and wall time approaches the
+solve-count ratio.
+
+## 4.9 Equivalence gates (sym vs asym, identical config + binary otherwise)
+
+Scripts `analysis/phase4_subcontrol_compare.py` (stores) and
+`analysis/phase4_aoa_compare.py` (post-processing); logs
+`analysis/phase4_subcontrol_gate.log`, `analysis/phase4_aoa_gate.log`.
+Mueller comparison is per vertex/component over the coefficient overlap and
+globally normalized (per-vertex truncation counts vary at noise level;
+per-component normalization would punish near-zero components).
+
+| probe | ext_mat_horiz_avg | eps_vec | mueller coeffs |
+|---|---|---|---|
+| ellipsoid gate (3 mirrors) | **1.2e-15** | 6.2e-17 | **1.1e-11** (70586) |
+| HongPlate 10 µm/228 GHz (XY+XZ) | **4.7e-14** | 1.1e-15 | **4.5e-12** (527800) |
+| HongColumn 20 µm/887 GHz (YZ) | **1.7e-13** | 1.6e-12 | **2.1e-11** (630094) |
+
+- Post-processing path (`aoa.rawdata2average` on both stores — the consumer
+  used by SSDB export): new plain-averaging branch fires on the complete
+  symmetry store; `ext_mat_horiz_avg` **4.7e-14**, `mue_mat_horiz_avg_sph`
+  (shape (5,10,16,300), the SSDB-facing averaged mueller expansion) **4.6e-14**,
+  worst over all products **7.7e-13** → exit 0.
+- Regression: Phase-3 equivalence suite (`analysis/phase3_equiv.py`) re-run
+  after ALL Phase-4 edits: **RESULT: PASS** (cross-binary + TRO gates unchanged).
+
+## 4.10 Deliberately NOT done / open
+
+- Steps 17–19 of the plan (Gauss–Legendre β grid + incidence 0–90° under
+  mirror symmetry, ADDA-internal `-eps`/dpl benchmark table, job-structure
+  rework): orthogonal to the symmetry machinery, deferred to keep this phase
+  reviewable — they change *sampling*, not correctness; symmetry fill-in
+  composes with them independently.
+- `sym_Zobj` (Cn) pipeline support — see §4.7.
+- A cache-resumed store that predates fill-in cannot be completed in place
+  (expansions are not mirror-transformable) → RuntimeError with regeneration
+  guidance, by design.
+
+## 4.11 Verification & commit trail
+
+TBD (filled at commit time).
+
+---
+
+*(end of Phase 4 section)*
 
