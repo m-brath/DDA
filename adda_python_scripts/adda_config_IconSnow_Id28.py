@@ -98,8 +98,12 @@ if calc_type=='mistral':
     adda_binary=adda_prefix+'adda_1.2/src/mpi/adda_mpi'
     adda_launcher=['srun','-n',str(ncores)]
 elif calc_type=='local':
-    adda_binary=adda_prefix+'adda_1.2/src/seq/adda'
+    # production binary decision (Phase 3): 1.4.0 (locally built + equivalence
+    # gated, analysis/phase3_equiv.py); cluster branch stays 1.2 until an
+    # adda_1.4 MPI build exists there, or override via ADDA_BINARY/ADDA_VERSION
+    adda_binary=adda_prefix+'adda_1.4/src/seq/adda'
     adda_launcher=[]
+    adda_version='1.4.0'
 else:
     adda_binary='adda_mpi'
     adda_launcher=['mpiexec','-n',str(ncores)]
@@ -214,11 +218,12 @@ sym_YZobj=False
 
 
 
-frequencies=np.array([5,])*1e9
-# frequencies=np.array([1, 1.4, 3, 5, 7, 9, 10, 10.65, 13.4, 15, 18.6, 24, 31.3,
-# 31.5, 35.6, 50.1, 57.6, 88.8, 94.1, 115.3, 122.2, 164.1,
-# 166.9, 175.3, 191.3, 228, 247.2, 314.2, 336.1, 439.3,
-# 456.7, 657.3, 670.7, 862.4, 886.4])*1e9
+# Phase 5: was a 5 GHz stub computing NOTHING (all shape files are fmin>=192
+# GHz class, report §1.7) — now the same production channel list as
+# adda_config_HongPlate_Id9.py; resolution selection via the f<fmin skip
+frequencies=np.array([1,1.4, 3, 5, 7., 9, 10, 10.65, 13, 15, 19, 24, 31, 32, 36, 50, 58, 89,
+                      94, 115, 122, 164, 167, 175, 191, 228, 247, 314, 336, 
+                      439, 457, 657, 671, 862, 886.])*1e9
 
 
 

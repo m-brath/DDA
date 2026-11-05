@@ -12,6 +12,7 @@ Created on Tue Feb  3 10:58:25 2015
 
 import glob
 import os
+import sys
 import numpy as np
 import typhon as ty
 import socket
@@ -36,6 +37,17 @@ if hereiam[0:6]=='mlogin' or hereiam[0:7]=='mistral' or hereiam[0:2]=='m2': #we 
     Partition='compute2'
 
 
+elif sys.platform.startswith('darwin'):
+    # local (no-queue) mode (Phase 5): repo-relative paths, results under
+    # this repo's adda_results/ (same layout as the Phase-3/4 local branches)
+    calc_type='local'
+    repo=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+'/'
+    prefix=repo
+    prefix_data=repo[:-1] if repo.endswith('/') else repo
+    ncores=8
+    Partition=None
+
+
 else:
     prefix='/scratch/uni/u237/users/mbrath/'
     prefix_data='/scratch/uni/u237/user_data/mbrath/'
@@ -45,7 +57,10 @@ else:
 
 
 #path of the configfile folder
-script_path=prefix+'/adda/adda_python_scripts/'
+if calc_type=='local':
+    script_path=prefix+'adda_python_scripts/'
+else:
+    script_path=prefix+'/adda/adda_python_scripts/'
 
 #change directory for not putting all the trash in my controlfile folder
 temporary_folder=prefix_data+'/adda_results/temp'
@@ -64,8 +79,8 @@ incidence_angles=np.linspace(0,180.,num=19)
 #create regular grid
 regular_phasematrix=True
 
-#export to netcdf
-export_netdf=False
+#export to netcdf (env-switchable for local runs: SSDB_EXPORT_NETCDF=1)
+export_netdf=os.environ.get('SSDB_EXPORT_NETCDF','0')=='1'
 
 #grid size
 grid_size=181
@@ -91,15 +106,18 @@ orientation_type='Azimuthally_random'
 
 medium='ice'
 
-queueing=True
+queueing=calc_type!='local'  # local (macOS) mode has no SLURM (Phase 5)
 #==============================================================================
 # paths
 #==============================================================================
 
 #raw data path (ADDA results)
+# the habit folder is env-selectable (default = historic production choice):
+#   SSDB_HABIT=<foldername>  e.g. HongPlate_Id9 / phase4_hp_sym
 #rawdatapath=prefix_data+'/adda_results/LiuSectorSnowflake_Id3/'
 #rawdatapath=prefix_data+'/adda_results/IconSnow_Id28/'
-rawdatapath=prefix_data+'/adda_results/HexPlaAggCrystal_Id20/'
+rawdatapath=prefix_data+'/adda_results/'+os.environ.get('SSDB_HABIT',
+                  'HexPlaAggCrystal_Id20')+'/'
 #rawdatapath=prefix_data+'/adda_results/HongPlate_Id9/'
 #rawdatapath=prefix_data+'/adda_results/HongColumn_Id7/'
 
@@ -444,7 +462,7 @@ if __name__ == "__main__":
                         'ADDA_'+folder,str(ncores),'08:00:00']
 
         #Command string (queue on thunder)
-        else:
+        elif calc_type=='thunder':
             sbatch_str=['/scratch/uni/u237/sw/bin/sbatch_simple','-p', 'uni-compute2',#'-x', 'ctc[132,133,134]',
                 'ADDA_'+folder,str(ncores)]
 
@@ -462,4 +480,9 @@ if __name__ == "__main__":
         print('    ')
         print('    ')
 
-        sub.call(command_str)
+        if calc_type=='local':
+            # run in THIS interpreter (mamba env); the env `python` shebang
+            # would miss the DDA environment (Phase 5)
+            sub.check_call([sys.executable]+command_str)
+        else:
+            sub.call(command_str)

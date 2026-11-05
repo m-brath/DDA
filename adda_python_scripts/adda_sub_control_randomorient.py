@@ -166,12 +166,18 @@ for idx in indices:
     eps=liste[2,idx]
     eps=eps[0,0]
 
-    #Temperature
-    # FIXME (Phase 5, report §1.6-10): `liste` carries no temperature row, so
-    # the storage folder encodes the FLAT INDEX as "T####K". Harmless for the
-    # archived old runs, but the TRO configs rebuilt in Phase 5 must carry a
-    # temperature column (row 8) and this line must use it.
-    temperature=idx
+    #Temperature (Phase 5, report §1.6-10): the 9-row `liste` format carries an
+    #explicit temperature in row 8 (rebuilt TRO configs use it). The legacy
+    #8-row format encoded the FLAT INDEX as "T####K" (wrong label in the
+    #storage folder name); accepted only with a loud warning.
+    if np.shape(liste)[0] >= 9:
+        temperature=liste[8,idx]
+        temperature=temperature[0,0]
+    else:
+        temperature=idx
+        print('WARNING: liste has no temperature row (8-row legacy format) — '
+              'storage folder will encode the flat index as T####K; rebuild '
+              'the config with a 9-row liste (row 8 = temperature).')
 
 
     #create storage folder

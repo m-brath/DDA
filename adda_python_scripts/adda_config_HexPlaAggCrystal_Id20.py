@@ -98,8 +98,12 @@ if calc_type=='mistral':
     adda_binary=adda_prefix+'adda_1.2/src/mpi/adda_mpi'
     adda_launcher=['srun','-n',str(ncores)]
 elif calc_type=='local':
-    adda_binary=adda_prefix+'adda_1.2/src/seq/adda'
+    # production binary decision (Phase 3): 1.4.0 (locally built + equivalence
+    # gated, analysis/phase3_equiv.py); cluster branch stays 1.2 until an
+    # adda_1.4 MPI build exists there, or override via ADDA_BINARY/ADDA_VERSION
+    adda_binary=adda_prefix+'adda_1.4/src/seq/adda'
     adda_launcher=[]
+    adda_version='1.4.0'
 else:
     adda_binary='adda_mpi'
     adda_launcher=['mpiexec','-n',str(ncores)]
