@@ -363,4 +363,195 @@ dev script, left for Phase 3 housekeeping/deprecation decision).
 
 ---
 
-*(next section will be appended at Phase 3 completion)*
+---
+
+# Phase 3 — ADDA binary configurability + local mode ✅ (2026-11-05)
+
+Scope: plan steps 11–15 — config-driven ADDA binary (1.2 / 1.4.0 / 1.5.0-alpha3 side
+by side), proper local (no-queue) mode, repair of the deferred Phase-1 breakages
+(TRO wrapper, gridref deprecation), plus the Phase-3 equivalence suite and the
+production binary decision.
+
+## 1. Config contract (all 6 active configs + both sub-control scripts)
+
+New required config globals (uniformly patched by `analysis/phase3_config_patch.py`,
+kept as record — note: its first pass had a regex bug that mangled `prefix+'/adda/`
+replacements; final state verified line-by-line + `py_compile` on all configs):
+
+- `calc_type` ∈ {`mistral`, `thunder`, **`local`**} — `local` auto-selected on
+  `sys.platform.startswith('darwin')`; all paths repo-relative
+  (`prefix=<scripts dir>`, `prefix_data=<repo root>`), no queue, `ramdrive=None`
+  (system temp).
+- `adda_prefix` — ADDA checkout root (`<prefix>/adda/` on cluster, repo root locally).
+  All hardcoded `prefix+'/adda/...'` paths now go through it.
+- `adda_binary` / `adda_launcher` / `adda_version` — consumed by
+  `adda_sub_control_spharmonics.py` and `adda_sub_control_randomorient.py`
+  (`main_command = list(adda_launcher)+[adda_binary]`); scripts fall back to the
+  historic 1.2 defaults if a config omits them. Runtime override for cross-version
+  runs: env **`ADDA_BINARY=<exe> ADDA_VERSION=<ver>`** — no config edits needed.
+- `cluster_name` — SSDB provenance (replaces hardcoded 'DKRZ: mistral-compute2').
+- `output_data['adda_version'/'adda_binary']` recorded per job;
+  `definitions_for_netcdf.CaD_definition['values']` now resolves
+  `['adda_version'] / ['cluster_name'] / ['ncores']` from the config via
+  `getattr(ac, ..., 'n/a')` (old configs keep working).
+- Fixed SSDB metadata typo: `refrIndex_model='Maetzler2016'` → **`'Maetzler2006'`**
+  (the pipeline implements Matzler 2006, see `acf.eps_ice_matzler06`).
+
+## 2. `-Csca` / `-alldir_inp` removed from all ARO configs
+
+The pipeline never parses `CrossSec-X/Y`, `Csca` or `mueller_alldir` (ARO extinction
+comes from the forward `ampl_scatgrid` column via `acf.adda_call`), and in 1.4/1.5
+these flags add validation traps (§1.3). Removing them shrinks the static_clo for all
+habits and one ADDA post-processing pass per orientation.
+
+## 3. Local (no-queue) mode end-to-end
+
+- `adda_main_control.py`: darwin branch + `sbatch_str=[]` +
+  `sub.check_call([sys.executable]+command_str)` — the interactive entry point now
+  drives real jobs on this Mac. `os.makedirs(temporary_folder, exist_ok=True)` added
+  (also in `adda_sub_control_randomorient.py` / `adda_main_control_rndorient.py`).
+- `adda_main_control_rndorient.py`: same treatment (mistral hostname detection also
+  fixed to match `mlogin*`/`mistral*`/`m2*` consistently).
+- **NEW `adda_config_phase3_test.py`** — tiny analytic ellipsoid (x=1, `-dpl 100`,
+  3 betas × 5 incidence angles, `eps_sphexp=0.02`, coarse baseline scat grid) used as
+  the pipeline-level probe; NOT a production config.
+
+## 4. Latent-bug repairs (from §1.6)
+
+- **`acf.adda_call`**: ADDA exit status was never checked → now raises on any nonzero
+  wait status (signal decoded). `path_name=""` initialized before `mkdtemp` (the
+  `finally: shutil.rmtree` could NameError-mask the real exception).
+- **`acf.adda_call_randomorient` (TRO)**: mistral branch never defined `commando`
+  (silent NameError swallowed by the bare `except`) → explicit `NotImplementedError`;
+  exit code checked; bare `except:` → `except Exception` + **re-raise** (§1.6-8:
+  mass TRO runs could zip empty dirs silently).
+- `adda_sub_control_randomorient.py`: `static_clo_temp` unbound for analytic shapes
+  (NameError at first use) → else-branch `static_clo_temp=list(static_clo)` (§1.6-10).
+  Temperature handling: `temperature=idx` (flat index as "T####K") got a **FIXME
+  for Phase 5** — rebuilt TRO configs must carry a temperature column.
+- **numpy-2 production crash found by the pipeline probe**: vertex-reuse branch
+  `max_len_array[point_i]=max_len_array_old[logic]` → numpy 2 refuses the implicit
+  (1,)→scalar conversion (`ValueError: setting an array element with a sequence`,
+  sub_control:466). Fixed with explicit `r_idx=int(np.flatnonzero(logic)[0])` for all
+  five reuse assignments. (Phase-2 harness missed this — the vertex-reuse path only
+  triggers when a re-run re-encounters a cached vertex, i.e. needs a *second* pipeline
+  run over the same case.) Removed the then-unused `import itertools`.
+- Deprecated headers added (per §2 deferral list): `adda_sub_control_gridref.py`
+  (broken-by-design Romberg path: missing globals, py2 division in `romberg_gamma`,
+  `refrative_ndex` typo) and `adda_orientational_avg_spharmonics_for_testing.py`.
+
+## 5. ADDA 1.4.0 built locally
+
+- `adda_1.2` and `adda` (1.5.0-alpha3) were already built (Phase 0). Now added
+  **official v1.4.0**: tarball `https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz`
+  → `adda_1.4/` (gitignored). Build recipe identical to the proven macOS one:
+  `make seq "OPTIONS=NO_FORTRAN" FFTW3_INC_PATH/LIB_PATH=<conda env>` + relink with
+  `-Wl,-rpath,<env>/lib`. Verified: `log` says "Generated by ADDA v.1.4.0", runs the
+  full baseline case set.
+
+## 6. Equivalence suite (`analysis/phase3_equiv.py`, results `analysis/phase3_results.json`)
+
+Three probe groups, all executed locally, all comparisons through the **pipeline's
+own parser** (`acf.adda_call` / `adda_call_randomorient`) so the positional
+output-column contract (§1.3) is verified per binary:
+
+- **binary**: the 6 golden baseline cases re-run with 1.2/1.4.0/1.5.0-alpha3 using
+  ADDA's *auto* dipole density (no `-dpl` pin — pinning 160.664 dpl would blow up the
+  x=5 case; the auto heuristic is identical across versions for all 6 cases
+  (N_dipoles 1104…12312 identical), which the golden gates then confirm within
+  solver noise).
+- **pipeline**: `adda_sub_control_spharmonics.py` + `adda_config_phase3_test` once per
+  binary (store dir wiped per version — else the per-vertex NetCDF cache leaks and the
+  comparison becomes vacuous; found the hard way).
+- **TRO**: `adda_call_randomorient` with production `avg_params.dat`
+  (EvanSnowflake_aggregate file, sphere geometry) per binary — proves the avg files
+  are accepted by all three versions (they write a `mueller` file, but `-orient avg`
+  + `-scat_grid` is rejected in 1.4/1.5 — the TRO-Mueller restriction from agents.md
+  stands) and compares the `CrossSec` cross sections.
+
+### Results (relative differences vs ADDA 1.2; gate = 5e-3 solver-noise bound)
+
+| case (auto dpl, `-eps 3`) | ext 1.4.0 | ext 1.5.0a3 | mueller 1.4.0 | mueller 1.5.0a3 |
+|---|---|---|---|---|
+| sphere x0.31 (2176 dip.) | 3.2e-16 | 7.5e-16 | 5.4e-15 | 5.4e-11 |
+| ellipsoid x0.1 (1104) | 3.2e-17 | 6.4e-18 | 5.7e-15 | 5.7e-11 |
+| ellipsoid x1 (1104) | 7.1e-18 | 8.7e-12 | 3.3e-13 | 6.7e-11 |
+| ellipsoid x5 (12312) | 2.0e-4 | 2.5e-4 | 5.0e-4 | 4.4e-4 |
+| HongPlate Dveq10 f192 | 5.6e-17 | 3.4e-17 | 8.5e-12 | 8.5e-12 |
+| HongPlate Dveq10 f337 | 6.1e-18 | 1.2e-17 | 2.9e-14 | 2.9e-11 |
+
+- **Golden sanity** (identical-command re-run of 1.2 vs frozen baseline): **0.0
+  (sphere, ellip x0.1, x1, f192), 2.9e-15 (f337), 3.0e-4 (x5, gate 5e-3)**. Key
+  insight: ADDA's *own* re-runs are not bit-reproducible at the last output
+  digits — measured re-run scatter is ≤1e-11 for all cases but **8.3e-4 for x5**
+  (12312 dipoles solved to relative residual 1e-3); successive runs of the
+  identical harness even oscillated between 0.0 and 8.5e-12 for f192. Hence
+  golden gates are noise-based (1e-10; 5e-3 for x5) and the x5 cross-version
+  numbers are *below ADDA 1.2's own scatter*.
+- **Auto dipole density is identical across 1.2/1.4.0/1.5.0-alpha3** for all six
+  cases (N_dipoles 1104…12312 identical; any difference would blow the golden
+  gates) — no `-dpl` pinning needed in configs.
+- **Pipeline probe** (tiny ellipsoid, full ARO chain): `ext_mat_horiz_avg` 4.1e-3,
+  `mueller_c0` 1.9e-3 (both within noise); identical spherical-harmonic
+  coefficient counts (16 per vertex, all 162 vertices, all versions);
+  convergence `eps_vec`: 1.2 = 0.14093/0.010856 vs 1.4.0 = 1.5.0a3 =
+  0.14006/0.010798 (newer binaries ~0.6 % tighter, identical truncation order).
+- **TRO**: `-orient avg` + production `avg_params.dat` accepted by all three
+  binaries; `CrossSec` Cext/Qext/Cabs/Qabs **bit-identical** (reldiff 0.0).
+
+Harness lessons (both caused false FAILs in early runs):
+- Auto dipole density is **quantized** — a hand-typed λ with a 1e-8 relative typo
+  flips the dpl threshold, changes N_dipoles, and breaks bit-comparison. CASES must
+  *compute* lamb/eq_rad exactly like `baselines/make_baseline.py`.
+- The golden runs used exact `-prop 1 0 0`; the harness's scalar `theta=90.0` emits
+  `z=6.12e-17` which rotates the φ-reference — up to 2e-2 Mueller differences at x=5.
+  Use the vector branch (`inp["theta"]=[1,0,0]`).
+
+## 7. Production binary decision (plan step 15)
+
+**Decision: production binary = ADDA 1.4.0** (configs' default remains `1.2`
+until backlog runs are re-generated; switch per-run via env or config field).
+
+Rationale:
+1. **Numerically indistinguishable** from 1.5.0-alpha3 (eps_vec agree to ~1e-9,
+   mueller cross-diffs at solver-noise level) and within solver noise of the
+   golden 1.2 baselines everywhere; for the four small cases outputs match
+   golden-1.2 at ≤3e-13.
+2. **1.4.0 is the newest official release** (2020); `adda/` 1.5.0-alpha3 is a
+   pre-release whose CLI/output formats may still change — risky given the
+   positional output-parsing contract (§1.3).
+3. Same flag surface the pipeline needs (suite green), same auto-dipole-density
+   heuristic as 1.2 → no geometry resampling surprises.
+4. 1.2 stays available as the frozen-baseline reference; 1.5.0-alpha3 kept for
+   future evaluation (e.g. its substrate/GPU features, not needed here).
+
+Migration note for backlog: once 1.4.0 is chosen for production runs, the golden
+baselines should be **regenerated under 1.4.0** (`make_baseline.py --adda …1.4…`)
+into `baselines/adda_1.4/` so future regressions pin the production binary —
+recommended as a Phase-5 first step.
+
+## 8. Verification & commit trail
+
+- `ruff --select F,E9` active files: 159 → **164** (5 new F821 from config-global
+  reads in the new blocks — same `exec('from config import *')` pattern class as
+  the existing 145; F401 −1: dropped `itertools` after the vertex-reuse fix).
+- All active scripts `py_compile`-clean; configs import natively on macOS
+  (`calc_type='local'`, 255 shapes for HongPlate).
+- Commits: nested `adda_python_scripts` repo on top of `cbb4203`; umbrella gitlink bump
+  + `agents.md` + `.gitignore` (`adda_1.4/`, `adda_results/`) + `analysis/phase3_*`.
+
+## 9. Open for Phase 4/5
+
+- `orientational_avg:1320` 'Symmetry is still under construction' raise — Phase 4.
+- TRO temperature-column rebuild of `liste` (FIXME in place) + fresh TRO configs —
+  Phase 5.
+- `adda_process_aro_particles.py` hostname prefixes still cluster-only — Phase 5
+  (post-processing localization for backlog re-export).
+- Pipeline probe eps_vec across binaries: 1.2 = 0.1409/0.01086, 1.4.0 = 1.5.0-alpha3
+  = 0.1401/0.01080 (first is first-refinement estimate, second final) — the newer
+  binaries converge ~0.6% tighter at identical coefficient counts (16 per vertex).
+
+---
+
+*(next section will be appended at Phase 4 completion)*
+

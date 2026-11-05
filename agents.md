@@ -63,12 +63,15 @@ reference patterns only.**
   rely on analytic tests (sphere/Mie, oblate ellipsoid) and 1.2-vs-1.4/1.5 cross-runs.
 - **Modernization plan approved** (see `plans/DDA-modernization-plan.md`): code analysis,
   numpy-2 migration, configurable ADDA binary (1.2 / 1.4 / 1.5.0-alpha3), symmetry-based
-  optimization, then production backlog. Status: **Phases 0+1+2 done** (Phase 2: pipeline
-  now runs natively on numpy 2 / scipy 1.18 / py3.12 / macOS, proven by the equivalence
-  harness `analysis/phase2_equiv.py`; internal Mueller artifact switched from ARTS-XML to
-  **pickle**) — findings in `plans/DDA-modernization-report.md` (read it before touching
-  pipeline code; §1.5 lists old breakages, §1.6 dormant bugs, §1.7 backlog reality check,
-  Phase-2 section lists what was deliberately deferred to Phase 3/4). Phase 3+ pending.
+  optimization, then production backlog. Status: **Phases 0+1+2+3 done** (Phase 2: pipeline
+  runs natively on numpy 2 / scipy 1.18 / py3.12 / macOS, proven by `analysis/phase2_equiv.py`;
+  internal Mueller artifact switched from ARTS-XML to **pickle**. Phase 3: config-driven ADDA
+  binary + local no-queue mode + TRO repairs; equivalence suite `analysis/phase3_equiv.py`
+  PASSES all gates — 1.2/1.4.0/1.5.0-alpha3 identical within solver noise, TRO `-orient avg`
+  cross sections bit-identical, auto dpl heuristic identical; **production binary decision:
+  ADDA 1.4.0**) — findings in `plans/DDA-modernization-report.md` (read it before touching
+  pipeline code; §1.5 breakages, §1.6 dormant bugs, §1.7 backlog reality check, Phase-2/3
+  sections list deferred items). Phase 4+ pending.
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -101,7 +104,18 @@ reference patterns only.**
 `adda_main_control_rndorient.py` → `adda_sub_control_randomorient.py` →
 `acf.adda_call_randomorient`, using ADDA's built-in `-orient avg` with an
 `avg_params.dat` from `adda_aux_input/` (zyz Euler angles, Romberg refinement
-`Jmin/Jmax/eps`). Old configs in `old_configs/*_RndOrient.py`.
+`Jmin/Jmax/eps`). Old configs in `old_configs/*_RndOrient.py`. **Phase-3
+repairs**: `adda_call_randomorient` now fails loudly (mistral batch path raises
+`NotImplementedError`; ADDA exit codes checked; exceptions re-raised instead of
+swallowed); `static_clo_temp` no longer unbound for analytic shapes; avg files
+verified accepted by ADDA 1.2/1.4/1.5 (report Phase 3). **Open Phase-5 TODO**:
+`liste` carries no temperature row → output folders encode the flat index as
+`T####K` (FIXME in `adda_sub_control_randomorient.py`) — rebuilt TRO configs
+must carry the temperature.
+
+`adda_sub_control_gridref.py` + `acf.romberg_*` and
+`adda_orientational_avg_spharmonics_for_testing.py` are **deprecated** (header
+notes; do not extend — report §1.6-9).
 
 ### Support modules
 
@@ -163,6 +177,24 @@ reference patterns only.**
 
 ## Conventions & Gotchas
 
+- **Config contract (since Phase 3)**: every active `adda_config_*.py` defines
+  `calc_type` (host detection incl. a new **`local`** branch for macOS/darwin —
+  repo-relative paths, no queue, direct `sub.check_call` execution),
+  `adda_prefix` (ADDA checkout root: `<prefix>/adda` on cluster, the repo itself
+  locally), `cluster_name` (SSDB provenance), and the ADDA binary triple
+  `adda_binary` / `adda_launcher` / `adda_version` (default 1.2; overridable at
+  run time via env `ADDA_BINARY=<exe> ADDA_VERSION=<ver>` for cross-version
+  work). Sub-control scripts fall back to the historic 1.2 defaults if a config
+  lacks these. The three ADDA trees are now built locally: `adda_1.2/`,
+  **`adda_1.4/`** (v1.4.0 tarball from github adda-team/adda, gitignored —
+  same NO_FORTRAN+FFTW rpath build recipe), `adda/` (1.5.0-alpha3).
+  `-Csca`/`-alldir_inp` were **removed from all ARO configs** (outputs never
+  parsed; ARO extinction comes from the forward `ampl_scatgrid` column).
+  **Production binary decision (Phase 3): ADDA 1.4.0** — numerically indistinguishable
+  from 1.5.0-alpha3 and within solver noise of golden-1.2 (suite `analysis/phase3_equiv.py`,
+  `analysis/phase3_results.json`). Caveat: ADDA re-runs of identical commands are *not*
+  bit-reproducible at `-eps 3` (own scatter ≤1e-11, but ~8e-4 for x=5/12312 dipoles) →
+  regression/golden gates must be noise-based, never bit-level.
 - One `adda_config_*.py` per habit; keep the structure/field names of existing configs so
   the control scripts keep working (they read globals via `exec('from ... import *')`
   and `getattr`-style checks).

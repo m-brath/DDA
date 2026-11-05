@@ -13,3 +13,11 @@ adda_1.2/src/*/.cppopts
 adda_1.2/src/seq/adda
 adda_1.2/src/mpi/adda_mpi
 baselines/tmp/
+
+# ADDA 1.4.0 checkout (third-party; fetch via
+# https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz)
+adda_1.4/
+
+# local run outputs (results never live in this repo; Phase 3 local mode)
+adda_results/
+analysis/_tmp*/
