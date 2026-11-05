@@ -117,10 +117,14 @@ reference patterns only.**
 repairs**: `adda_call_randomorient` now fails loudly (mistral batch path raises
 `NotImplementedError`; ADDA exit codes checked; exceptions re-raised instead of
 swallowed); `static_clo_temp` no longer unbound for analytic shapes; avg files
-verified accepted by ADDA 1.2/1.4/1.5 (report Phase 3). **Open Phase-5 TODO**:
-`liste` carries no temperature row → output folders encode the flat index as
-`T####K` (FIXME in `adda_sub_control_randomorient.py`) — rebuilt TRO configs
-must carry the temperature.
+verified accepted by ADDA 1.2/1.4/1.5 (report Phase 3). **Phase-5 repairs DONE**:
+9-row `liste` carries the temperature (row 8) — `adda_sub_control_randomorient.py`
+reads it (legacy 8-row configs still run but warn); new production TRO config
+`adda_config_HongPlate_Id9_TRO.py` (+ `_probe` / `_probe_fullr` gate twins) over
+`HongPlate_Id9_TOR_sizegrid` with XY-mirror-folded averaging input
+(`adda_aux_input/HongPlate_Id9_TOR_sizegrid/avg_params.dat`, beta 0–90°, justified
+by the voxel-exact XY closure of that grid); gate vs full-range twin PASS
+(≤1.4e-5 = Romberg tolerance; averaged Mueller ≤1e-13) — report §5.3.
 
 `adda_sub_control_gridref.py` + `acf.romberg_*` and
 `adda_orientational_avg_spharmonics_for_testing.py` are **deprecated** (header
@@ -212,9 +216,10 @@ notes; do not extend — report §1.6-9).
 - **Shape resolution scheme**: each physical size exists in 5 resolution files with
   `frequency_min ∈ {192, 337, 457, 671, 887} GHz`; `N_dipoles` is fixed per shape file
   (tied to fmin — ADDA rescales geometry, never resamples). The `f < fmin` skip in
-  `adda_main_control.py` implements resolution selection. Consequence: backlog configs
-  with frequencies < 192 GHz (the `=np.array([5,])*1e9` stubs) compute **nothing** —
-  see report §1.7.
+  `adda_main_control.py` implements resolution selection (file with smallest
+  `fmin >= f` = least-fine discretization still resolved at f). The old backlog
+  5-GHz stubs are FIXED (Phase 5): all active configs now carry the production
+  channel list (report §1.7 for the historical problem).
 - Size parameter x = π·D_veq/λ; default cap `size_parameter_limit = 10`.
 - ARO config symmetry flags (`sym_XYobj`, `sym_XZobj`, `sym_YZobj`) must reflect the actual
   habit symmetry. **Phase 4 implemented the full mirror machinery** (write-time fill-in —
@@ -238,9 +243,13 @@ notes; do not extend — report §1.6-9).
   the 1.5.0-alpha3 tree in `adda/`): `-eps <n>` semantics unchanged (residual exponent),
   `-orient`, `-m`, `-lambda`, `-eq_rad`, `-store_scat_grid`, `-scat_grid_inp`, `-scat_matr`,
   `-Csca`, `-alldir_inp` all still exist. **But `-orient avg` cannot be combined with
-  `-scat_grid`, `-alldir` or `-Csca`** (1.4/1.5 reject it) → built-in averaging only yields
-  cross sections, never Mueller grids; TRO Mueller data must come from own orientation
-  sampling + spherical-harmonic expansion.
+  `-scat_grid`, `-alldir` or `-Csca`** (1.4/1.5 reject it; 1.2 `param.c` too).
+  With `-orient avg` ADDA Romberg-integrates the cross sections AND the
+  orientation-averaged **Mueller** matrix (writes `mueller` on the θ-grid +
+  `CrossSec`; source: 1.2 `calculator.c`/`Romberg.c`, verified end-to-end with
+  1.4.0 in Phase 5) — only the amplitude matrix is never integrated. TRO products
+  therefore need NO own orientation sampling (strategy decision report §5.2);
+  own icosphere sampling remains the ARO machinery only.
 - ADDA output parsing (`ampl_scatgrid`, `mueller_scatgrid` in `acf.adda_call`) is
   **positional** (column indices hardcoded) → re-verify column layouts when switching
   ADDA binary versions.

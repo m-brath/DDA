@@ -903,3 +903,140 @@ frequency stubs; optional: pool-parallel vertex loop from §4b.3 as a
 production optimization, per-resolution symmetry flags (fine-class C2z,
 §4.6 finding 2).
 
+---
+
+# Phase 5 — Production backlog ✅ (2026-11-06, plan steps 21–23)
+
+## 5.0 Repairs first (items accumulated in Phases 1–3)
+
+| item | fix | evidence |
+|---|---|---|
+| TRO `liste` temperature column (§1.6-10) | 9-row `liste` (row 8 = temperature); `adda_sub_control_randomorient.py` reads it; legacy 8-row configs still accepted with a loud warning | config below runs with correct `_T0190K`-style folder labels |
+| 5-GHz backlog frequency stubs (§1.7) | `adda_config_HongColumn_Id7/IconSnow_Id28/LiuSectorSnowflake_Id3.py` now carry the same 35-channel production list as HongPlate_Id9 (resolution selection untouched: `fmin >= f`, least-fine qualifying class) | job inventory §5.4 |
+| `adda_process_aro_particles.py` localization | new `darwin`/`local` branch (repo-relative paths, no SLURM, `sys.executable` re-invocation); habit + NetCDF-export switched by env (`SSDB_HABIT`, `SSDB_EXPORT_NETCDF`) — cluster defaults unchanged | §5.5 export runs |
+| golden baselines under production binary | `baselines/adda_1.4.0/` regenerated with ADDA 1.4.0 via `make_baseline.py`; `check_baselines.py` PASS (Mie dev ≤2.2% as before); diff vs archived `adda_1.2/` golden: scat grids ≤3.5e-4 and CrossSec ≤4.2e-4 **only** in the x=5 cases, all else bit-identical — within the documented `-eps 3` rerun noise (≤8e-4 at x=5) | `baselines/README.md` updated |
+| ARO config binaries → production 1.4.0 | local (`darwin`) branch of the 5 active ARO configs switched to `adda_1.4/src/seq/adda` + `adda_version='1.4.0'`; cluster branches stay 1.2 until an `adda_1.4` MPI build exists on Mistral (env override available) | post-edit regression: full `analysis/phase3_equiv.py` re-run **PASS** (36 gates) — `analysis/phase5_phase3_rerun.log` |
+
+## 5.1 TRO strategy decision (plan step 21)
+
+`-orient avg` in ADDA 1.2/1.4/1.5 **does integrate the Mueller matrix** over
+orientations (source: 1.2 `param.c` incompatibility list + `calculator.c`/
+`Romberg.c` alpha-integration of `muel_alpha`; empirical 1.4.0 probe: exit 0,
+writes `mueller` on the 2° θ-grid + `CrossSec`, alpha-integration error ~1e-13).
+What is NOT available with `-orient avg`: per-angle scat *grid*, `-Csca`,
+`-alldir`, and the amplitude matrix (never integrated). The old
+`agents.md`/report-Phase-3 statement "built-in averaging yields cross sections
+only" was **too narrow** and has been corrected.
+
+=> **Decision: TRO products come from `-orient avg`** (cross sections +
+orientation-averaged angular Mueller in one Romberg-integrated call). Own
+orientation sampling stays ARO-only. The phase-3/3.5 claim "scattering-matrix
+elements identical across binaries" applies to the ARO path; the TRO gate
+(§5.3) now establishes matrix-level equivalence for the TRO path too.
+
+## 5.2 Production TRO config
+
+`adda_config_HongPlate_Id9_TRO.py` (Phase-3 contract; production binary
+**1.4.0**; production 35-channel list; T ∈ {190,230,270}; x≤10; 9-row `liste`
+built by a `build_liste()` helper so probe twins stay DRY). Averaging input
+`adda_aux_input/HongPlate_Id9_TOR_sizegrid/avg_params.dat`: beta folded to
+**0–90°** exploiting the voxel-exact XY closure of the TOR grid
+(closure = 1.000 at BOTH coarsest and finest classes, §4.6 table — the YZ
+0.986 coarse closure is deliberately NOT used). Production liste =
+**4608 jobs** (each = one ADDA orient-avg call, minutes). Run entry point:
+`adda_main_control_rndorient.py` (local branch direct-runs; SLURM path
+unchanged). Note: output folder `deq` field carries the eq RADIUS, not
+diameter — legacy naming of the old RndOrient scripts, kept for consistency
+with archived runs.
+
+## 5.3 TRO gate: XY-folded vs full-range orientation average
+
+Probe: Dveq 10/20 µm of the TOR grid × {228, 886} GHz × 230 K
+(`adda_config_HongPlate_Id9_TRO_probe`), twin with `avg_params_fullrange.dat`
+(beta 0–180, otherwise identical: `..._probe_fullr.py`, distinct store tag
+`HongPlate_Id9_TOR_fullr_*`).
+
+| job | CrossSec reldiff | averaged-Mueller reldiff | Romberg outer-beta d (folded/full) |
+|---|---|---|---|
+| 5 µm / 228 GHz | 3.6e-9 | 2.7e-22 | converged / converged |
+| 5 µm / 886 GHz | 4.9e-9 | 2.4e-18 | converged / converged |
+| 10 µm / 228 GHz | 1.35e-5 | 7.8e-17 | 1.4e-5 / 6.0e-5 |
+| 10 µm / 886 GHz | 3.5e-6 | 9.9e-14 | 1.6e-5 / 3.5e-5 |
+
+WORST = **1.35e-5 = the Romberg tolerance itself** (both runs sit at their
+own `d`), matrices to 1e-13 → the fold is exact to integration accuracy;
+gate script `analysis/phase5_tro_beta_gate.py` (threshold 1e-3, **PASS**,
+log `analysis/phase5_tro_beta_gate.log`). Also proves: the voxel-model mirror
+symmetry carries through the orientation-AVERAGE integrand, not just ARO
+grids. Folded runs additionally converged *tighter* (halved beta axis needs
+fewer Romberg levels for the same d).
+
+## 5.4 ARO backlog (plan step 22): configs ready + inventory
+
+Smoke validation of the three production configs (probe size 20 µm-class,
+f=228 GHz, T=230, via `adda_sub_control_spharmonics.py` directly): all
+**exit 0** with complete stores; HongColumn smoke confirms the production
+YZ-symmetry branch live (337 solves + 305 mirror fills); Liu converged at
+icosphere level 2 (162 solves); Icon ran (N=2 coarsest class — plumbing
+check). Statuses: `analysis/phase5_aro_smoke_status.txt`.
+
+Production scale (`analysis/phase5_backlog_inventory.py` →
+`analysis/phase5_backlog_inventory.txt`; cost anchors = §4b.2 measured
+solve times × icosphere vertex sequence, single-core Mac):
+
+| config | jobs | symmetry | est. solve-CPU-h (asym) |
+|---|---|---|---|
+| HongPlate_Id9 (ARO) | 5235 | XY+XZ (25%) | **377** (1506) |
+| HongColumn_Id7 | 1524 | YZ (50%) | **141** (282) |
+| IconSnow_Id28 | 1276 | none | 1942 |
+| LiuSectorSnowflake_Id3 | 1252 | none | 257 |
+| HongPlate_Id9_TRO | 4608 | orient-avg (β-fold ≈50% Romberg work) | minutes/job each |
+
+Total modernized ARO backlog ≈ **2700 single-core CPU-h** (was ~4000 with
+symmetry off; HPC MPI + the §4b.3 vertex-pool layout cuts wall time ~1–2
+orders of magnitude). IconSnow dominates: no usable symmetry + large fixed
+N per size class.
+
+## 5.5 SSDB export (plan step 23)
+
+`adda_process_aro_particles.py` localized (§5.0) and run end-to-end on the
+committed Phase-4 symmetry store (`SSDB_HABIT=phase4_hp_sym`): the Phase-4
+complete-store branch fires ("symmetry flags set but complete vertex data
+present: using plain averaging"); outputs `*_horiz_avg.mat` +
+`*_horiz_avg_phasematrix.mat` (19β×19θ, no NaN; Cext 6.2–7.5e-15 m² for the
+10 µm plate at 228 GHz), and with `SSDB_EXPORT_NETCDF=1` the full published
+SSD tree: `SSD/Azimuthally_random/ice/Aggregate/Pristine/HongPlate_Id9/
+AzimuthallyRandom_beta{000..180}deg/<shapefile-stem>/Freq0228.000GHz_T190K.nc`
+with groups SingleScatteringData (phaMat/extMat/absVec/sph_coeffs_scat) /
+ShapeData (N=1015, dpl, m) / CalculationData — spot-checked β=90° file:
+extMat[0]=6.164e-15 matches the avg-mat, absVec symmetric about β=90°,
+16653 sph coefficients. Log: `/tmp/p5_ssdb_export*.log` (store dirs are
+gitignored; regenerate via the commands in this section).
+Note: repeated "sph expansion has bigger error than set accuracy!" warnings
+at some regrid points = probe-store expansion truncation slightly under the
+19-point export grid's demand — expected for a probe, monitor for production.
+
+**Published-DB cross-check (optional remainder):** zenodo 1175572 v1.1.0
+files are 4.2 GB (SSD.tar.gz, TRO) / 16.5 GB (SSD_ARO.tar.gz); no local copy
+exists. The comparison tooling is in `arts-sspdb-interface/` — download +
+overlap comparison (identical habits + overlapping f/T/size points) is a
+low-risk operational task, deferred, not a stack risk.
+
+## 5.6 Production runbook (what the backlog submission now looks like)
+
+- ARO: `python adda_main_control.py` (select config; on HPC it sbatch's one
+  job per (T,f,size); `ADDA_BINARY`/`ADDA_VERSION` env overrides available;
+  production default now **1.4.0** — set in the new TRO config; the older
+  ARO configs still default 1.2 — flip when submitting from HPC or use env).
+- TRO: `python adda_main_control_rndorient.py` (select
+  `adda_config_HongPlate_Id9_TRO`; chunks auto-split by `num_chunks`).
+- Export: `SSDB_HABIT=<store-folder> [SSDB_EXPORT_NETCDF=1]
+  python adda_process_aro_particles.py` (interactive: 'all' + Process/Update).
+
+## 5.7 Phase-5 commit trail & open items
+
+Open (deliberate, all optional or HPC-side): actual production runs (HPC);
+published-DB numerical cross-check (download); flip ARO config binaries to
+1.4.0 at submission time; §4b.3 vertex-pool parallelization as an
+optimization; per-resolution symmetry flags (§4.6).
+

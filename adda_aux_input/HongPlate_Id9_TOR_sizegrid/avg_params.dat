@@ -1,0 +1,42 @@
+# Description of the parameters for orientation averaging
+# (HongPlate_Id9_TOR_sizegrid, Phase 5)
+# Program does not assume any symmetries of the particle, so the reduced
+# ranges below must be justified by MEASURED voxel-model closure:
+# analysis/phase4_symmetry_table.txt: HongPlate_Id9_TOR_sizegrid closes the
+# XY mirror EXACTLY (1.000) at BOTH coarsest (192-GHz) and finest resolution
+# classes of the size grid (report §4.6) -> beta range halves to 0-90 deg.
+# YZ closes only 0.986 at the coarse class -> NOT exploited. The XZ mirror is
+# also exact but for the zyz-Euler averaging it folds into the alpha/gamma
+# ranges, which already run at full range with equiv=true (cheap axis).
+# zyz-notation (y-convention).
+
+alpha:
+# cheap, precalculated; keep defaults
+min=0
+max=360
+Jmin=2
+Jmax=5
+eps=0
+equiv=true
+periodic=true
+
+beta:
+# XY mirror plane of the voxel model (measured exact at all resolutions):
+# max=90 (manual: "xy - symmetry plane: max=90"); do NOT use periodic=true
+min=0
+max=90
+Jmin=2
+Jmax=4
+eps=1e-6
+equiv=false
+periodic=false
+
+gamma:
+# full range (no exact gamma symmetry exploited; equiv handles the periodicity)
+min=0
+max=360
+Jmin=2
+Jmax=4
+eps=1e-6
+equiv=true
+periodic=true

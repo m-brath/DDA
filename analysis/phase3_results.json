@@ -14,21 +14,21 @@
  "ellipsoid_oblate_x1_f183GHz_T253:ext_matrix:1.4.0": 7.149282401748717e-18,
  "ellipsoid_oblate_x1_f183GHz_T253:ext_matrix:1.5.0-alpha3": 8.655954234079494e-12,
  "ellipsoid_oblate_x1_f183GHz_T253:golden_1.2": 0.0,
- "ellipsoid_oblate_x5_f183GHz_T253:mueller_array:1.4.0": 0.0005220753785140002,
- "ellipsoid_oblate_x5_f183GHz_T253:mueller_array:1.5.0-alpha3": 0.00037608784287052006,
- "ellipsoid_oblate_x5_f183GHz_T253:ext_matrix:1.4.0": 0.0002596846969143738,
- "ellipsoid_oblate_x5_f183GHz_T253:ext_matrix:1.5.0-alpha3": 0.0001247546625328752,
- "ellipsoid_oblate_x5_f183GHz_T253:golden_1.2": 0.0003846053921746739,
+ "ellipsoid_oblate_x5_f183GHz_T253:mueller_array:1.4.0": 0.0007375707698065138,
+ "ellipsoid_oblate_x5_f183GHz_T253:mueller_array:1.5.0-alpha3": 0.0004374022265121393,
+ "ellipsoid_oblate_x5_f183GHz_T253:ext_matrix:1.4.0": 0.0003113506607336869,
+ "ellipsoid_oblate_x5_f183GHz_T253:ext_matrix:1.5.0-alpha3": 0.00016436723039608996,
+ "ellipsoid_oblate_x5_f183GHz_T253:golden_1.2": 0.0005371153375539759,
  "hongplate_id9_dveq10_f192GHz_T230:mueller_array:1.4.0": 8.511708600074568e-12,
  "hongplate_id9_dveq10_f192GHz_T230:mueller_array:1.5.0-alpha3": 8.511708600074568e-12,
  "hongplate_id9_dveq10_f192GHz_T230:ext_matrix:1.4.0": 4.6706802261144376e-17,
- "hongplate_id9_dveq10_f192GHz_T230:ext_matrix:1.5.0-alpha3": 4.395360025583554e-17,
+ "hongplate_id9_dveq10_f192GHz_T230:ext_matrix:1.5.0-alpha3": 3.404109543925354e-17,
  "hongplate_id9_dveq10_f192GHz_T230:golden_1.2": 0.0,
  "hongplate_id9_dveq10_f337GHz_T230:mueller_array:1.4.0": 2.908992674385689e-14,
  "hongplate_id9_dveq10_f337GHz_T230:mueller_array:1.5.0-alpha3": 2.908989325828838e-11,
- "hongplate_id9_dveq10_f337GHz_T230:ext_matrix:1.4.0": 5.055072558468355e-17,
- "hongplate_id9_dveq10_f337GHz_T230:ext_matrix:1.5.0-alpha3": 1.4926319287537355e-17,
- "hongplate_id9_dveq10_f337GHz_T230:golden_1.2": 2.9089899206382788e-15,
+ "hongplate_id9_dveq10_f337GHz_T230:ext_matrix:1.4.0": 4.577164529885734e-17,
+ "hongplate_id9_dveq10_f337GHz_T230:ext_matrix:1.5.0-alpha3": 4.672262821100239e-17,
+ "hongplate_id9_dveq10_f337GHz_T230:golden_1.2": 2.9089853310592615e-15,
  "pipeline:ext_mat_horiz_avg:1.4.0": 0.004056678910175689,
  "pipeline:mueller_c0:1.4.0": 0.0018487252414834815,
  "pipeline:ext_mat_horiz_avg:1.5.0-alpha3": 0.004056678903496217,
@@ -531,17 +531,17 @@
   "1.2": [
    NaN,
    0.14092550019952912,
-   0.010856273465522679
+   0.010856273465522684
   ],
   "1.4.0": [
    NaN,
    0.14006314667838832,
-   0.010798208875939847
+   0.010798208875939852
   ],
   "1.5.0-alpha3": [
    NaN,
    0.14006314666656575,
-   0.010798208879021713
+   0.010798208879021724
   ]
  },
  "tro:crosssec:1.4.0": 0.0,

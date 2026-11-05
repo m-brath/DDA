@@ -1,7 +1,14 @@
 # Baselines — frozen regression reference
 
-Generated 2026-11-03 with **ADDA v1.2** (sequential, locally rebuilt on macOS
-arm64) via `make_baseline.py`. These are the golden files for the modernization
+**Current golden: `adda_1.4.0/`** (regenerated 2026-11-06 with **ADDA v1.4.0**,
+the production binary per the Phase-3 decision). `adda_1.2/` is the archived
+historical golden (original 2026-11-03 set, ADDA v1.2, locally rebuilt on macOS
+arm64) — kept for provenance. 1.2 → 1.4.0 file-level diff (this session):
+scat grids ≤3.5e-4, CrossSec ≤4.2e-4 (both only in the x=5 cases), all other
+cases bit-identical — i.e. within the documented `-eps 3` rerun noise (≤8e-4
+at x=5), per the noise-based gate rule (never bit-level).
+
+These are the golden files for the modernization
 plan (see `plans/DDA-modernization-plan.md`, Phase 0/3): every stack change
 (numpy-2 migration, ADDA 1.4/1.5 switch, symmetry optimizations) must reproduce
 these outputs within stated tolerances.

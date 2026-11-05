@@ -1,0 +1,60 @@
+all data is saved in '/var/folders/gv/mb1d5jjj5r1dm8gmdg2gpltr0000gp/T/tmpdf5t_tae/out'
+box dimensions: 16x16x8
+lambda: 1638.210153   Dipoles/lambda: 402.847
+Required relative residual norm: 0.001
+Total number of occupied dipoles: 1104
+Memory usage for MatVec matrices: 0.7 MB
+Calculating Green's function (Dmatrix)
+Fourier transform of Dmatrix
+Initializing FFTW3
+Total memory usage: 1.2 MB
+
+here we go, calc Y
+
+CoupleConstant: 6.739226798+0.02083684489i
+x_0 = E_inc
+RE_000 = 1.5244181056E-01
+RE_001 = 3.5878125658E-02  + 
+RE_002 = 7.2514898353E-03  + 
+RE_003 = 2.9638698487E-03  + 
+RE_004 = 9.2360324329E-04  + 
+Calculating scattered field for the whole solid angle:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Calculating grid of scattered field:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Cext	= 1.608694263
+Qext	= 0.00075325869
+Cabs	= 1.476667538
+Qabs	= 0.0006914381935
+All inner integrations converged
+The outer integration converged
+In total 20 evaluations were used
+Csca	= 0.1319614
+Qsca	= 6.178990847e-05
+
+here we go, calc X
+
+CoupleConstant: 6.739226798+0.02083684489i
+x_0 = E_inc
+RE_000 = 2.6113318029E-01
+RE_001 = 2.4042336373E-02  + 
+RE_002 = 8.1571228614E-03  + 
+RE_003 = 2.4938387753E-03  + 
+RE_004 = 7.8915096732E-04  + 
+Calculating scattered field for the whole solid angle:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Calculating grid of scattered field:
+ 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%  done
+Cext	= 0.8165842523
+Qext	= 0.0003823592825
+Cabs	= 0.7498758247
+Qabs	= 0.0003511235754
+All inner integrations converged
+The outer integration converged
+In total 20 evaluations were used
+Csca	= 0.06646198663
+Qsca	= 3.1120313e-05
+
+WARNING: (../param.c:2326) Directory
+'/var/folders/gv/mb1d5jjj5r1dm8gmdg2gpltr0000gp/T/tmpdf5t_tae/out' already
+exists

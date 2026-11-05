@@ -1,0 +1,5 @@
+adda_config_HongColumn_Id7             jobs= 1524  mirrors=1 (50% solves)  est single-core ARO solve-time:      141.0 CPU-h (asym would be 282.0)
+adda_config_IconSnow_Id28              jobs= 1276  mirrors=0 (100% solves)  est single-core ARO solve-time:     1942.1 CPU-h (asym would be 1942.1)
+adda_config_LiuSectorSnowflake_Id3     jobs= 1252  mirrors=0 (100% solves)  est single-core ARO solve-time:      257.1 CPU-h (asym would be 257.1)
+adda_config_HongPlate_Id9              jobs= 5235  mirrors=2 (25% solves)  est single-core ARO solve-time:      376.6 CPU-h (asym would be 1506.4)
+adda_config_HongPlate_Id9_TRO (TRO orient-avg) jobs=4608 (4608; Romberg ~tens of solves each, minutes-size jobs)

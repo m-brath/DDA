@@ -1,0 +1,33 @@
+# full-range reference avg input (Phase-5 gate twin):
+# identical to avg_params.dat EXCEPT beta max=180 (no XY-mirror folding).
+# The gate: CrossSec + averaged mueller must agree with the beta 0-90 run to
+# ~Romberg eps (1e-6) + solver noise -> proves the voxel-exact XY closure
+# applies to the orientation-AVERAGE integrand (not just to ARO grids).
+# zyz-notation (y-convention).
+
+alpha:
+min=0
+max=360
+Jmin=2
+Jmax=5
+eps=0
+equiv=true
+periodic=true
+
+beta:
+min=0
+max=180
+Jmin=2
+Jmax=4
+eps=1e-6
+equiv=false
+periodic=false
+
+gamma:
+min=0
+max=360
+Jmin=2
+Jmax=4
+eps=1e-6
+equiv=true
+periodic=true

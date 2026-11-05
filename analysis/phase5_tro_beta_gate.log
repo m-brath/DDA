@@ -1,0 +1,5 @@
+deq00005um_freq228.0GHz      CrossSec reldiff 3.61e-09   mueller reldiff 2.67e-22   beta-d folded=nan full=nan
+deq00005um_freq886.0GHz      CrossSec reldiff 4.94e-09   mueller reldiff 2.44e-18   beta-d folded=nan full=nan
+deq00010um_freq228.0GHz      CrossSec reldiff 1.35e-05   mueller reldiff 7.76e-17   beta-d folded=1.36536e-05 full=6.04098e-05
+deq00010um_freq886.0GHz      CrossSec reldiff 3.53e-06   mueller reldiff 9.91e-14   beta-d folded=1.61517e-05 full=3.52097e-05
+WORST folded-vs-fullrange reldiff: 1.35e-05
