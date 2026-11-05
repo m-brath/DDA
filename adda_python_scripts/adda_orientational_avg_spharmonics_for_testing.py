@@ -4,6 +4,12 @@
 Created on Tue Feb  3 10:58:25 2015
 
 @author: u242031
+
+.. deprecated:: modernization Phase 3
+   Development scratch script: it duplicates the production post-processing
+   chain (adda_process_aro_particles_single.py) plus plotting code that is
+   broken since matplotlib 3 (plt.hold, plt.cm.seismic — report §1.5).
+   Kept for reference only; do NOT import from it or extend it.
 """
 #==============================================================================
 # import modules

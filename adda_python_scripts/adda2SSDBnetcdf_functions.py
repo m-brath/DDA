@@ -228,7 +228,9 @@ def add_attribute_to_group2(group2,CaD_definition,output_data, ac):
                 horst=output_data['eps_phase']
                 
             else:
-                horst=getattr(ac,CaD_definition['values'][i][0])
+                # Phase 3: values resolve from the config module; optional
+                # entries (older configs) fall back to 'n/a'
+                horst=getattr(ac,CaD_definition['values'][i][0],'n/a')
                 
             if type(horst)==bool:
                 horst=int(horst)

@@ -4,6 +4,15 @@
 Created on Tue Feb  3 10:58:25 2015
 
 @author: u242031
+
+.. deprecated:: modernization Phase 1/3
+   This legacy Romberg-quadrature path is BROKEN BY DESIGN and kept for
+   reference only (like old_configs/): it requires config globals
+   (sym_Zlab, sym_Zobj, limit_alpha, limit_gamma) that no active config
+   defines, contains a Python-2 division bug in acf.romberg_gamma
+   (2**(Nidx/2) -> float), and passes input_data['refrative_ndex']
+   (typo, adda_sub_control_gridref.py:~230). Do not extend; use
+   adda_sub_control_spharmonics.py (see modernization report §1.6-9).
 """
 #==============================================================================
 # import modules

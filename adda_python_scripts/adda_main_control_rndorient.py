@@ -13,6 +13,7 @@ Created on Tue Feb  3 10:58:25 2015
 import glob
 import os
 import socket
+import sys
 import numpy as np
 #import pdb
 import subprocess as sub
@@ -25,18 +26,27 @@ import adda_control_functions as acf
 #where am I?
 hereiam=socket.gethostname()
 
-if hereiam[0:6]=='mlogin': #we are on mistral
+if hereiam[0:6]=='mlogin' or hereiam[0:7]=='mistral' or hereiam[0:2]=='m2': #we are on mistral
 
     prefix='/mnt/lustre01/work/um0878/users/mbrath/'
 
     calc_type='mistral'
 
+elif sys.platform.startswith('darwin'):
+
+    # local (no-queue) mode (Phase 3): paths relative to this repo
+    calc_type='local'
+    prefix=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+'/'
+
 else:
     prefix='/scratch/uni/u237/users/mbrath/'
-
+    calc_type='thunder'
 
 #path of the configfile folder
-script_path=prefix+'adda/adda_python_scripts/'
+if calc_type=='local':
+    script_path=prefix+'adda_python_scripts/'
+else:
+    script_path=prefix+'adda/adda_python_scripts/'
 
 #change directory for not putting all the trash in my controlfile folder
 temporary_folder=prefix+'adda_results/temp'
@@ -108,6 +118,7 @@ else:
 
 
 #change directory for not putting all the trash in my controlfile folder
+os.makedirs(temporary_folder, exist_ok=True)
 os.chdir(temporary_folder)
 
 
@@ -134,17 +145,23 @@ for j in range(0,num_chunks):
                 adda_config,
                 str(idx_s),str(idx_e)]
 
-    sbatch_str=['/scratch/uni/u237/sw/bin/sbatch_simple','-x', 'ctc[132-133]',
+    if calc_type=='local':
+        # local (no-queue) mode: run the chunk directly (Phase 3)
+        command_str=python_str
+    else:
+        sbatch_str=['/scratch/uni/u237/sw/bin/sbatch_simple','-x', 'ctc[132-133]',
                  'ADDA_'+str(j)+'_'+shape_name, str(ncores)]
 
-
-    command_str=sbatch_str+python_str
+        command_str=sbatch_str+python_str
 
     print(command_str)
 #    print(python_str)
 
 
-    sub.call(command_str)
+    if calc_type=='local':
+        sub.check_call([sys.executable]+command_str)
+    else:
+        sub.call(command_str)
 #    sub.call(python_str)
 
 

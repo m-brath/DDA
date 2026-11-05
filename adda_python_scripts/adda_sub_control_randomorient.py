@@ -81,8 +81,17 @@ exec('from '+adda_config+' import *')
 #  constants/paths
 #==============================================================================
 
-#adda command
-main_command=['mpiexec','-n',str(ncores),'adda_mpi']
+#adda command — config-driven (Phase 3), same contract as
+#adda_sub_control_spharmonics.py: adda_binary/adda_launcher/adda_version
+if 'adda_binary' not in locals():
+
+    adda_binary='adda_mpi'
+
+if 'adda_launcher' not in locals():
+
+    adda_launcher=['mpiexec','-n',str(ncores)]
+
+main_command=list(adda_launcher)+[adda_binary]
 
 
 #temp directory for not putting all the trash in my controlfile folder
@@ -96,6 +105,7 @@ temporary_folder=os.path.join(prefix,'adda_results','temp')
 
 
 #change directory for not putting all the trash in my controlfile folder
+os.makedirs(temporary_folder, exist_ok=True)
 os.chdir(temporary_folder)
 
 if idx_e != -999:
@@ -119,6 +129,13 @@ for idx in indices:
         read_shape_str=['-shape','read',shape_path+liste[6,idx][0]]
 
         static_clo_temp=read_shape_str+static_clo
+
+    else:
+        # analytic shapes: the -shape tokens are expected to be part of
+        # static_clo already (as in the habit configs where they are added
+        # above). Fixes the former NameError for static_clo_temp (:204 uses
+        # it unconditionally) — report §1.6-10.
+        static_clo_temp=list(static_clo)
 
 
 
@@ -150,6 +167,10 @@ for idx in indices:
     eps=eps[0,0]
 
     #Temperature
+    # FIXME (Phase 5, report §1.6-10): `liste` carries no temperature row, so
+    # the storage folder encodes the FLAT INDEX as "T####K". Harmless for the
+    # archived old runs, but the TRO configs rebuilt in Phase 5 must carry a
+    # temperature column (row 8) and this line must use it.
     temperature=idx
 
 

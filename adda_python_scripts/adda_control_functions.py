@@ -161,6 +161,7 @@ def adda_call(input_data):
 
 
         #Output directory
+        path_name=""
         try:
             path_name = tempfile.mkdtemp(dir=ramdrive)
             dir_str=['-dir',path_name+'/temp']
@@ -179,7 +180,15 @@ def adda_call(input_data):
             #run adda==========================================================
 
             #sub.call(commando)
-            spawn_command(' '.join(commando))
+            ret=spawn_command(' '.join(commando))
+
+            #ADDAs exit status was never checked before (Phase 3) — a crashed
+            #or signalled ADDA used to pass silently into the parse step
+            if int(ret)!=0:
+                raise RuntimeError('ADDA terminated abnormally '
+                                   '(wait status {}, signal {}): {}'
+                                   .format(int(ret), int(ret)&0x7f,
+                                           ' '.join(commando[:4])+' ...'))
 
             #==================================================================
 
@@ -943,7 +952,12 @@ def adda_call_randomorient(input_data):
 
             #Command string (queue on mistral)
 #            commando=sbatch_str+adda_str
-            print('Mistral is not yet implemented, sorry!')
+            # Phase 3: this branch never defined `commando` (silent NameError
+            # swallowed by the bare except at the end of this function). Fail
+            # loudly instead; the sbatch_adda path was never completed.
+            raise NotImplementedError(
+                'adda_call_randomorient: mistral batch submission was never '
+                'implemented; use calc_type=noqueue/local or run on thunder')
             
 #        elif calc_type=='thunder':
 #
@@ -1025,17 +1039,26 @@ def adda_call_randomorient(input_data):
         #run adda==========================================================
 
         #sub.call(commando)
-        spawn_command(' '.join(commando))
+        ret=spawn_command(' '.join(commando))
+
+        #check ADDAs exit status (Phase 3 — used to be ignored entirely)
+        if int(ret)!=0:
+            raise RuntimeError('ADDA terminated abnormally '
+                               '(wait status {}, signal {})'
+                               .format(int(ret), int(ret)&0x7f))
 
         #==================================================================
 
 #        pdb.set_trace()
-    except:
+    except Exception as exc:
         print('there was something wrong...')
         print('input data:')
         print(input_data)
         print(' ')
         print('I hope, it was useful.')
+        # Phase 3: re-raise — swallowing this made mass TRO runs zip
+        # empty output dirs without any signal (report §1.6-8)
+        raise
 
 
 #==============================================================================

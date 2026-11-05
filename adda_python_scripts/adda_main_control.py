@@ -12,6 +12,7 @@ Created on Tue Feb  3 10:58:25 2015
 import subprocess as sub
 import glob
 import os
+import sys
 
 import numpy as np
 #import pdb
@@ -29,14 +30,33 @@ if hereiam[0:6]=='mlogin' or hereiam[0:7]=='mistral' or hereiam[0:2]=='m2': #we 
     calc_type='mistral'
 
 
+elif sys.platform.startswith('darwin'):
+
+    # local (no-queue) mode (Phase 3): everything relative to this repo
+    calc_type='local'
+    prefix=os.path.dirname(os.path.abspath(__file__))+'/'
+    prefix_data=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+'/'
+
+
 else:
     prefix='/scratch/uni/u237/users/mbrath/'
     prefix_data='/scratch/uni/u237/user_data/mbrath/'
+    calc_type='thunder'
 
 
 
 #path of the configfile folder
-script_path=prefix+'/adda/adda_python_scripts/'
+if calc_type=='local':
+    script_path=prefix
+else:
+    script_path=prefix+'/adda/adda_python_scripts/'
+
+#path of the adda checkout (cluster: <prefix>/adda; local: repo root, i.e.
+#one level above this scripts folder)
+if calc_type=='local':
+    adda_prefix=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+'/'
+else:
+    adda_prefix=prefix+'adda/'
 
 #change directory for not putting all the trash in my controlfile folder
 temporary_folder=prefix_data+'/adda_results/temp'
@@ -71,6 +91,7 @@ exec('from '+adda_config+' import *')
 #==============================================================================
 
 #change directory for not putting all the trash in my controlfile folder
+os.makedirs(temporary_folder, exist_ok=True)
 os.chdir(temporary_folder)
 
 fmin_exist='fmin' in locals()
@@ -202,10 +223,14 @@ for T in temperatures:
                             +shape,str(ncores),'08:00:00']
 
             #Command string (queue on thunder)
-            else:
+            elif calc_type=='thunder':
                 sbatch_str=['/scratch/uni/u237/sw/bin/sbatch_simple',#'-x', 'ctc13[6-9]',
                     'ADDA_'+str(Tindex)+'-'+str(findex)+'-'+str(Dindex)+'-'
                     +shape,str(ncores)]
+
+            #local (no-queue): run the sub-control script directly (Phase 3)
+            else:
+                sbatch_str=[]
 
 
             #queue
@@ -222,7 +247,10 @@ for T in temperatures:
             count=count+1
             joblist=joblist+[filename(**strings)]
 
-            sub.call(command_str)
+            if calc_type=='local':
+                sub.check_call([sys.executable]+command_str)
+            else:
+                sub.call(command_str)
 
 print('  ')
 print('Jobs send to queue:')

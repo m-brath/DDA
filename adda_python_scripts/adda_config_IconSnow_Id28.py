@@ -14,6 +14,8 @@ import numpy as np
 import scipy.io as sio
 import glob
 import socket
+import os
+import sys
 import adda_control_functions as acf
 #==============================================================================
 #  constants
@@ -45,6 +47,18 @@ if hereiam[0:6]=='mlogin' or hereiam[0:7]=='mistral' or hereiam[0:2]=='m2': #we 
     ncores=36
     Partition='compute2'
 
+elif sys.platform.startswith('darwin'):
+
+    # local (no-queue) mode (Phase 3): paths relative to this repo
+    _here=os.path.dirname(os.path.abspath(__file__))+'/'
+    _repo=os.path.dirname(_here[:-1])+'/'
+    prefix=_here
+    prefix_data=_repo
+    calc_type='local'
+    Partition='n/a'
+    #number of cores
+    ncores=4
+
 else:
     prefix='/scratch/uni/u237/users/mbrath/'
     prefix_data='/scratch/uni/u237/user_data/mbrath/'
@@ -56,21 +70,57 @@ else:
 
     
     
+#==============================================================================
+# ADDA checkout, provenance and binary (Phase 3 - configurable binary)
+#==============================================================================
+
+#path of the adda checkout (cluster: <prefix>/adda; local: this repo root)
+if calc_type=='local':
+    adda_prefix=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+'/'
+else:
+    adda_prefix=prefix+'adda/'
+
+#provenance strings for the SSDB CalculationData group
+if calc_type=='mistral':
+    cluster_name='DKRZ: mistral-compute2'
+elif calc_type=='local':
+    cluster_name='local: '+hereiam
+else:
+    cluster_name='TCUB: thunder'
+
+#ADDA executable and launcher (consumed by the adda_sub_control_*.py scripts;
+#they fall back to the historic 1.2 defaults if a config defines neither).
+#Env overrides enable cross-version runs without editing configs:
+#  ADDA_BINARY=<exe> ADDA_VERSION=<ver> python adda_main_control.py ...
+adda_version='1.2'
+
+if calc_type=='mistral':
+    adda_binary=adda_prefix+'adda_1.2/src/mpi/adda_mpi'
+    adda_launcher=['srun','-n',str(ncores)]
+elif calc_type=='local':
+    adda_binary=adda_prefix+'adda_1.2/src/seq/adda'
+    adda_launcher=[]
+else:
+    adda_binary='adda_mpi'
+    adda_launcher=['mpiexec','-n',str(ncores)]
+
+adda_version=os.environ.get('ADDA_VERSION',adda_version)
+adda_binary=os.environ.get('ADDA_BINARY',adda_binary)
+
 #ramdrive
 if calc_type=='mistral':
     ramdrive="/dev/shm/"
+elif calc_type=='local':
+    ramdrive=None      # system temp dir
 else:
-    ramdrive="/dev/shm/u242031/"    
-
-
-#scat_params_path
-scat_param_path=prefix+'adda/adda_python_scripts/scat_params.dat'
+    ramdrive="/dev/shm/u242031/"#scat_params_path
+scat_param_path=adda_prefix+'adda_python_scripts/scat_params.dat'
 
 #alldir_params_path
-alldir_param_path=prefix+'adda/adda_python_scripts/alldir_params.dat'
+alldir_param_path=adda_prefix+'adda_python_scripts/alldir_params.dat'
 
 #avg_params_path
-#avg_param_path=prefix+'adda/adda_aux_input/EvanSnowflake_aggregate/avg_params.dat'
+#avg_param_path=adda_prefix+'adda_aux_input/EvanSnowflake_aggregate/avg_params.dat'
 
 #main path
 main_path=prefix_data+'adda_results/'
@@ -82,7 +132,7 @@ shape_name='IconSnow_Id28'
 shape_foldername=shape_name
 
 #shape mainpath
-shape_mainpath=prefix+'adda/adda_shape_files/'
+shape_mainpath=adda_prefix+'adda_shape_files/'
 
 #shape_path
 shape_path=shape_mainpath+shape_foldername+'/'
@@ -229,8 +279,11 @@ alldir_input='-alldir_inp'
 
 
 #Scattering output...
-scatoutput_str=[scat_output,scat_input,scat_param_path,scat_mat,scat_mat_type,
-                Csca_output,alldir_input,alldir_param_path]
+# -Csca / -alldir_inp dropped (Phase 3): CrossSec*/Csca/mueller_alldir are
+# never parsed by this pipeline (ARO extinction comes from the forward
+# ampl_scatgrid column); skipping them saves the all-direction integration
+# and avoids the 1.4/1.5 flag-combination validation traps (report §1.3)
+scatoutput_str=[scat_output,scat_input,scat_param_path,scat_mat,scat_mat_type]
 
 
 #Adda's static command line options

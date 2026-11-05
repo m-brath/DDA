@@ -29,7 +29,7 @@ fixed_values['phaMat_index']=np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,1
 fixed_values['extMat_index']=np.array([[1,2,0,0],[2,1,0,0],[0,0,1,3],[0,0,-3,1]])
 fixed_values['absVec_index']=np.array([1,2,0,0])
 
-refrIndex_model='Maetzler2016'
+refrIndex_model='Maetzler2006'
 
 #==============================================================================
 # SingleScatteringData definitions
@@ -267,10 +267,10 @@ CaD_definition['descriptions_general']=[
 CaD_definition['values']=[
         'DDA',
         'ADDA',
-        '1.2',
-        'DKRZ: mistral-compute2',
+        ['adda_version'],
+        ['cluster_name'],
         'n/a',
-        '36',
+        ['ncores'],
         datetime.now().isoformat(),
         ['eps'],
         'n/a',

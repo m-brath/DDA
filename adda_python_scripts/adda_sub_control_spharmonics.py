@@ -19,7 +19,6 @@ import os
 import numpy as np
 import scipy.io as sio
 import sys
-import itertools
 import pickle
 import typhon as ty
 #import zipfile
@@ -102,16 +101,48 @@ if 'calc_type' not in locals():
     calc_type='thunder'
 
 
-if calc_type=='mistral':
+#==============================================================================
+# ADDA executable + launcher — config-driven (Phase 3)
+#   adda_binary : path (or command name) of the ADDA executable
+#   adda_launcher: list of launcher tokens prefixed to it ('' = run directly)
+#   adda_version: provenance string, e.g. '1.2' or '1.5.0-alpha3'
+# Defaults preserve the historical per-cluster behaviour (ADDA 1.2).
+#==============================================================================
 
-    #adda command
-    main_command=['srun','-n',str(ncores),prefix+'/adda/adda_1.2/src/mpi/adda_mpi']
+
+if 'adda_binary' not in locals():
+
+    if calc_type=='mistral':
+
+        adda_binary=prefix+'/adda/adda_1.2/src/mpi/adda_mpi'
+
+    else:
+
+        adda_binary='adda_mpi'
 
 
-else:
+if 'adda_launcher' not in locals():
 
-    #adda command
-    main_command=['mpiexec','-n',str(ncores),'adda_mpi']
+    if calc_type=='mistral':
+
+        adda_launcher=['srun','-n',str(ncores)]
+
+    elif calc_type=='local':
+
+        adda_launcher=[]
+
+    else:
+
+        adda_launcher=['mpiexec','-n',str(ncores)]
+
+
+if 'adda_version' not in locals():
+
+    adda_version='1.2'
+
+
+#adda command
+main_command=list(adda_launcher)+[adda_binary]
 
 
 
@@ -154,7 +185,8 @@ storage_path=os.path.join(main_path+subpath,filename(**strings))
 if not os.path.exists(storage_path):
         os.makedirs(storage_path)
 
-if not os.path.exists(ramdrive):
+# ramdrive may be None in local mode (system temp dir is used then)
+if ramdrive is not None and not os.path.exists(ramdrive):
         os.makedirs(ramdrive)
 
 
@@ -422,18 +454,22 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
             logic=np.sum(logic_temp,axis=1)==np.size(vertices_old,axis=1)
 
             if sum(logic)==1:
-                ext_mat_array[point_i,:,:]=ext_mat_array_old[logic,:,:]
+                # numpy 2 no longer converts a shape-(1,) boolean-selection
+                # result into a scalar implicitly -> index directly
+                r_idx=int(np.flatnonzero(logic)[0])
 
-                mueller_array[point_i]=next(itertools.compress(mueller_array_old, logic))
+                ext_mat_array[point_i,:,:]=ext_mat_array_old[r_idx,:,:]
+
+                mueller_array[point_i]=mueller_array_old[r_idx]
 
                 #relative error of sph expansion
-                rel_err_array[point_i,:]=rel_err_array_old[logic,:]
+                rel_err_array[point_i,:]=rel_err_array_old[r_idx,:]
 
                 #max number coefficients
-                max_len_array[point_i]=max_len_array_old[logic]
+                max_len_array[point_i]=max_len_array_old[r_idx]
 
                 #max number of truncation
-                max_ntrunc_array[point_i]=max_ntrunc_array_old[logic]
+                max_ntrunc_array[point_i]=max_ntrunc_array_old[r_idx]
             else:
 
                 #Check if vertex was already simulated
@@ -743,6 +779,8 @@ output_data['wavelength']=lamb;
 output_data['diameter_volume_equ']=D*1e-6
 output_data['diameter_max']=dmax*1e-6
 output_data['refr_index']=m
+output_data['adda_version']=adda_version
+output_data['adda_binary']=adda_binary
 output_data['sym_XYobj']=sym_XYobj
 output_data['sym_XZobj']=sym_XZobj
 output_data['sym_YZobj']=sym_YZobj
