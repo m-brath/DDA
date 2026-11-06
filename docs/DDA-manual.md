@@ -115,7 +115,7 @@ DDA/
 | **`limit_sph`=4** | max icosphere refinement level (levels: 12/42/162/642/2562 vertices; minimum 3 passes). |
 | **shtns** | fast spherical-harmonics transform library (orthonormal, no Condon–Shortley phase here). |
 | **Matzler 2006** | dielectric function of ice used for all ice habits: `acf.eps_ice_matzler06(f, T)`. |
-| **SSDB** | ARTS Microwave Single Scattering Properties Database; our export format is `beta_0.9` (zenodo 1175572 lineage). |
+| **SSDB** | ARTS Microwave Single Scattering Properties Database; our export format is `beta_0.9` (zenodo 1175572 lineage — Eriksson et al. 2018; ARO extension: Brath et al. 2020). |
 | **habit IDs** | particle shape definitions from the ARTS habit catalogue: ID9 = Hong/MoCOLAG plate, ID7 = Hong column, ID20 = hexagonal plate aggregate, ID28 = Icon snowflake, ID3 = Liu sector snowflake. |
 | **gloden / baseline** | frozen ADDA outputs in `baselines/` used for regression (§4.1). |
 
@@ -325,6 +325,14 @@ R(\alpha,\beta,\gamma) \;=\; R_z(\alpha)\;R_{z'}(\beta)\;R_{z''}(\gamma),
 \qquad \text{ADDA flag {\tt -orient} } \alpha\ \beta\ \gamma\ \text{[deg]}
 $$
 
+> **Source methodology (ARO):** the TRO/ARO classification, the zyz Euler convention, the
+> $\alpha$/$\gamma$-averaging at fixed tilt $\beta$, and the resulting ARO dependence on
+> ($\beta$, $\theta_{\mathrm{inc}}$, scattering angles) follow **Brath et al. (2020, AMT 13, 2309–2333)**
+> — the foundation paper of this project's ARO approach (see References). Their hexagonal-plate /
+> plate-aggregate ARO database itself builds on the shape and frequency/temperature setup of
+> **Eriksson et al. (2018, ESSD 10, 1301–1326)**, which is also where the habit IDs used in this
+> repo (`HongPlate_Id9`, `HongColumn_Id7`, …) originate.
+
 | | ARO | TRO |
 |---|---|---|
 | free orientation parameters | tilt $\beta$ of the particle axis; azimuth ( $\alpha,\gamma$) averaged | all of $\alpha,\beta,\gamma$ |
@@ -516,7 +524,10 @@ never realizes ideal $C_6$ exactly; XY+XZ fill-in already implies exact $C_{2x}$
 
 ## 1.8 What the SSDB export contains
 
-Post-processing turns the per-job store into ARTS-SSDB NetCDF (`beta_0.9`). One file per
+Post-processing turns the per-job store into ARTS-SSDB NetCDF (`beta_0.9`) — the format of
+the published ARTS Microwave SSP Database, whose TRO generation is documented in
+**Eriksson et al. (2018, ESSD 10, 1301–1326)**; the ARO extension of that format is
+documented in **Brath et al. (2020, AMT 13, 2309–2333)**. One file per
 **( $\beta$, size, f, T)** under a nested tree:
 
 ```
@@ -1046,6 +1057,20 @@ Numbered for reference; several carry the bug-fix that neutralized them.
 
 # References
 
+- **Brath, M., Ekelund, R., Eriksson, P., Lemke, O., Buehler, S. A. (2020)**: Microwave and
+  submillimeter wave scattering of oriented ice particles, *Atmos. Meas. Tech.* **13**,
+  2309–2333, https://doi.org/10.5194/amt-13-2309-2020. — **The main methodology article for
+  everything ARO in this repo**: TRO/ARO definitions, zyz Euler angles, the ARO averaging
+  approach (DDA solves + own orientation averaging over $\alpha,\gamma$), the
+  ( $\beta$, $\theta_{\mathrm{inc}}$) output coordinates, and the RT motivation (ICI, GMI 166 GHz
+  polarization). Their ARO database: zenodo 3463003.
+- **Eriksson, P., Ekelund, R., Mendrok, J., Brath, M., Lemke, O., Buehler, S. A. (2018)**: A
+  general database of hydrometeor single scattering properties at microwave and sub-millimetre
+  wavelengths, *Earth Syst. Sci. Data* **10**, 1301–1326, https://doi.org/10.5194/essd-10-1301-2018.
+  — The published ARTS SSPDB (TRO) paper: source of the habit-ID numbering and shape-file
+  lineage (`*_Id<n>` folder names), the 35-channel frequency selection, the 190/230/270 K
+  temperature set, the Mätzler-2006 refractive-index choice, and the SSDB NetCDF format the
+  export targets (zenodo 1175572, tooling: `arts-sspdb-interface/`).
 - Yurkin & Hoekstra 2011, *JQSRT* 112, 2234–2247 (ADDA); ADDA manual: `adda/doc/manual.pdf`, `adda_1.2/doc/manual.pdf`.
 - Mätzler 2006, dielectric function of ice (implemented in `acf.eps_ice_matzler06`).
 - Mishchenko 2002 (*Light Scattering by Nonspherical Particles*) — extinction-matrix construction used in `acf.extinction_matrix`.

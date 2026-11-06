@@ -229,7 +229,7 @@ The old HPC results are <em>not accessible</em> — regression validation theref
 </tr>
 <tr>
 <td><strong>SSDB</strong></td>
-<td>ARTS Microwave Single Scattering Properties Database; our export format is <code>beta_0.9</code> (zenodo 1175572 lineage).</td>
+<td>ARTS Microwave Single Scattering Properties Database; our export format is <code>beta_0.9</code> (zenodo 1175572 lineage — Eriksson et al. 2018; ARO extension: Brath et al. 2020).</td>
 </tr>
 <tr>
 <td><strong>habit IDs</strong></td>
@@ -471,6 +471,15 @@ ADDA's <strong>zyz convention</strong> ( <span class="arithmatex">\(\alpha\)</sp
 R(\alpha,\beta,\gamma) \;=\; R_z(\alpha)\;R_{z'}(\beta)\;R_{z''}(\gamma),
 \qquad \text{ADDA flag {\tt -orient} } \alpha\ \beta\ \gamma\ \text{[deg]}
 \]</div>
+<blockquote>
+<p><strong>Source methodology (ARO):</strong> the TRO/ARO classification, the zyz Euler convention, the
+<span class="arithmatex">\(\alpha\)</span>/<span class="arithmatex">\(\gamma\)</span>-averaging at fixed tilt <span class="arithmatex">\(\beta\)</span>, and the resulting ARO dependence on
+(<span class="arithmatex">\(\beta\)</span>, <span class="arithmatex">\(\theta_{\mathrm{inc}}\)</span>, scattering angles) follow <strong>Brath et al. (2020, AMT 13, 2309–2333)</strong>
+— the foundation paper of this project's ARO approach (see References). Their hexagonal-plate /
+plate-aggregate ARO database itself builds on the shape and frequency/temperature setup of
+<strong>Eriksson et al. (2018, ESSD 10, 1301–1326)</strong>, which is also where the habit IDs used in this
+repo (<code>HongPlate_Id9</code>, <code>HongColumn_Id7</code>, …) originate.</p>
+</blockquote>
 <table>
 <thead>
 <tr>
@@ -774,7 +783,10 @@ dominates and the ratio closes. <code>sym_Zobj</code> (<span class="arithmatex">
 resolution-dependent (HongPlate: 1.000 fine / 0.986 coarse), and the cube-lattice model
 never realizes ideal <span class="arithmatex">\(C_6\)</span> exactly; XY+XZ fill-in already implies exact <span class="arithmatex">\(C_{2x}\)</span> anyway.</p>
 <h2 id="18-what-the-ssdb-export-contains">1.8 What the SSDB export contains</h2>
-<p>Post-processing turns the per-job store into ARTS-SSDB NetCDF (<code>beta_0.9</code>). One file per
+<p>Post-processing turns the per-job store into ARTS-SSDB NetCDF (<code>beta_0.9</code>) — the format of
+the published ARTS Microwave SSP Database, whose TRO generation is documented in
+<strong>Eriksson et al. (2018, ESSD 10, 1301–1326)</strong>; the ARO extension of that format is
+documented in <strong>Brath et al. (2020, AMT 13, 2309–2333)</strong>. One file per
 <strong>( <span class="arithmatex">\(\beta\)</span>, size, f, T)</strong> under a nested tree:</p>
 <pre><code>&lt;adda_results&gt;/SSD/Azimuthally_random/ice/Aggregate/Pristine/HongPlate_Id9/
     AzimuthallyRandom_beta090deg/
@@ -1357,6 +1369,20 @@ Missing config keys degrade to <code>'n/a'</code> (<code>getattr(ac, …, 'n/a')
 </ol>
 <h1 id="references">References</h1>
 <ul>
+<li><strong>Brath, M., Ekelund, R., Eriksson, P., Lemke, O., Buehler, S. A. (2020)</strong>: Microwave and
+  submillimeter wave scattering of oriented ice particles, <em>Atmos. Meas. Tech.</em> <strong>13</strong>,
+  2309–2333, https://doi.org/10.5194/amt-13-2309-2020. — <strong>The main methodology article for
+  everything ARO in this repo</strong>: TRO/ARO definitions, zyz Euler angles, the ARO averaging
+  approach (DDA solves + own orientation averaging over <span class="arithmatex">\(\alpha,\gamma\)</span>), the
+  ( <span class="arithmatex">\(\beta\)</span>, <span class="arithmatex">\(\theta_{\mathrm{inc}}\)</span>) output coordinates, and the RT motivation (ICI, GMI 166 GHz
+  polarization). Their ARO database: zenodo 3463003.</li>
+<li><strong>Eriksson, P., Ekelund, R., Mendrok, J., Brath, M., Lemke, O., Buehler, S. A. (2018)</strong>: A
+  general database of hydrometeor single scattering properties at microwave and sub-millimetre
+  wavelengths, <em>Earth Syst. Sci. Data</em> <strong>10</strong>, 1301–1326, https://doi.org/10.5194/essd-10-1301-2018.
+  — The published ARTS SSPDB (TRO) paper: source of the habit-ID numbering and shape-file
+  lineage (<code>*_Id&lt;n&gt;</code> folder names), the 35-channel frequency selection, the 190/230/270 K
+  temperature set, the Mätzler-2006 refractive-index choice, and the SSDB NetCDF format the
+  export targets (zenodo 1175572, tooling: <code>arts-sspdb-interface/</code>).</li>
 <li>Yurkin &amp; Hoekstra 2011, <em>JQSRT</em> 112, 2234–2247 (ADDA); ADDA manual: <code>adda/doc/manual.pdf</code>, <code>adda_1.2/doc/manual.pdf</code>.</li>
 <li>Mätzler 2006, dielectric function of ice (implemented in <code>acf.eps_ice_matzler06</code>).</li>
 <li>Mishchenko 2002 (<em>Light Scattering by Nonspherical Particles</em>) — extinction-matrix construction used in <code>acf.extinction_matrix</code>.</li>

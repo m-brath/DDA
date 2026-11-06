@@ -11,7 +11,8 @@ Single Scattering Properties Database (SSDB)** and radiative-transfer use (RTTOV
 Orientation strategies:
 - **ARO** — particle orientation is random except that its symmetry/maximum axis stays
   horizontal; handled by integrating over a set of Euler-β tilt angles (and the azimuthal
-  incidence angles), then expanding the result in **spherical harmonics**.
+  incidence angles), then expanding the result in **spherical harmonics** (methodology:
+  Brath et al. 2020).
 - **TRO** — fully random orientation; handled either by ADDA's built-in
   `-orient avg` (Romberg integration over α,β,γ via `avg_params.dat`) or by an
   icosphere sampling of orientations (`*_RndOrient` scripts, see below).
@@ -284,7 +285,17 @@ notes; do not extend — report §1.6-9).
 
 ## Key References
 
+- **Brath et al. 2020, *AMT* 13, 2309–2333, doi:10.5194/amt-13-2309-2020** — **the main
+  methodology article for the ARO approach in this project** (TRO/ARO definitions, zyz Euler
+  angles, α/γ-averaging at fixed tilt β, the (β, θ_inc) ARO output coordinates, ADDA +
+  self-developed orientation averaging; ARO hex-plate/aggregate database: zenodo 3463003).
+- **Eriksson et al. 2018, *ESSD* 10, 1301–1326, doi:10.5194/essd-10-1301-2018** — the published
+  ARTS Microwave SSPDB (TRO) paper: source of the habit-ID numbering (`*_Id<n>` folder names),
+  shape-file lineage, the production frequency-channel selection, T = 190/230/270 K, and the
+  SSDB NetCDF format our export targets.
 - Yurkin & Hoekstra 2011, *JQSRT* 112, 2234–2247 (ADDA paper). ADDA manual: `adda/doc/manual.pdf`, `adda_1.2/doc/manual.pdf`.
 - Matzler 2006 dielectric function of ice (implemented in `acf.eps_ice_matzler06`).
 - ARTS Microwave SSP Database: https://doi.org/10.5281/zenodo.1175572
-- Liu / Hong-MoCOLAG / Icon habit definitions: particle IDs referenced in shape folder names (see `arts-sspdb-interface` documentation for habit naming conventions).
+- Liu / Hong-MoCOLAG / Icon habit definitions: particle IDs referenced in shape folder names
+  (ID numbering and shapes from Eriksson et al. 2018; see `arts-sspdb-interface` documentation
+  for habit naming conventions).
