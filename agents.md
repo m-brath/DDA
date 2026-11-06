@@ -31,6 +31,7 @@ Orientation strategies:
 | `plans/` | Working plans (`DDA-modernization-plan.md`) and the running phase-findings report (`DDA-modernization-report.md` — updated after every phase). |
 | `baselines/` | Frozen regression baselines (golden ADDA outputs) + `make_baseline.py` / `check_baselines.py`. See `baselines/README.md`. **Do not regenerate casually; they are the reference for all migrations.** |
 | `analysis/` | Phase-1 analysis tools (e.g. `inventory.py` — habit×size×freq×T status sheet). |
+| `docs/` | **Project manual** (`DDA-manual.md` — theory, architecture, runbooks, gotcha catalogue; generated `.html`/`.pdf`; data + Mermaid figures). Regenerate figures with `docs/make_figures.py`, HTML/PDF with `docs/build_html.py`; commit regenerated figures. |
 
 ### Habits (shape folders / active configs)
 
@@ -93,6 +94,11 @@ reference patterns only.**
   SSDB export localized + verified end-to-end (mat + full SSD NetCDF tree); golden
   baselines re-anchored to `baselines/adda_1.4.0/`. Remaining is operational
   (HPC submissions per runbook §5.6, optional published-DB cross-check).
+- **Project manual added** (`docs/DDA-manual.md`, 2026-11-06): the maintainer-facing
+  single reference — physics theory, pipeline architecture/call graphs, config contract
+  walkthrough, local/HPC runbooks, validation gates, gotcha catalogue. Read it alongside
+  `plans/DDA-modernization-report.md` (the historical findings log) when operating or
+  extending the pipeline.
 
 ## The Workflow (`adda_python_scripts/`)
 
