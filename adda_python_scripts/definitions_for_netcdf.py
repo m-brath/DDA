@@ -15,7 +15,7 @@ from subprocess import check_output
 # Definitions general
 #==============================================================================
 
-version='beta_0.9'
+version='beta_0.9.1'
 
 groupnames=['SingleScatteringData','ShapeData','CalculationData']
 
@@ -28,6 +28,9 @@ fixed_values['aa_inc']=0
 fixed_values['phaMat_index']=np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
 fixed_values['extMat_index']=np.array([[1,2,0,0],[2,1,0,0],[0,0,1,3],[0,0,-3,1]])
 fixed_values['absVec_index']=np.array([1,2,0,0])
+# Phase 6: exact-backscatter matrix uses the same 4x4 Stokes-element
+# enumeration as the phase matrix
+fixed_values['backMat_index']=np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
 
 refrIndex_model='Maetzler2006'
 
@@ -72,9 +75,12 @@ SSD_definition['variables']=['frequency',      #0
             'phaMat_data_real', #8
             'phaMat_data_imag', #9
             'extMat_data',      #10
-            'absVec_data']      #11
+            'absVec_data',      #11
+            'backMat_index',    #12  (Phase 6)
+            'backMat_data']     #13  (Phase 6)
               
-SSD_definition['datatypes']=['f4','f4','i4','f4','f4','i1','i1','i1','f4','f4','f4','f4']              
+SSD_definition['datatypes']=['f4','f4','i4','f4','f4','i1','i1','i1','f4','f4','f4','f4',
+                             'i1','f4']              
               
 SSD_definition['fill_values']=[np.nan,
                  np.nan,
@@ -87,6 +93,8 @@ SSD_definition['fill_values']=[np.nan,
                  np.nan,
                  np.nan,
                  np.nan,
+                 np.nan,
+                 -1,
                  np.nan]              
               
 
@@ -101,7 +109,9 @@ SSD_definition['dimensions']=[None,
                 (SSD_dimnames[5],SSD_dimnames[1],SSD_dimnames[2],SSD_dimnames[0]),
                 (SSD_dimnames[5],SSD_dimnames[1],SSD_dimnames[2],SSD_dimnames[0]),
                 (SSD_dimnames[6],SSD_dimnames[1],SSD_dimnames[2]),
-                (SSD_dimnames[7],SSD_dimnames[1],SSD_dimnames[2])]
+                (SSD_dimnames[7],SSD_dimnames[1],SSD_dimnames[2]),
+                (SSD_dimnames[4],SSD_dimnames[3]),
+                (SSD_dimnames[5],SSD_dimnames[1],SSD_dimnames[2])]
                 
 
 
@@ -116,10 +126,13 @@ SSD_definition['RAW_variables']=['Frequency',
               'phase_matrix_sph',
               'phase_matrix_sph',
               'ext_mat_horiz_avg',
-              'abs_vector']
+              'abs_vector',
+              '',
+              'back_mat_horiz_avg']
 
 
-SSD_definition['units']=['Hz','K','','degree','degree','','','','m^2','m^2','m^2','m^2']
+SSD_definition['units']=['Hz','K','','degree','degree','','','','m^2','m^2','m^2','m^2',
+                         '','m^2/sr']
 
 
 
@@ -136,7 +149,18 @@ SSD_definition['descriptions']=[
         'Phase matrix data',
         'Phase matrix data',
         'Extinction matrix data',
-        'Absorption vector data']
+        'Absorption vector data',
+        'Backscatter matrix index (same Stokes enumeration as phaMat_index)',
+        'Exact-backscatter Mueller matrix (4x4 Stokes): orientation-averaged '
+        'limit of the scattering matrix at scattering angle Theta_s = 180 '
+        'degree (independent of the scattering-direction azimuth); input '
+        'polarization basis is the laboratory scattering-plane basis of the '
+        'incidence direction (za_inc, aa_inc), output basis its continuation '
+        'to the exact-backscatter direction; equals the phase matrix in the '
+        'Theta_s -> 180 degree limit, so ARTS consumers using it as a back '
+        'scattering matrix for delta beams must apply the d4pi/4pi factors '
+        'as for the W-matrix (assp2backcoef-style conversion); see DDA '
+        'modernization report Phase 6 for the convention derivation']
         
 
 SSD_attributes=['units','descriptions']

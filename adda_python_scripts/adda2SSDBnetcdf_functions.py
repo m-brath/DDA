@@ -38,9 +38,28 @@ def put_variables_in_group0(group0,output_data,SSD_definition,fixed_values,b_i):
 #        print(i)
 #        print(SSD_definition['variables'][i]+' <--- '+SSD_definition['RAW_variables'][i])            
         
-        if len(SSD_definition['RAW_variables'][i])>0:                
-                            
-            if (SSD_definition['RAW_variables'][i].find(SSD_definition['RAW_variables'][8])>-1 or 
+        if len(SSD_definition['RAW_variables'][i])>0:                            
+
+            # Phase 6: exact-backscatter matrix — its own layout: the raw
+            # array is (n_theta_inc,4,4) (m^2/sr, converted in
+            # rawdata2average), the netCDF variable (phaMatElem,aa_inc,za_inc)
+            # with the same row-major 4x4 Stokes enumeration as the phase
+            # matrix. Absent in output_data from pre-Phase-6 runs -> the
+            # variable keeps its fill value (NaN).
+            if (SSD_definition['RAW_variables'][i].find('back_mat_horiz_avg')>-1):
+
+                if 'back_mat_horiz_avg' in output_data:
+
+                    back_raw=output_data['back_mat_horiz_avg'][b_i]
+
+                    #reordering (element index becomes the fastest axis)
+                    back_temp=np.transpose(back_raw,(1,2,0))
+
+                    back_temp=back_temp.reshape((16,1,np.shape(back_raw)[0]))
+
+                    group0.variables[SSD_definition['variables'][i]][:]=back_temp
+
+            elif (SSD_definition['RAW_variables'][i].find(SSD_definition['RAW_variables'][8])>-1 or 
                 SSD_definition['RAW_variables'][i].find(SSD_definition['RAW_variables'][10])>-1 or 
                 SSD_definition['RAW_variables'][i].find(SSD_definition['RAW_variables'][11])>-1):
             
@@ -311,7 +330,7 @@ def write_SSDBnetCDF(netcdf_filename,b_i,output_data,meta_data,ac,meta_data_path
                                   fill_value=SSD_definition['fill_values'][i])
             else:
                                 
-                if i in (8,9):
+                if i in (8,9,13):
                     do_zip=True                    
                 else:
                     do_zip=False

@@ -1077,6 +1077,62 @@ def pol_changer(vertices, vpol, vpol_lab ,mueller_mat,ext_mat,sph_object):
     return mueller_mat_rot,ext_mat_rot
     
 
+def pol_changer_back(vertices, vpol, vpol_lab, back_mat):
+    """Phase 6: backscatter-Mueller branch of pol_changer.
+
+    back_mat[i] is the raw 4x4 Theta=180/Phi=0 Mueller matrix of vertex i
+    (incidence along vertices[i]) exactly as read from ADDA's
+    mueller_scatgrid (k-normalized BH-amplitude products, dimensionless —
+    see report Phase 6). Its two Stokes bases are the propagation-ATTACHED
+    scattering-plane bases of the exact-backscatter direction: input basis
+    attached at +v, output basis at -v (the par-axis flip between them is
+    already contained in the raw values — it is exactly what makes the
+    sphere back matrix |S1(180)|^2*diag(1,1,-1,-1)).
+
+    This function maps both sides into the laboratory polarization bases
+    (vpol_lab at the incidence side and its continuation at the back
+    direction, where create_vpol_vector(-k) = create_vpol_vector(k) and
+    hpol flips). The incidence side uses the same angle phi_i as the
+    extinction branch of pol_changer. The SCATTERED side, however, is
+    attached at -v, and parallel transport across the antipodal basis flip
+    measures the transport angle with opposite sign. The result is
+
+        B_lab = R(phi_s) * B_raw * R(phi_i),   phi_s = +phi_i,
+
+    i.e. opposite to the extinction branch's phi_s = -phi_i. This was
+    pinned against the pipeline's own phase matrix (which is the reference:
+    it carries the validated Zrotate convention of pol_changer) by the
+    GATE 2 convention scan of analysis/phase6_backscatter.py: both-sides
+    R(+phi_i) reproduces the phase matrix at exact backscatter to the
+    near-pole interpolation floor (~3%), while the ext-analog phi_s = -phi_i
+    is off by ~96%. (R(-phi) on both sides ties numerically for the
+    quadrature-symmetric alpha/gamma average; the +phi choice follows from
+    the parallel-transport derivation.)
+    """
+
+    back_mat_local=copy.deepcopy(back_mat)
+
+    #scattering angle in the scattering plane
+    hpol_lab=np.array([np.cross(a,b) for a,b in zip(vpol_lab,vertices)])
+
+    x=np.array([np.dot(a,b) for a,b in zip(vpol,vpol_lab)])
+    y=np.array([np.dot(a,b) for a,b in zip(vpol,hpol_lab)])
+
+    phi_i=np.arctan2(y,x)
+    # Phase 6 convention (GATE 2 scan pinned): the scattered basis is
+    # attached at -v, so its parallel-transport angle has OPPOSITE sign to
+    # the extinction branch -> phi_s = +phi_i, NOT -phi_i.
+    phi_s=phi_i
+
+    #transform polarization of the backscatter matrix
+    KxP1=np.array([np.dot(a,rotater_mat(b))
+                   for a,b in zip(back_mat_local,phi_i)])
+    back_mat_rot=np.array([np.dot(rotater_mat(a),b)
+                           for a,b in zip(phi_s,KxP1)])
+
+    return back_mat_rot
+
+
 def construct_by_symmetry(mueller_mat,ext_mat,V_sym):
     #function to reconstruct mueller matrix and extinction matrix by using
     #mirror symmetry
@@ -1156,10 +1212,16 @@ def construct_by_symmetry(mueller_mat,ext_mat,V_sym):
 
 def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coeffs, max_ntrunc,
                       inc_dir, beta,
-                      ref_lev, sym_XYobj=False, sym_XZobj=False,sym_YZobj=False):
+                      ref_lev, sym_XYobj=False, sym_XZobj=False,sym_YZobj=False,
+                      back_mat_array=None):
     
     '''function to do the orientational average for one particle for a specific 
-       incidence angle and a specific particle tilt (beta) angle'''
+       incidence angle and a specific particle tilt (beta) angle
+
+       Phase 6: optional back_mat_array (Nvertex,4,4 raw Theta=180/Phi=0
+       Mueller matrices, see pol_changer_back) — when given, the averaged
+       backscatter matrix (raw units, lab bases) is returned as the third
+       result element (None otherwise).'''
 
 #    spawn_command('free -m')
 #    print('  ')
@@ -1193,6 +1255,16 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
     #zero matrix
     ZERO_EXT=np.zeros((q_ext[1],q_ext[2]))
     ZERO_MUE=np.complex64(np.zeros((qm[0],qm[1]),dtype=complex))
+
+    # Phase 6: per-vertex backscatter matrices are averaged in parallel to
+    # extinction/Mueller (raw units; conversion to m^2/sr happens outside)
+    if back_mat_array is not None:
+        q_back=np.shape(back_mat_array)
+        ZERO_BACK=np.zeros((q_back[1],q_back[2]))
+        back_mat_alpha_temp=ZERO_BACK.copy()
+    else:
+        ZERO_BACK=None
+        back_mat_alpha_temp=None
 
     mue_mat_alpha_temp=ZERO_MUE.copy()
     ext_mat_alpha_temp=ZERO_EXT.copy()
@@ -1238,6 +1310,8 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
 
         mue_mat_gamma_temp=ZERO_MUE.copy()
         ext_mat_gamma_temp=ZERO_EXT.copy()
+        if ZERO_BACK is not None:
+            back_mat_gamma_temp=ZERO_BACK.copy()
 
         #counter gamma
         n_gamma=-1
@@ -1401,12 +1475,20 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
                 [mueller_mat_rot,ext_mat_rot]=pol_changer(vertices_rot[idx,:],
                                 vpol_rot,vpol_lab ,
                                 mueller_array_temp_sub,ext_mat_array[idx,:,:],sph_object)
+
+                # Phase 6: rotate the per-vertex backscatter matrices into
+                # the laboratory bases with the same angle convention
+                if back_mat_array is not None:
+                    back_mat_rot=pol_changer_back(vertices_rot[idx,:],vpol_rot,
+                                                  vpol_lab,back_mat_array[idx,:,:])
                 
 #                spha.visualize_mueller_matrix_sph(mueller_array_temp_sub[0][0],sph_object,max_len_coeffs,max_ntrunc)
 
                 #interpolated value
                 EXTTEMP=ZERO_EXT.copy()
                 MUETEMP=ZERO_MUE.copy()
+                if ZERO_BACK is not None:
+                    BACKTEMP=ZERO_BACK.copy()
                 
                             
                 for i in range(0,len(idx)):
@@ -1425,23 +1507,31 @@ def orientational_avg( vertices, vpol, mueller_array, ext_mat_array, max_len_coe
                                 
                     EXTTEMP=w_int[i]*ext_mat_rot[i,:,:]+EXTTEMP
                     MUETEMP=w_int[i]*mueller_temp+MUETEMP
+                    if ZERO_BACK is not None:
+                        BACKTEMP=w_int[i]*back_mat_rot[i,:,:]+BACKTEMP
 
 
             #do the gamma summation
             ext_mat_gamma_temp=EXTTEMP*gauss_weights[g_i]/2+ext_mat_gamma_temp
             mue_mat_gamma_temp=MUETEMP*gauss_weights[g_i]/2+mue_mat_gamma_temp
+            if ZERO_BACK is not None:
+                back_mat_gamma_temp=BACKTEMP*gauss_weights[g_i]/2+\
+                                     back_mat_gamma_temp
 
             
         #do the alpha summation
         ext_mat_alpha_temp=ext_mat_gamma_temp*gauss_weights[a_i]/2+ext_mat_alpha_temp
         mue_mat_alpha_temp=mue_mat_gamma_temp*gauss_weights[a_i]/2+mue_mat_alpha_temp   
+        if ZERO_BACK is not None:
+            back_mat_alpha_temp=back_mat_gamma_temp*gauss_weights[a_i]/2+\
+                                 back_mat_alpha_temp
           
 
 
     print()    
     print('theta: '+str(np.arccos(inc_dir[2])*180/np.pi)+'deg')
     print('Yeah, it is done!')
-    return [mue_mat_alpha_temp,ext_mat_alpha_temp]
+    return [mue_mat_alpha_temp,ext_mat_alpha_temp,back_mat_alpha_temp]
 #    return [1,2]
 
 
@@ -1509,6 +1599,16 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     
     #extinction matrix array
     ext_mat_array=overviewdata['ext_mat_array']
+
+    # Phase 6: per-vertex raw backscatter matrices (Theta=180/Phi=0 slice of
+    # the ADDA mueller grid, dimensionless k-normalized units). Overview
+    # files written before Phase 6 do not contain them.
+    try:
+        back_mat_array=overviewdata['back_mat_array']
+    except KeyError:
+        back_mat_array=None
+        print('overview file has no back_mat_array -- backscatter export '
+              'will stay NaN (re-run adda_sub_control_spharmonics.py)')
     
     #vertex array
     vertices=overviewdata['vertices']
@@ -1528,9 +1628,23 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
 
     
     #load mueller matrix
+    #   current artifact: single NetCDF4 file (see acf.load_mueller_array_from_netcdf);
+    #   legacy fallback: pickle (.pkl, Phase-2 era) then ARTS XML (.xml, pre-Phase-2,
+    #   no longer readable). Ordering is by vertex index exactly as before.
     
     print('loading adda results...')
-    mueller_array=pickle.load(open(inputdatapath+overviewdata['mueller_matrix_filename']+'.pkl','rb'))
+    mueller_base=inputdatapath+overviewdata['mueller_matrix_filename']
+    
+    if os.path.exists(mueller_base+'.nc'):
+        mueller_array=acf.load_mueller_array_from_netcdf(
+                mueller_base+'.nc', np.shape(vertices)[0])
+    elif os.path.exists(mueller_base+'.pkl'):
+        print('DEPRECATION WARNING: legacy pickle artifact '+mueller_base+
+              '.pkl -- convert with analysis/migrate_pkl_to_nc.py')
+        mueller_array=pickle.load(open(mueller_base+'.pkl','rb'))
+    else:
+        raise FileNotFoundError('no mueller artifact ('+mueller_base+
+                                '.nc / .pkl) for this run')
     
     #reduce mueller_array from complex128 to complex64
     for i in range(len(mueller_array)):
@@ -1558,6 +1672,15 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     ext_mat_horiz_avg=np.zeros((len(p_orientation_beta),len(incidence_angles),q_ext[1],q_ext[2])) 
     ext_mat_horiz_avg[:]=np.nan
     mue_mat_horiz_avg_sph=np.zeros((len(p_orientation_beta),len(incidence_angles),16,max_len_coeffs),dtype=complex) 
+    
+    # Phase 6: orientation-averaged backscatter matrix (filled raw, converted
+    # to m^2/sr after the loop)
+    if back_mat_array is not None:
+        q_b=np.shape(back_mat_array)
+        back_mat_horiz_avg=np.full((len(p_orientation_beta),
+                                    len(incidence_angles),q_b[1],q_b[2]),np.nan)
+    else:
+        back_mat_horiz_avg=None
     
     #create vertical polarization vectors
     
@@ -1587,6 +1710,12 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
         #map polarizationto new polarization basis
         [mueller_array,ext_mat_array]=pol_changer(
                 vertices, vpol, vpol_lab, mueller_array,ext_mat_array,sph_object)
+        
+        # Phase 6 note: the ATTACHED backscatter matrices need no transform
+        # here — vertices and vpol rotate rigidly together, so the attached
+        # (scattering-plane) bases of each vertex are unchanged; only the
+        # lab-frame rotation inside orientational_avg/pol_changer_back
+        # matters, and it uses the rotated vertices consistently.
         
         #change vpol to the new vpol
         vpol=vpol_lab.copy()
@@ -1636,12 +1765,15 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
                              (vertices, vpol,mueller_array, ext_mat_array,
                               max_len_coeffs, max_ntrunc, 
                               np.array([np.sin(theta*np.pi/180),0,np.cos(theta*np.pi/180)]), beta,
-                                               ref_lev,sym_XYobj, sym_XZobj, sym_YZobj) 
+                                               ref_lev,sym_XYobj, sym_XZobj, sym_YZobj,
+                                               back_mat_array) 
                              for theta in incidence_angles)
                  
                 for i in range(0,len(results)):
                     ext_mat_horiz_avg[n_beta,i,:,:]=results[i][1]
                     mue_mat_horiz_avg_sph[n_beta,i,:,:]=np.array([results[i][0]])
+                    if back_mat_array is not None:
+                        back_mat_horiz_avg[n_beta,i,:,:]=results[i][2]
                     
      
     
@@ -1667,14 +1799,17 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
           
                     inc_dir=np.array([np.sin(theta*np.pi/180),0,np.cos(theta*np.pi/180)])
           
-                    [mue_mat_alpha_temp,ext_mat_alpha_temp]=orientational_avg( 
+                    [mue_mat_alpha_temp,ext_mat_alpha_temp,back_mat_alpha_temp]=orientational_avg( 
                               vertices, vpol, mueller_array, ext_mat_array, 
                               max_len_coeffs, max_ntrunc,
                               inc_dir, beta, 
-                              ref_lev,sym_XYobj, sym_XZobj, sym_YZobj)
+                              ref_lev,sym_XYobj, sym_XZobj, sym_YZobj,
+                              back_mat_array)
           
                     ext_mat_horiz_avg[n_beta,n_theta,:,:]=ext_mat_alpha_temp                
                     mue_mat_horiz_avg_sph[n_beta,n_theta,:,:]=mue_mat_alpha_temp
+                    if back_mat_array is not None:
+                        back_mat_horiz_avg[n_beta,n_theta,:,:]=back_mat_alpha_temp
 
     
 #==============================================================================
@@ -1683,6 +1818,14 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
 
     #Convert extmat from µm^2 to m^2
     ext_mat_horiz_avg=ext_mat_horiz_avg*1e-12;
+
+    # Phase 6: convert the averaged backscatter matrix from the raw
+    # k-normalized mueller-grid units (dimensionless per sr) to physical
+    # m^2/sr, using the same factor lambda^2/(4*pi)^2 that mueller2phase
+    # applies to the phase matrix (wavelength in the overview file is µm)
+    if back_mat_horiz_avg is not None:
+        lamb_m=overviewdata['wavelength']*1e-6 #[m]
+        back_mat_horiz_avg=back_mat_horiz_avg*lamb_m**2/(4.*np.pi**2)
     
 
     #prepare data for save as overview of run
@@ -1700,6 +1843,11 @@ def rawdata2average(inputdatapath, incidence_angles, p_orientation_beta,
     output_data['sym_YZobj']=overviewdata['sym_YZobj']
     output_data['ext_mat_horiz_avg']=ext_mat_horiz_avg
     output_data['mue_mat_horiz_avg_sph']=mue_mat_horiz_avg_sph
+    if back_mat_horiz_avg is not None:
+        # Phase 6: orientation-averaged backscatter Mueller matrix, m^2/sr,
+        # lab bases (see pol_changer_back docstring for the convention)
+        output_data['back_mat_horiz_avg']=back_mat_horiz_avg
+        output_data['back_mat_array_raw']=back_mat_array
     output_data['eps_vec']=overviewdata['eps_vec']
     output_data['delta']=overviewdata['delta']
     output_data['limit_sph']=overviewdata['limit_sph']

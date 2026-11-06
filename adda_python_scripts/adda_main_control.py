@@ -188,11 +188,13 @@ for T in temperatures:
             if os.path.exists(storage_path):
 #                os.makedirs(storage_path)
 
-                # note: '*_mueller_data.xml' was the old (ARTS-XML) artifact name;
-                # current runs write '*_mueller_data.pkl' — accept both
-                datalist=glob.glob(storage_path+'/*mueller_data.xml')+glob.glob(storage_path+'/*mueller_data.pkl')
+                # note: artifact history: '*_mueller_data.xml' (ARTS-XML, pre-Phase-2),
+                # '*_mueller_data.pkl' (Phase-2 pickle), current runs write
+                # '*_mueller_data.nc' (NetCDF4) — accept all (one per completed run).
+                # The per-vertex '_temp_data_vertex_*.nc' caches cannot match.
+                datalist=glob.glob(storage_path+'/*mueller_data.xml')+glob.glob(storage_path+'/*mueller_data.pkl')+glob.glob(storage_path+'/*mueller_data.nc')
 
-                if len(datalist)==1 and force_new==False:
+                if len(datalist)>=1 and force_new==False:
 
                     print('The Particle was already calculated.')
                     print('So, I skip it!')

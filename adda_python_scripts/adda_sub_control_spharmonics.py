@@ -240,7 +240,12 @@ mueller_array=[]
 rel_err_array=np.zeros((0,16))
 max_len_array=np.zeros(0)
 max_ntrunc_array=np.zeros(0)
+back_mat_array=np.empty((0,4,4))
 ext_mat_horiz_avg_new=np.full((len(p_orientation_beta),len(incidence_angles),4,4),np.nan)
+# Phase 6: orientation-averaged backscatter matrices (raw units) tracked in
+# parallel to the extinction averaging; convergence stays ext-based
+back_mat_horiz_avg_old=np.full((len(p_orientation_beta),len(incidence_angles),4,4),np.nan)
+back_mat_horiz_avg_new=np.full((len(p_orientation_beta),len(incidence_angles),4,4),np.nan)
 
 
 #prepare
@@ -267,7 +272,8 @@ _mirror_flags=[f for f,s in (('XY',sym_XYobj),('XZ',sym_XZobj),('YZ',sym_YZobj))
 
 
 def mirror_fill(point_i, particle_id, output_data, vertices, ext_mat_array,
-                mueller_array, rel_err_array, max_len_array, max_ntrunc_array):
+                mueller_array, rel_err_array, max_len_array, max_ntrunc_array,
+                back_mat_array):
 
     if not _mirror_flags or 'mueller_array' not in output_data:
         return
@@ -301,6 +307,22 @@ def mirror_fill(point_i, particle_id, output_data, vertices, ext_mat_array,
             extm=output_data['ext_matrix']\
                  *acf.mirror_signs(len(subset)).reshape((4,4))
 
+            # Phase 6: backscatter ring fill-in. The Theta=180 ring of the
+            # mirrored vertex equals the source ring with the identical
+            # phi-column permutation and mirror-sign pattern as the full
+            # grid (exact twin-vertex verification: report Phase 6 /
+            # analysis/phase6_backscatter.py); the target backscatter
+            # matrix is the ring row whose mapped source phi is jmap[0]
+            # (phis_grid[jmap[0]] maps onto Phi=0 of the target grid).
+            backm_t=None
+            backring_t=None
+            if output_data.get('back_mat_ring') is not None:
+                backring_t=output_data['back_mat_ring'][jmap,:,:]\
+                           *acf.mirror_signs(len(subset)).reshape((1,4,4))
+                ip0=int(np.flatnonzero(
+                        np.abs(output_data['phis_grid'])<1e-9)[0])
+                backm_t=backring_t[ip0,:,:]
+
             [sphj,relj,lenj,ntrj]=spha.expand_mueller_2_spharmonics(
                     mir_data,eps_sphexp,diagnostics=False)
 
@@ -309,13 +331,17 @@ def mirror_fill(point_i, particle_id, output_data, vertices, ext_mat_array,
                                  'ZV':(vertices[jj,2]*1e5)})
 
             acf.write_data_to_separate_netcdf(netcdf_tempname, pid_j,
-                                              sphj, relj, lenj, ntrj, extm)
+                                              sphj, relj, lenj, ntrj, extm,
+                                              back_mat=backm_t,
+                                              back_mat_ring=backring_t)
 
             ext_mat_array[jj,:,:]=extm
             mueller_array[jj]=sphj
             rel_err_array[jj,:]=relj
             max_len_array[jj]=lenj
             max_ntrunc_array[jj]=ntrj
+            if backm_t is not None:
+                back_mat_array[jj,:,:]=backm_t
 
             print('  mirror-filled %s (%s) from %s'
                   %(pid_j,'+'.join(subset),particle_id))
@@ -433,6 +459,12 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                 print(f"Checking cached data")
                 output_data = acf.read_data_from_separate_netcdf(netcdf_tempname, particle_id)
 
+            # Phase 6: pre-Phase-6 stores carry no backscatter matrix/ring
+            # and it cannot be reconstructed from the stored sph expansions
+            # -> treat as cache miss and re-run ADDA for this vertex
+            if output_data is not None and output_data.get('back_matrix') is None:
+                print('Cached store lacks backscatter data -- re-running ADDA')
+                output_data = None
 
 
             if output_data is None:
@@ -454,7 +486,9 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                 acf.write_data_to_separate_netcdf(netcdf_tempname, particle_id,
                                           mueller_matrix_sph,
                                           rel_error, max_len_coeffs, max_ntrunc,
-                                          output_data['ext_matrix'])
+                                          output_data['ext_matrix'],
+                                          back_mat=output_data['back_matrix'],
+                                          back_mat_ring=output_data['back_mat_ring'])
 
             else:
                 mueller_matrix_sph=output_data['mueller_sph']
@@ -477,6 +511,10 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                 ext_mat_array[:] = np.nan
                 ext_mat_array_old=ext_mat_array.copy()
 
+                # Phase 6: per-vertex raw backscatter matrices
+                back_mat_array=np.full((np.size(vertices,axis=0),4,4),np.nan)
+                back_mat_array_old=back_mat_array.copy()
+
                 mueller_array = [None] * np.size(vertices,axis=0)
                 mueller_array_old = copy.deepcopy(mueller_array)
 
@@ -497,6 +535,11 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
             ext_mat_array[point_i,:,:]=output_data['ext_matrix']
             mueller_array[point_i]=mueller_matrix_sph
 
+            # Phase 6: raw backscatter matrix at this vertex (present in both
+            # fresh adda_call output and Phase-6 cache dicts — old stores were
+            # turned into a cache miss above)
+            back_mat_array[point_i,:,:]=output_data['back_matrix']
+
             #relative error of sph expansion
             rel_err_array[point_i,:]=rel_error
 
@@ -509,7 +552,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
             # ---- Phase 4: mirror-symmetry write-time fill-in ---------------
             mirror_fill(point_i, particle_id, output_data, vertices,
                         ext_mat_array, mueller_array, rel_err_array,
-                        max_len_array, max_ntrunc_array)
+                        max_len_array, max_ntrunc_array, back_mat_array)
 
 #            phis_grid=output_data['phis_grid']
 #            thetas_grid=output_data['thetas_grid']
@@ -524,6 +567,9 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
                 ext_mat_array=np.empty((np.size(vertices,axis=0),q[0],q[1]))
                 ext_mat_array[:] = np.nan
+
+                # Phase 6: per-vertex raw backscatter matrices
+                back_mat_array=np.full((np.size(vertices,axis=0),4,4),np.nan)
 
                 mueller_array=[None] * np.size(vertices,axis=0)
 
@@ -550,6 +596,9 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
                 ext_mat_array[point_i,:,:]=ext_mat_array_old[r_idx,:,:]
 
+                # Phase 6: carry over the raw backscatter matrix as well
+                back_mat_array[point_i,:,:]=back_mat_array_old[r_idx,:,:]
+
                 mueller_array[point_i]=mueller_array_old[r_idx]
 
                 #relative error of sph expansion
@@ -570,6 +619,11 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                     print(f"Checking cached data")
                     output_data = acf.read_data_from_separate_netcdf(netcdf_tempname, particle_id)
 
+                # Phase 6: same rule as ref_lev==0 — old store without
+                # backscatter data means cache miss, re-run ADDA
+                if output_data is not None and output_data.get('back_matrix') is None:
+                    print('Cached store lacks backscatter data -- re-running ADDA')
+                    output_data = None
 
 
                 if output_data is None:
@@ -595,7 +649,9 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                         acf.write_data_to_separate_netcdf(netcdf_tempname, particle_id,
                                                   mueller_matrix_sph,
                                                   rel_error, max_len_coeffs, max_ntrunc,
-                                                  output_data['ext_matrix'])
+                                                  output_data['ext_matrix'],
+                                                  back_mat=output_data['back_matrix'],
+                                                  back_mat_ring=output_data['back_mat_ring'])
                 else:
                     mueller_matrix_sph=output_data['mueller_sph']
                     rel_error=output_data['relerror']
@@ -605,6 +661,10 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
                 ext_mat_array[point_i,:,:]=output_data['ext_matrix']
                 mueller_array[point_i]=mueller_matrix_sph
+
+                # Phase 6: raw backscatter matrix (fresh run or cache hit;
+                # old stores became cache misses above)
+                back_mat_array[point_i,:,:]=output_data['back_matrix']
 
                 #relative error of sph expansion
                 rel_err_array[point_i,:]=rel_error
@@ -618,7 +678,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                 # Phase 4: mirror-symmetry write-time fill-in (refined passes)
                 mirror_fill(point_i, particle_id, output_data, vertices,
                             ext_mat_array, mueller_array, rel_err_array,
-                            max_len_array, max_ntrunc_array)
+                            max_len_array, max_ntrunc_array, back_mat_array)
 
     q_ext=ext_mat_array.shape
 
@@ -663,6 +723,10 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
             ext_mat_alpha_temp=np.zeros((q_ext[1],q_ext[2]))
 
+            # Phase 6: backscatter matrix tracking in parallel (raw units;
+            # conversion to m^2/sr happens in rawdata2average)
+            back_mat_alpha_temp=np.zeros((4,4))
+
             #counter alpha
             n_alpha=-1
 
@@ -674,6 +738,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
 #                ext_mat_gamma_temp=np.zeros((q_ext[1],q_ext[2],len(p_orientation_gamma)))
                 ext_mat_gamma_temp=np.zeros((q_ext[1],q_ext[2]))
+                back_mat_gamma_temp=np.zeros((4,4))
 
                 #counter gamma
                 n_gamma=-1
@@ -688,6 +753,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                     vertices_rot=ico.rotate_vertices(vertices,alpha*np.pi/180,beta*np.pi/180,gamma*np.pi/180)
 
                     ext_mat_array_temp=ext_mat_array.copy()
+                    back_mat_array_temp=back_mat_array.copy()
 
                     [w_int,idx]=ico.interpolation_weights_icosahedric_grid(vertices_rot,inc_dir)
 
@@ -756,9 +822,21 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                         [mueller_mat_rot,ext_mat_rot]=aoa.pol_changer(vertices_rot[idx,:], vpol_rot,
                                 vpol_lab ,np.empty(0),ext_mat_sym,np.empty(0))
 
+                        # Phase 6: backscatter matrices at the symmetry-mapped
+                        # vertices transform exactly like the extinction
+                        # matrix (same M**Nsym elementwise sign pattern) and
+                        # then get the same lab-frame rotation (branch of
+                        # pol_changer for 4x4 back matrices)
+                        Nsym=np.sum(np.abs((V_sym-1)/2).astype(bool),axis=1)
+                        back_mat_sym=back_mat_array_temp[idx_sym,:,:]*\
+                            (M[np.newaxis,:,:]**Nsym.astype(int)[:,None,None])
+                        back_mat_rot=aoa.pol_changer_back(vertices_rot[idx,:],
+                                vpol_rot,vpol_lab,back_mat_sym)
+
 
                         #interpolated value
                         EXTTEMP=np.zeros((q_ext[1],q_ext[2]))
+                        BACKTEMP=np.zeros((4,4))
 
 
                         for i in range(0,len(idx)):
@@ -766,6 +844,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                             Ksym=ext_mat_rot[i,:,:];
 
                             EXTTEMP=w_int[i]*Ksym+EXTTEMP
+                            BACKTEMP=w_int[i]*back_mat_rot[i,:,:]+BACKTEMP
 
 
 
@@ -780,29 +859,39 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
                         [_,ext_mat_rot]=aoa.pol_changer(vertices_rot[idx,:], vpol_rot,
                                 vpol_lab ,np.empty(0),ext_mat_array_temp[idx,:,:],np.empty(0))
 
+                        # Phase 6: rotate attached back matrices to lab bases
+                        back_mat_rot=aoa.pol_changer_back(vertices_rot[idx,:], vpol_rot,
+                                vpol_lab ,back_mat_array_temp[idx,:,:])
+
                         #interpolated value
                         EXTTEMP=np.zeros((q_ext[1],q_ext[2]))
+                        BACKTEMP=np.zeros((4,4))
 
 
                         for i in range(0,len(idx)):
 
                             EXTTEMP=w_int[i]*ext_mat_rot[i,:,:]+EXTTEMP
+                            BACKTEMP=w_int[i]*back_mat_rot[i,:,:]+BACKTEMP
 
                     #do the gamma summation
                     ext_mat_gamma_temp=EXTTEMP*gauss_weights[g_i]/2+ext_mat_gamma_temp
+                    back_mat_gamma_temp=BACKTEMP*gauss_weights[g_i]/2+back_mat_gamma_temp
 
 
 
                 #copy
                 ext_mat_gamma=ext_mat_gamma_temp
+                back_mat_gamma=back_mat_gamma_temp
 
 
                 #do the alpha summation
                 ext_mat_alpha_temp=ext_mat_gamma*gauss_weights[a_i]/2+ext_mat_alpha_temp
+                back_mat_alpha_temp=back_mat_gamma*gauss_weights[a_i]/2+back_mat_alpha_temp
 
 
             #copy
             ext_mat_alpha=ext_mat_alpha_temp
+            back_mat_alpha=back_mat_alpha_temp
 
             if ref_lev<1 and flag==False:
                 ext_mat_horiz_avg_new=(np.ones((len(p_orientation_beta),
@@ -812,6 +901,7 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 
 
             ext_mat_horiz_avg_new[n_beta,n_theta,:,:]=ext_mat_alpha
+            back_mat_horiz_avg_new[n_beta,n_theta,:,:]=back_mat_alpha
 
 
     #check convergence
@@ -842,8 +932,10 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
     #prepare next round
     ref_lev=ref_lev+1
     ext_mat_horiz_avg_old=np.copy(ext_mat_horiz_avg_new)
+    back_mat_horiz_avg_old=np.copy(back_mat_horiz_avg_new)
     epsilon_old=epsilon
     ext_mat_array_old=np.copy(ext_mat_array)
+    back_mat_array_old=np.copy(back_mat_array)
     mueller_array_old=copy.deepcopy(mueller_array)
     rel_err_array_old=copy.deepcopy(rel_err_array)
     max_len_array_old=max_len_array.copy()
@@ -860,7 +952,14 @@ while (ref_lev<=limit_sph and converged==False) or ref_lev<=2 :
 #prepare save names
 matfile_name=os.path.join(storage_path,shape_name+'_overview_data.mat')
 netcdf_name=os.path.join(storage_path,shape_name+'_mueller_data.nc')
-xml_name=os.path.join(storage_path,shape_name+'_mueller_data.pkl')
+pkl_name=os.path.join(storage_path,shape_name+'_mueller_data.pkl')
+
+# Migration probe flag (plans/DDA-mueller-netcdf-migration-plan.md): when a
+# config sets mueller_artifact_pickle=True, the legacy pickle artifact is
+# written alongside the NetCDF one so double-reader equivalence gates can
+# run on a single computation. Production configs leave it off (NetCDF only).
+if 'mueller_artifact_pickle' not in locals():
+    mueller_artifact_pickle=False
 
 #==============================================================================
 #       ###Save output in mat format
@@ -883,6 +982,12 @@ output_data['sym_XZobj']=sym_XZobj
 output_data['sym_YZobj']=sym_YZobj
 output_data['ext_mat_array']=ext_mat_array
 output_data['ext_mat_horiz_avg']=ext_mat_horiz_avg_new
+# Phase 6: per-vertex raw backscatter matrices and the orientation-
+# averaged (alpha,gamma) backscatter matrices — both in RAW
+# k-normalized mueller-grid units (m^2/sr conversion happens in
+# rawdata2average at export time)
+output_data['back_mat_array']=back_mat_array
+output_data['back_mat_horiz_avg']=back_mat_horiz_avg_new
 output_data['eps_vec']=eps_mat
 output_data['delta']=delta
 output_data['limit_sph']=limit_sph
@@ -901,17 +1006,41 @@ sio.savemat(matfile_name, {'output_data':output_data}, appendmat=True, format='5
 
 
 #==============================================================================
-#       ### save mueller matrix (pickle)
-#       formerly ARTS binary XML via typhon (ty.arts.xml) — that module was
-#       dropped in typhon >0.8 and PyARTS is unavailable on osx-arm64. The
-#       file is a pure internal artifact between sub_control and post-
-#       processing; the ARTS-facing layer is the SSDB NetCDF export.
+#       ### save mueller array (NetCDF4, one file per run)
+#       formerly ARTS binary XML via typhon (ty.arts.xml — dropped in
+#       typhon >0.8), then pickle; both replaced by a single NetCDF4 file
+#       (schema + rationale: acf.write_mueller_array_to_netcdf /
+#       plans/DDA-mueller-netcdf-migration-plan.md). Written via a temp
+#       name + os.replace: an interrupted run must never leave a
+#       half-written final artifact (main_control's skip-glob would then
+#       accept an incomplete run as done).
 #==============================================================================
 
 
-print(f'Saving mueller array in {xml_name}')
-with open(xml_name, 'wb') as fh:
-    pickle.dump(mueller_array, fh, protocol=pickle.HIGHEST_PROTOCOL)
+mue_meta={}
+mue_meta['shape_name']=shape_name
+mue_meta['temperature']=T
+mue_meta['frequency']=frequencies[findex]
+mue_meta['wavelength']=lamb
+mue_meta['refr_index']=m
+mue_meta['adda_version']=adda_version
+mue_meta['adda_binary']=adda_binary
+mue_meta['max_len_coeffs']=int(np.max(max_len_array))
+mue_meta['max_ntrunc']=int(np.max(max_ntrunc_array))
+
+print(f'Saving mueller array in {netcdf_name}')
+acf.write_mueller_array_to_netcdf(netcdf_name+'.tmp', mueller_array,
+                                  vertices, rel_err_array, ext_mat_array,
+                                  back_mat_array=back_mat_array,
+                                  meta=mue_meta,
+                                  max_len_array=max_len_array,
+                                  max_ntrunc_array=max_ntrunc_array)
+os.replace(netcdf_name+'.tmp', netcdf_name)
+
+if mueller_artifact_pickle:
+    print(f'Saving legacy pickle twin in {pkl_name} (probe run)')
+    with open(pkl_name, 'wb') as fh:
+        pickle.dump(mueller_array, fh, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 #==============================================================================
