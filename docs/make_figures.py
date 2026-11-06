@@ -14,6 +14,9 @@ Every figure is computed from real code / real measurement files in this repo:
   fig05_solve_reduction   measured solve counts, report Phase 4 §4.8
   fig06_sym_closure       measured voxel-mirror closure, report Phase 4 §4.6
   fig07_backlog           analysis/phase5_backlog_inventory.txt
+  fig08_orientation_geometry  schematic (3D): Euler/ARO geometry + k-attached scattering grid
+  fig09..fig12            baseline results (delegated to baselines/plot_baseline_figs.py,
+                          data: baselines/adda_1.2/, mirrored into docs/figures for Appendix E)
 
 Outputs: docs/figures/figNN_*.png (300 dpi) — referenced by the manual.
 """
@@ -305,71 +308,176 @@ def fig_backlog():
 
 
 # --------------------------------------------------------------- Fig 08 ---
+def _wireframe_sphere(ax, radius=1.0, nlat=3, nlon=8, color='0.7', lw=0.55,
+                      alpha=0.6, exclude_lat=None):
+    """Light lat/lon wireframe of a unit sphere (matplotlib 3D)."""
+    u = np.linspace(0, 2 * np.pi, 120)
+    for lat in np.linspace(-90, 90, nlat + 2)[1:-1]:
+        if exclude_lat is not None and abs(lat - exclude_lat) < 1e-6:
+            continue
+        la = np.deg2rad(lat)
+        r = radius * np.cos(la)
+        ax.plot(r * np.cos(u), r * np.sin(u),
+                radius * np.sin(la) * np.ones_like(u),
+                color=color, lw=lw, alpha=alpha)
+    ax.plot(radius * np.cos(u), radius * np.sin(u), np.zeros_like(u),
+            color=color, lw=lw, alpha=0.9)          # equator slightly stronger
+    for lon in np.linspace(0, 180, nlon + 1)[:-1]:
+        lo = np.deg2rad(lon)
+        v = np.linspace(-np.pi / 2, np.pi / 2, 90)
+        ax.plot(radius * np.cos(v) * np.cos(lo), radius * np.cos(v) * np.sin(lo),
+                radius * np.sin(v), color=color, lw=lw, alpha=alpha)
+
+
 def fig_orientation_geometry():
-    fig = plt.figure(figsize=(10.4, 4.0))
-    # panel (a): Euler/ARO/TRO geometry in the lab frame
+    from matplotlib.lines import Line2D
+    fig = plt.figure(figsize=(11.0, 5.0))
+    u = np.linspace(0, 2 * np.pi, 200)
+
+    # ---- panel (a): lab frame — incidence k-hat and particle axis (zyz Euler)
     ax = fig.add_subplot(121, projection='3d')
     ax.set_axis_off()
-    L = 1.0
+    _wireframe_sphere(ax, nlat=2, nlon=6)
+    R = 1.0
+
     # lab z axis (gravity)
-    ax.quiver(0, 0, 0, 0, 0, 1.25 * L, color='k', lw=1.5)
-    ax.text(0, 0, 1.32 * L, 'lab $z$ (gravity)', fontsize=9)
-    # incidence direction: polar theta_inc in the x-z plane
+    ax.quiver(0, 0, -0.1, 0, 0, R + 0.45, color='k', lw=1.7,
+              arrow_length_ratio=0.06)
+    ax.text(0, 0, 1.60, 'lab $z$ (gravity)', fontsize=9, ha='center')
+
+    # ARO horizontal-plane ring (beta = 90 deg family)
+    ax.plot(np.cos(u), np.sin(u), np.zeros_like(u),
+            color='tab:blue', lw=1.2, ls='--', alpha=0.8)
+
+    # incidence direction k-hat: theta_inc from z, azimuth fixed to 0 (x-z plane)
     t_inc = np.deg2rad(115)
-    ix, iz = np.sin(t_inc), np.cos(t_inc)
-    ax.quiver(0, 0, 0, ix, 0, iz, color='tab:red', lw=1.6)
-    ax.text(ix * 1.15, 0, iz * 1.15, r'incidence $\hat{k}$'
-            '\n($\\theta_{inc}$ from $z$, azimuth fixed)', fontsize=8, color='tab:red')
-    # particle axis tilted by beta (rotated about y so it leaves x-z plane too)
+    kx, kz = np.sin(t_inc), np.cos(t_inc)
+    ax.quiver(0, 0, 0, kx, 0, kz, color='tab:red', lw=2.0,
+              arrow_length_ratio=0.09)
+    ax.text(kx * 1.08 - 0.05, -0.28, kz * 1.08 - 0.10, 'incidence $\\hat{k}$',
+            fontsize=9, color='tab:red', ha='center')
+
+    # theta_inc arc in the x-z plane (from +z down to k-hat)
+    tt = np.linspace(0, t_inc, 60)
+    ax.plot(np.sin(tt), np.zeros_like(tt), np.cos(tt), color='tab:red', lw=1.3)
+    ta = np.deg2rad(78)
+    ax.text(0.60 * np.sin(ta), -0.16, 0.60 * np.cos(ta), '$\\theta_{inc}$',
+            color='tab:red', fontsize=12)
+
+    # particle symmetry axis: tilt beta off z, own azimuth (the averaged Euler angles)
     b = np.deg2rad(55)
-    px = np.sin(b) * np.cos(np.deg2rad(35))
-    py = np.sin(b) * np.sin(np.deg2rad(35))
-    pz = np.cos(b)
-    ax.quiver(0, 0, 0, px, py, pz, color='tab:blue', lw=1.6)
-    ax.text(px * 1.15, py * 1.15, pz * 1.15, 'particle symmetry axis\n'
-            '(tilt $\\beta$ from $z$)', fontsize=8, color='tab:blue')
-    # beta arc
-    tt = np.linspace(np.deg2rad(55), 0, 30)
-    ax.plot(np.sin(tt) * np.cos(np.deg2rad(35)),
-            np.sin(tt) * np.sin(np.deg2rad(35)), np.cos(tt), color='tab:blue', lw=1)
-    ax.text(0.32, 0.22, 0.95, '$\\beta$', color='tab:blue', fontsize=11)
-    tt = np.linspace(np.deg2rad(115), 0, 30)
-    ax.plot(np.sin(tt), np.zeros_like(tt), np.cos(tt), color='tab:red', lw=1)
-    ax.text(0.42, 0, 0.88, '$\\theta_{inc}$', color='tab:red', fontsize=11)
-    # reference sphere: equator + one meridian, light
-    u = np.linspace(0, 2 * np.pi, 100)
-    ax.plot(np.cos(u) * .6, np.sin(u) * .6, np.zeros_like(u), color='0.75', lw=0.6)
-    ax.plot(np.zeros_like(u), np.cos(u) * .6, np.sin(u) * .6, color='0.75', lw=0.6)
-    ax.set_title('(a) Euler zyz: $R(\\alpha,\\beta,\\gamma)=R_z(\\alpha)R_{z\'}(\\beta)R_{z\'\'}(\\gamma)$\n'
-                 'ARO: $\\beta$ = tilt of particle axis, azimuth ($\\alpha$, $\\gamma$) averaged', fontsize=9)
-    ax.view_init(elev=12, azim=28)
+    az = np.deg2rad(-35)
+    px, py, pz = np.sin(b) * np.cos(az), np.sin(b) * np.sin(az), np.cos(b)
+    ax.quiver(0, 0, 0, px, py, pz, color='tab:blue', lw=2.0,
+              arrow_length_ratio=0.09)
+    ax.text(px * 1.20 + 0.15, py * 1.20, pz * 1.20 + 0.12, 'particle axis',
+            fontsize=9, color='tab:blue', ha='center')
+
+    # beta arc: great-circle from +z to the particle axis, in its own vertical plane
+    tt = np.linspace(0, b, 60)
+    ax.plot(np.sin(tt) * np.cos(az), np.sin(tt) * np.sin(az), np.cos(tt),
+            color='tab:blue', lw=1.3)
+    tb = np.deg2rad(44)
+    ax.text(0.68 * np.sin(tb) * np.cos(az) + 0.22,
+            0.68 * np.sin(tb) * np.sin(az) - 0.04,
+            0.68 * np.cos(tb) - 0.02, '$\\beta$', color='tab:blue', fontsize=12)
+
+    ax.legend(handles=[
+        Line2D([], [], color='tab:red', lw=2,
+               label='incidence $\\hat{k}$: $\\theta_{inc}$ from lab-$z$,\n'
+                     'incidence azimuth fixed (0°)'),
+        Line2D([], [], color='tab:blue', lw=2,
+               label='particle symmetry axis: tilt $\\beta$ from $z$'),
+        Line2D([], [], color='tab:blue', lw=1.4, ls='--',
+               label='ARO azimuth ring: $\\alpha,\\gamma$ averaged at fixed $\\beta$\n'
+                     '(dashed ring: gravity-horizontal state $\\beta=90°$)')],
+        loc='upper left', fontsize=7.5, framealpha=0.85,
+        handlelength=1.6, borderpad=0.7)
+
+    ax.set_title('(a) lab frame: one particle orientation = zyz Euler angles\n'
+                 r'$R(\alpha,\beta,\gamma)$ — ARO keeps $\beta$, averages $\alpha,\gamma$',
+                 fontsize=9.5)
+    ax.view_init(elev=16, azim=-62)
     ax.set_box_aspect([1, 1, 1])
-    # panel (b): scattering grid attached to k
-    ax2 = fig.add_subplot(122)
-    ax2.set_aspect('equal'); ax2.axis('off')
-    th = np.linspace(0, 2 * np.pi, 200)
-    ax2.plot(np.cos(th), np.sin(th), color='0.4', lw=1.2)
-    for a in range(15, 180, 15):  # theta cones seen edge-on
-        r = np.cos(np.deg2rad(a))
-        ax2.plot(np.cos(th), r * np.sin(th) * .28 + np.sin(th) * (1 - abs(r)) * 0,
-                 color='0.8', lw=0.5)
-    ax2.annotate('', xy=(1.35, 0), xytext=(-0.05, 0),
-                 arrowprops=dict(arrowstyle='->', lw=1.6))
-    ax2.text(0.85, 0.07, 'propagation $\\hat{k}$', fontsize=9)
-    tta = np.linspace(0, np.deg2rad(120), 30)
-    ax2.plot(1.15 * np.cos(tta), 1.15 * np.sin(tta), color='tab:orange', lw=1.4)
-    ax2.text(1.02, 0.55, '$\\theta$', color='tab:orange', fontsize=11)
-    ph = np.linspace(np.deg2rad(200), np.deg2rad(340), 40)
-    ax2.plot(0.45 * np.cos(ph), 0.45 * np.sin(ph) * .3 - 0.42, color='tab:green', lw=1.4)
-    ax2.text(0.12, -0.55, '$\\varphi$', color='tab:green', fontsize=11)
-    ax2.plot([np.cos(np.deg2rad(120))], [np.sin(np.deg2rad(120))], 'o', ms=6)
-    ax2.text(np.cos(np.deg2rad(120)) - .18, np.sin(np.deg2rad(120)) + .05,
-             'scattering direction $\\hat{n}(\\theta,\\varphi)$', fontsize=8)
-    ax2.text(-1.1, -0.85, 'grid attached to $\\hat{k}$:  $\\theta\\in[0^\\circ,180^\\circ]$ (181 pts),  '
-             '$\\varphi\\in[0^\\circ,360^\\circ]$ (361 pts)  —  $\\theta=0°$ is straight ahead', fontsize=8)
-    ax2.set_title('(b) the ADDA scattering grid of every solve\n(why the mirror transform only remaps $\\varphi$)', fontsize=9)
-    ax2.set_xlim(-1.15, 1.5); ax2.set_ylim(-0.95, 1.3)
+    lim = 1.45
+    ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_zlim(-lim, lim)
+
+    # ---- panel (b): the mueller/amplitude scattering grid attached to k-hat
+    ax2 = fig.add_subplot(122, projection='3d')
+    ax2.set_axis_off()
+    _wireframe_sphere(ax2, nlat=4, nlon=8)
+
+    # propagation axis: theta = 0 at the north pole (straight ahead)
+    ax2.quiver(0, 0, -0.15, 0, 0, 1.55, color='k', lw=1.8,
+               arrow_length_ratio=0.05)
+    ax2.text(0.62, -0.38, 1.02, 'propagation $\\hat{k}$  →  $\\theta=0°$\n'
+             'is straight ahead at the pole', fontsize=8.5, ha='left', va='center')
+    ax2.scatter(0, 0, 1.0, color='0.3', s=22, zorder=5)
+    ax2.scatter(0, 0, -1.0, color='tab:red', s=30, zorder=5)
+    ax2.text(0.12, 0, -1.04, '$\\theta=180°$\nexact backscatter', fontsize=8,
+             color='tab:red', va='top')
+
+    # theta = cone circle (latitude) around k
+    th_c = np.deg2rad(60)
+    ax2.plot(np.sin(th_c) * np.cos(u), np.sin(th_c) * np.sin(u),
+             np.cos(th_c) * np.ones_like(u), color='tab:orange', lw=1.8)
+
+    # phi = sweep circle at one theta
+    ph_c = np.deg2rad(115)
+    r_p = np.sin(ph_c)
+    ax2.plot(r_p * np.cos(u), r_p * np.sin(u),
+             np.cos(ph_c) * np.ones_like(u), color='tab:green', lw=1.8)
+
+    # a sample scattering direction n-hat(theta, phi)
+    n_th, n_ph = np.deg2rad(115), np.deg2rad(140)
+    nx, ny, nz = (np.sin(n_th) * np.cos(n_ph), np.sin(n_th) * np.sin(n_ph),
+                  np.cos(n_th))
+    ax2.quiver(0, 0, 0, nx, ny, nz, color='tab:purple', lw=1.7,
+               arrow_length_ratio=0.12)
+
+    ax2.legend(handles=[
+        Line2D([], [], color='tab:orange', lw=2,
+               label='$\\theta$-rings ($\\theta$=const): 181 pts, 0…180°'),
+        Line2D([], [], color='tab:green', lw=2,
+               label='$\\varphi$-sweep at one $\\theta$: 361 pts, 0…360°'),
+        Line2D([], [], color='tab:purple', lw=2,
+               label='one grid point $\\hat{n}(\\theta,\\varphi)$ of\n'
+                     'ampl/mueller_scatgrid'),
+        Line2D([], [], color='tab:red', marker='o', ls='', ms=6,
+               label='Phase-6 backscatter slice:\n$\\Theta$=180°, $\\Phi$=0° row/column')],
+        loc='upper left', fontsize=7.5, framealpha=0.85,
+        handlelength=1.6, borderpad=0.7)
+
+    ax2.set_title("(b) every solve's $181\\times361$ scattering grid lives on a sphere\n"
+                  r"attached to $\hat{k}$ — mirror transforms remap only $\varphi$, never $\theta$",
+                  fontsize=9.5)
+    ax2.view_init(elev=18, azim=32)
+    ax2.set_box_aspect([1, 1, 1])
+    ax2.set_xlim(-lim, lim); ax2.set_ylim(-lim, lim); ax2.set_zlim(-lim, lim)
+
+    fig.subplots_adjust(wspace=-0.25)
     savefig(fig, 'fig08_orientation_geometry.png')
+
+
+# ---------------------------------------------------------- Fig 09–12 ---
+def fig_baseline_set():
+    """Appendix E figures: regenerate the baseline report figures (data:
+    frozen golden runs under baselines/adda_1.2/) and mirror them into
+    docs/figures as fig09..fig12. Rendering is delegated to the baseline
+    tooling itself (baselines/plot_baseline_figs.py) so the appendix can
+    never drift from the reference report."""
+    import shutil
+    import subprocess
+    script = os.path.join(REPO, 'baselines', 'plot_baseline_figs.py')
+    subprocess.run([sys.executable, script], check=True, cwd=REPO)
+    src = os.path.join(REPO, 'baselines', 'report')
+    for srcname, dstname in [
+            ('fig1_crosssections.png', 'fig09_baseline_crosssections.png'),
+            ('fig2_sphere_mie.png', 'fig10_baseline_sphere_mie.png'),
+            ('fig3_scattering_maps.png', 'fig11_baseline_scattering_3d.png'),
+            ('fig4_ellipsoid_phase.png', 'fig12_baseline_ellipsoid_phase.png')]:
+        shutil.copyfile(os.path.join(src, srcname), os.path.join(FIGDIR, dstname))
+        print('wrote docs/figures/' + dstname)
 
 
 if __name__ == '__main__':
@@ -381,4 +489,5 @@ if __name__ == '__main__':
     fig_sym_closure()
     fig_backlog()
     fig_orientation_geometry()
+    fig_baseline_set()
     print('done.')
