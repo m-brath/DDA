@@ -13,9 +13,10 @@ Features:
   docs/figures/mermaid/, keyed by content hash) and embedded as <img>. This
   makes the HTML/PDF self-contained and print-reliable. If mermaid-cli is not
   available, falls back to client-side mermaid.js.
-    - puppeteer/mermaid-cli needs a Chrome binary: set CHROME_BIN=<path-to-chrome>
-      (e.g. a chrome-headless-shell binary) or have Chrome installed at a
-      default location.
+    - puppeteer/mermaid-cli needs a Chrome binary: found automatically at a
+      default macOS location OR in the puppeteer cache
+      (~/.cache/puppeteer/chrome-headless-shell/…); override with
+      CHROME_BIN=<path-to-chrome> (e.g. a chrome-headless-shell binary).
 
 Requires: pip install markdown pymdown-extensions
 """
@@ -40,6 +41,17 @@ MERDIR = os.path.join(HERE, 'figures', 'mermaid')
 CHROME_CANDIDATES = [os.environ.get('CHROME_BIN')] + [
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/Applications/Chromium.app/Contents/MacOS/Chromium']
+if CHROME_CANDIDATES[0] is None:
+    # puppeteer-managed headless-shell cache (what this machine's mermaid-cli/PDF
+    # builds actually use; newest version first) — spares maintainers the CHROME_BIN export
+    import glob as _glob
+    CHROME_CANDIDATES += sorted(
+        _glob.glob(os.path.expanduser(
+            '~/.cache/puppeteer/chrome-headless-shell/*/*-*/chrome-headless-shell'))
+        + _glob.glob(os.path.expanduser(
+            '~/.cache/puppeteer/chrome/*/*/chrome-mac*/Google Chrome for Testing.app/'
+            'Contents/MacOS/Google Chrome for Testing')),
+        reverse=True)
 CHROME = next((c for c in CHROME_CANDIDATES if c and os.path.exists(c)), None)
 
 
