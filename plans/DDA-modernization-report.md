@@ -1040,3 +1040,330 @@ published-DB numerical cross-check (download); flip ARO config binaries to
 1.4.0 at submission time; §4b.3 vertex-pool parallelization as an
 optimization; per-resolution symmetry flags (§4.6).
 
+
+# Phase 6 — exact 4x4 backscatter Mueller matrix in the ARO pipeline ✅ (2026-11-06)
+
+Spec: `plans/backscatter_matrix_plan.md`. Goal: carry the **exact 4x4
+backscatter Mueller matrix** (ADDA `mueller_scatgrid` slice Theta=180 deg,
+Phi=0) through the whole ARO stack — per-vertex extraction, NetCDF caching,
+mirror fill-in, orientation averaging, overview `.mat` storage and SSDB
+export (`backMat_data` / `backMat_index`, database version `beta_0.9.1`),
+validated by the gate suite `analysis/phase6_backscatter.py`
+(numbers in `analysis/phase6_results.json`).
+
+## 6.1 Implementation walk
+
+- **Extraction** (`acf.adda_call`): after parsing `mueller_scatgrid`, the
+  Theta=180 row x Phi=0 column element vector is returned as
+  `back_matrix` (4x4, raw units) plus `back_mat_ring` (full Phi ring at
+  Theta=180, needed for the mirror rule and the convention analysis).
+  `adda_call` raises if the scat-grid contains no Theta=180 row or
+  Phi=0 column (scat_params control this — production grids do).
+  No CLI change to ADDA; parsing only, positional columns re-verified
+  against 1.4.0.
+- **Per-vertex cache NetCDFs** (`acf.write/append/read_data_from_netcdf`):
+  optional `back_mat` (4x4) + `back_mat_ring` (n_phi x 4x4, dim
+  `backring`). Readers return `None` for both keys when a store predates
+  Phase 6 — both cache-check sites in `adda_sub_control_spharmonics.py`
+  then treat the store as a **cache miss** and re-run ADDA (so a resumed
+  old store can never silently produce NaN back data).
+  `read_fulldata_from_netcdf` tolerates the missing variables too.
+  Gate 3 caught a real tolerance bug: current netCDF4 raises `IndexError`
+  (not `KeyError`) for missing variables — `read_data_from_netcdf` now
+  catches both (pre-Phase-6 stores previously crashed the reader).
+- **Mirror fill-in** (Phase-4 machinery): the Theta=180 ring of a skipped
+  vertex is reconstructed from the source vertex's ring via
+  `ring_t = ring_src[mirror_phi_index_map] * outer(D,D)` with
+  `D = diag(1,1,-1,-1)` (same sign table as the mueller/ext fill-in).
+  The back matrix itself is the Phi=0 element of the filled ring —
+  verified **exactly** on directly-computed twin vertices (XY mirror pair,
+  production ellipsoid + HongPlate shape: signed rule matches to 1e-25
+  abs while dropping the sign leaves 2e-13 at a 3.6e-11 scale).
+  Note `ring_u(180deg, phi=180deg) == ring_u(180deg, phi=0deg)` (basis
+  pi-rotation = conjugation of s by -I), so the sym-branch elementwise
+  `M**Nsym` rule for B is exact even for XY (whose phi map sends 0 -> 180).
+- **Overview `.mat`**: `back_mat_array` (per vertex, raw units) and
+  `back_mat_horiz_avg` (orientation-averaged, raw units — converted to
+  m^2/sr only in `rawdata2average`).
+- **Orientation averaging** (`orientational_avg` + sub_control convergence
+  loop): the per-vertex raw B is mapped to laboratory Stokes bases by
+  `pol_changer_back` (parallel to the ext branch of `pol_changer`), then
+  barycentric-averaged over the icosphere exactly like `ext_mat`.
+  `orientational_avg` returns it as an optional third element; both
+  sub_control branches (mirror-sym via `M**Nsym` sign rule + plain) use
+  `pol_changer_back` so all paths agree.
+- **Units**: the raw mueller grid is **k-normalized** (dimensionless
+  |f|^2-like: GATE 1 measures B11/|S1(180)|^2_Mie = 1.0179 at default dpl
+  — exactly the DDA discretization error scale). The plan's assumption of
+  µm^2/sr at extraction was wrong — extraction takes the RAW slice (no
+  D or T factor); conversion to m^2/sr happens in `rawdata2average` via
+  the same `lambda^2/(4 pi^2)` factor `mueller2phase` uses for phaMat.
+  SSDB `backMat_data` is therefore m^2/sr, consistent with ARTS
+  `assp2backcoef` expectations.
+- **SSDB export** (`definitions_for_netcdf.py`, `adda2SSDBnetcdf_functions`):
+  version `beta_0.9.1`; `backMat_index` (scatMat_Col, scatMat_Row) fixed to
+  the identity pairing like phaMat; `backMat_data` (phaMatElem, aa_inc,
+  za_inc) f4; additive only — the 7 parallel variable lists all grew to
+  14 entries in lockstep; `put_variables_in_group0` handles the
+  (4,4,n_theta)->(16,1,n_theta) transpose explicitly and tolerates stores
+  without back data (NaN-filled).
+
+## 6.2 Polarization-basis conventions (the phase-6 deep-dive)
+
+Three separate convention facts had to be established before the gate
+could pin the production one:
+
+1. **The regular phase-matrix grid is LAB-absolute**, not incidence-frame:
+   the phase4_hp_sym store (beta=0, theta_inc=90) shows its P11 peak at
+   (theta_s=90, phi_s=0) = forward. Exact backscatter therefore sits at
+   (theta_s = 180 - theta_inc, phi_s = 180). phi_s=0 comparisons (and any
+   comparison at the singular point itself, where the PHI basis is
+   degenerate) are wrong.
+2. **Pointwise basis ladder**: the phase matrix P and the averaged Mueller
+   M are related exactly by `P = R(-PHI2) M R(PHI1) * lambda^2/4pi^2`
+   (`mueller2phase`, with `calculate_rotation_angles` PHI angles). At
+   every phi_s=180 comparison point the ladder angles are multiples of
+   180 deg, so both rotations reduce to identity there — the ladder was
+   implemented in the gate (`phi_ladder`, validated against
+   `calculate_rotation_angles` up to ±pi tester-ties, which are invisible
+   to `rotater_mat`) and verified to be I at the comparison rows.
+3. **Which ADDA pole column matches which side**: the scattering-plane
+   normal `k_s x k_i` is +y_lab on the theta_s < 180-theta_inc side of the
+   phi_s=180 ray, which is the continuous limit of the ADDA **Phi=0**
+   column basis at the Theta=180 pole. The Phi=180 side carries the flipped
+   basis (n = -y_lab) and must not be compared against the raw Phi=0
+   slice. (An earlier gate revision compared the wrong side and produced
+   O(1) errors for every convention — a good demonstration that the scan
+   geometry matters as much as the convention.)
+
+With 1-3 fixed, the convention scan (rotation-angle signs on both sides
+plus constant Stokes conjugations) discriminates cleanly:
+
+- `B_lab = R(phi_s) B_raw R(phi_i)` with the **ext-branch angle
+  phi_s = -phi_i is wrong** (rel err vs the pipeline phase matrix 0.96 —
+  sign-flipped off-diagonals). One-sided rotations score 1.85, wrongly
+  paired constant conjugations >= 1.99.
+- The correct transport is `phi_s = +phi_i`: the scattered basis of the
+  back matrix is attached at **-v** (not +v like the ext branch), and
+  parallel transport across the antipodal basis flip (hpol -> -hpol while
+  vpol(-k) = vpol(k)) measures the angle with opposite sign — so its
+  Stokes rotation enters with the opposite sign to the ext branch, i.e.
+  `R(+phi_i)` on the left. Scan floor: 3.06e-2 max rel err (see below).
+- **Ties at the floor** (deliberately tolerated by the gate, asserted as
+  "production at the minimum, all distinguishable alternatives >= 5x
+  worse"): `R(-phi_i)` on both sides (quadrature symmetry of the
+  alpha/gamma average) and the constant conjugations D|D, T|T, DT|DT
+  (this particle+geometry makes B insensitive to them: B11=B22, B33=B44,
+  vanishing one-sided U couplings). The derivation picks +phi_i; nothing
+  in the SSDB output distinguishes the floor-tie group.
+- **Scan floor ~3%**: the production convention's max rel err at the
+  comparison points is 3.06e-2 — and that number is NOT a back-matrix
+  error term. Sources: (i) the comparison uses points 2-4 deg off the
+  exact pole (the point itself is PHI-degenerate), and mueller2phase
+  re-expands the averaged Mueller with eps_phase=0.001 *after* pole
+  interpolation; (ii) `mueller2phase_core` pole-interpolates the
+  off-diagonal spherical-harmonic expansions across the incidence-frame
+  poles (`k % 5 != 0` branch) — near-pole off-diagonal values on the
+  regular grid carry interpolation artifacts of a few %, and the
+  coplanar-structurally-zero M13/M31 picks up ~1.2e-12 of fabricated
+  value; (iii) at x=0.3 the ellipsoid backscatter structure varies on a
+  degree scale near exactly the region probed. The gate therefore masks
+  (1,3)/(3,1) at the coplanar comparison points (true value 0 on the
+  back path by scattering-plane mirror symmetry — comparing the grid's
+  fabricated value would test the known artifact, not the back matrix).
+  **What pins the convention is the separation, not the absolute
+  number**: every wrong family sits 31x above the floor (ext-analog
+  phi_s=-phi_i: 0.961; one-sided: 1.845; mispaired conjugations: >=1.99),
+  while the production entry and the physically-equivalent floor-tie
+  group land at the artifact level. Gate 3's plate leg (x=0.024, much
+  smoother, same interpolation machinery) closes the absolute-number
+  question with a tight threshold.
+
+GATE 1 (sphere) additionally confirms the raw extraction against Mie,
+including the `diag(1,1,-1,-1)` structure that the attached-basis flip
+between +v and -v produces *inside the raw values* — the extraction must
+not add any extra D/T conjugation.
+
+## 6.3 Gate results
+
+| gate | check | result |
+|---|---|---|
+| 2 | store + back_mat_array finite | 162 vertices, all finite |
+| 2 | rawdata2average back output finite | (3 beta x 5 theta_inc x 4 x 4) |
+| 2 | replica == production averaging | 3.35e-16 |
+| 2 | production convention vs phase matrix | 3.06e-2 (artifact floor, <= 5%) |
+| 2 | ext-analog convention (rejected) | 9.61e-1 |
+| 2 | one-sided rotations (rejected) | 1.85e0 |
+| 2 | mispaired constant conjugations (rejected) | >= 1.99e0 |
+| 2 | floor tie group | R[+1,+1] with matched I/D/T/DT conjugations + R[-1,-1] (quadrature symmetry) |
+| 1 | Mie-anchor Cext (sphere x=0.314, ADDA 1.4.0) | ADDA 54.3059 vs Mie 53.3517 um^2, rel 1.79e-2 |
+| 1 | adda_call API slices | back_matrix/back_mat_ring == manual Theta=180/Phi=0 slices |
+| 1 | sphere B11 vs \|S1(180)\|^2 | ratio 1.01791 (DDA discretization ~1.8%) |
+| 1 | sphere diag(1,1,-1,-1)*M11 | max diag dev 0 |
+| 1 | sphere off-diagonals / Theta=180 ring flatness | 2.52e-16 / 4.88e-16 |
+| 3 | store complete (mirror fill active) | 642/642 vertices finite, back_mat_horiz_avg (5 beta x 10 theta) |
+| 3 | vertex-cache round-trip (back keys) | f4 dev 0 (exact) |
+| 3 | pre-Phase-6 store tolerance | reader returns None -> cache-miss rule reachable |
+| 3 | mirror ring + B rule (production shape, computed XY twins) | ring 2.80e-14 rel, B 1.00e-25 abs (scale 3.6e-11) |
+| 3 | sym-branch (sub_control) == plain-branch (rawdata2average) | 2.22e-16 |
+| 3 | plate pole comparison (x=0.024) | 1.41e-2 <= 2e-2 |
+| 3 | SSDB export | 5 beta files, version beta_0.9.1, backMat_index int8 (4,4), backMat_data (16,1,10) round-trip 9.3e-26 (scale 1.7e-18, = f4 epsilon), phaMat/extMat untouched |
+
+All 23 checks PASS (`analysis/phase6_results.json`, overall PASS; the
+`gate2_convention_scan` dict is embedded). GATE 2's x=1 informational leg
+(`--x1`) was **skipped** (optional; not part of the verdict).
+
+## 6.4 Files touched / created
+
+pipeline:
+- `adda_control_functions.py` — extraction, ring, cache read/write/append,
+  mirror helper use.
+- `adda_sub_control_spharmonics.py` — alloc/`_old`/reuse of back arrays,
+  cache-miss rule at both sites, mirror ring + B fill, convergence-loop
+  back averaging (both branches), `back_mat_horiz_avg` (+`back_mat_array`)
+  in the overview mat.
+- `adda_orientational_avg_spharmonics_functions.py` — `pol_changer_back`,
+  `orientational_avg` (3rd return + `back_mat_array` kwarg),
+  `rawdata2average` (tolerant load, m^2/sr conversion).
+- `definitions_for_netcdf.py`, `adda2SSDBnetcdf_functions.py` —
+  beta_0.9.1 additive export.
+
+analysis:
+- `analysis/phase6_backscatter.py` (new gate suite),
+  `analysis/phase6_results.json`,
+  configs `adda_config_phase6_gate2.py` (x=0.3, dpl 300),
+  `adda_config_phase6_gate2_x1.py` (x=1, informational),
+  `adda_config_phase6_hp_sym.py` (HongPlate 10um/228GHz/190K, mirror sym).
+
+## 6.5 Caveats & deferred
+
+- Convention pinned only up to the documented (alpha/gamma quadrature)
+  tie; the +phi_i choice follows from parallel transport.
+- Near-pole phase-matrix off-diagonals carry the pipeline's known
+  pole-interpolation artifacts (a few %); backMat at the exact point is
+  the cleaner value. If ARTS-side consumers cross-check
+  backMat vs phaMat(180-theta) they should expect that floor.
+- GATE 2 x=1 leg is informational (stronger pole structure than the
+  interpolation floor allows to assert tightly).
+- Old stores (pre-Phase-6) lack back data: cache-miss rule forces ADDA
+  re-runs on resume; `rawdata2average` on old stores warns and leaves
+  backMat NaN.
+
+---
+
+# Phase 7 — Mueller artifact: pickle → NetCDF4 ✅ (2026-11-06)
+
+Scope: plans/DDA-mueller-netcdf-migration-plan.md, fully executed. The
+internal per-run Mueller artifact `*_mueller_data.pkl` (Phase 2's replacement
+for the broken ARTS-XML) is replaced by a single **NetCDF4** file
+`*_mueller_data.nc` per (T, f, size) run — platform-independent, self-
+describing, `ncdump`-inspectable, zero new dependencies, same vlen schema the
+per-vertex temp caches already use.
+
+## 7.1 Format (as implemented)
+
+- Root dims `stokes=4`/`stokes2=16`, vlen type `float_vlen` (float32).
+- Root provenance attrs mirroring the `_overview_data.mat`: `shape_name`,
+  `temperature`, `frequency`, `wavelength`, `refr_index` (complex → stored
+  float64 `[re, im]`; the netCDF attr model has no complex type),
+  `adda_version`, `adda_binary`, `mueller_units`, `n_vertices`,
+  `max_len_coeffs`, `max_ntrunc`, `created`.
+- One group per **computed** icosphere vertex; group name = the existing
+  temp-cache id `vertex_X{XV:07.0f}_Y…_Z…` (coords ×1e5 µm) via
+  `acf.mueller_vertex_id`; uncomputed vertices (None) simply have no group.
+- Group contents = exactly the temp-cache layout (`acf.write_variables`
+  reused): `mueller_sph` (16 ragged arrays, complex64 `.view(np.float32)` —
+  the established lossless complex convention), `relerror`(16),
+  `ext_mat`(4×4), optional `back_mat`(4×4) [+ `back_mat_ring`, shared
+  `backring` dim], group attrs `max_len_coeffs`/`max_ntrunc`.
+- Ordering: group attr **`vertex_index` (int32)** = row into the run's
+  `vertices` array — the ONLY ordering key. Group iteration order observed
+  to be creation order (not name order) in netCDF4/HDF5, confirming the
+  plan's "never trust group order" rule; the loader rebuilds the vertex-
+  ordered list (None holes) and raises ValueError on missing/duplicate/
+  out-of-range indices.
+
+## 7.2 Changes applied
+
+- `adda_control_functions.py`: new `write_mueller_array_to_netcdf` /
+  `load_mueller_array_from_netcdf` + `mueller_vertex_id` (+`import datetime`).
+  Per-vertex temp-cache functions untouched.
+- `adda_sub_control_spharmonics.py`: pickle dump block replaced by the
+  NetCDF writer; written `netcdf_name+'.tmp'` then `os.replace` (an
+  interrupted run can never leave a half-written final artifact the skip-
+  glob would accept). New optional config global `mueller_artifact_pickle`
+  (default False) writes a legacy `.pkl` twin from the SAME run — double-
+  reader gate device only. `import pickle` kept for that path.
+- `adda_orientational_avg_spharmonics_functions.py` (`rawdata2average`):
+  reads `*.nc` via the new loader (`n_vertices` from the mat's `vertices`);
+  falls back to `.pkl` with a deprecation warning; raises FileNotFoundError
+  if neither exists. The downstream complex64-cast loop unchanged (loader
+  already yields complex64).
+- `adda_main_control.py`: skip-glob additionally accepts `*_mueller_data.nc`
+  (xml/pkl kept; temp caches cannot match). Completed-case condition changed
+  `len(datalist)==1` → `>=1`: the plan's own migration default keeps `.pkl`
+  beside the new `.nc`, which would otherwise break idempotency (2 matches
+  → re-run). This is the semantically intended "already simulated" test.
+- New: `adda_config_mueller_nc_probe.py` (tiny ellipsoid x=0.3 dpl 100 ARO
+  case, `mueller_artifact_pickle=True`, ADDA 1.4.0 default),
+  `analysis/mueller_nc_roundtrip_check.py`, `analysis/mueller_nc_gate.py`,
+  `analysis/migrate_pkl_to_nc.py`.
+- Docs: agents.md (artifact status + new Conventions bullet with the schema,
+  `vertex_index` rule, legacy fallback, atomic write, probe flag).
+
+## 7.3 Gates (DDA env, all PASS)
+
+1. **Round-trip unit check** (`analysis/mueller_nc_roundtrip_check.py`) —
+   20/20 checks PASS: synthesized store (42-vertex refined icosphere, 21
+   computed, 336 jagged complex64 arrays, relerror/ext/back + rings, full
+   meta) → write → reload **bitwise** (coeffs, float32 payloads, float64
+   attrs incl. refr_index [re,im]); None holes; group-name/id correspondence;
+   error paths (duplicate/missing/out-of-range `vertex_index`, each injected
+   on its own pristine copy, all → ValueError; missing file → FileNotFoundError).
+2. **Pipeline e2e** (`analysis/mueller_nc_gate.py`, gate W/X):
+   sub_control probe run (ADDA 1.4.0 seq, exit 0) → exactly one
+   `*_mueller_data.nc` (162/162 vertices in the final refinement round),
+   no `.nc.tmp` leftover, per-vertex temp cache cleaned, `.pkl` twin present,
+   skip-glob accepts. X: root attrs mirror the mat provenance (T/f/λ/m/
+   adda_*/n_vertices=162/max_len/max_ntrunc); 162 groups == mat-vertex ids;
+   `vertex_index` a complete permutation; **X3: nc == pkl twin coefficients
+   bitwise after the complex64 storage cast (2592 arrays / 162 vertices)**.
+3. **Double-reader equivalence** (gates R/E1): `rawdata2average` on the same
+   store via `.nc` and via the `.pkl` fallback (nc temporarily hidden) →
+   averaged dicts **bit-identical** (28 arrays/scalars); full downstream
+   chain (`mueller2phase_reexpand` → rescale/`abs_vector`) → **bit-identical
+   (32 arrays/scalars)**. Expected exactly, not noise-based: both readers
+   hand the identical complex64 coefficient lists to the identical code
+   (the Phase-2 pkl path downcast to complex64 anyway — the complex64
+   storage cast loses nothing the pipeline ever used).
+4. **SSDB export** (gate E2, real habit — `export2SSDBnetCDF` imports
+   `adda_config_<shape_name>`, so the analytic ellipsoid probe cannot export;
+   pre-existing design, unaffected): Phase-6 HongPlate store
+   (`phase6_hp_sym/HongPlate_Id9_deq00010um_freq228.0GHz_T0190K`, migrated
+   `.nc` + legacy `.pkl`): averaged dicts bitwise identical; both branches
+   exported → 5 beta files each, **125 NetCDF variables compared variable-
+   wise (data+mask) BITWISE identical**.
+5. **Golden baselines** (`baselines/check_baselines.py`): unchanged, all OK
+   (this migration never touches ADDA calls; artifact format is internal).
+
+## 7.4 Migration (step 4)
+
+`analysis/migrate_pkl_to_nc.py` over `adda_results/`: **12/12 stores
+migrated + bitwise-verified, 0 failures** (largest 642 vertices / 10272
+coeff arrays; 162/2592-class test stores included). `.pkl` files kept in
+place (rename to `.pkl.migrated` only with `--prune`; never deleted).
+Migration caveats (legacy `.pkl` stored only `mueller_array`): group
+`relerror` written as zeros and per-group `max_ntrunc` set to the run-global
+value (diagnostic attrs only — no reader consumes them per-group); coeff
+verification is bitwise against `pkl.astype(complex64)`. HPC `.pkl`/`.xml`
+artifacts: handled by the legacy read fallback + the same script when the
+HPC tree becomes accessible again.
+
+## 7.5 Deferred / out of scope
+
+- `*_overview_data.mat` stays as-is; per-vertex `_temp_data_vertex_*.nc`
+  caches stay (folding them into the single file = later optimization).
+- `.xml` artifacts are not readable anymore (typhon.arts.xml gone since
+  Phase 2) — glob accepts the name only for legacy directory detection.
+- Ring arrays remain temp-cache-only (final artifact carries the aggregated
+  `back_mat` 4×4; shared `backring` dim prevents mixed lengths in one file).

@@ -1,0 +1,145 @@
+{
+  "overall": "PASS",
+  "checks": [
+    {
+      "name": "G2 back_mat_array in store",
+      "pass": true,
+      "detail": "(162, 4, 4) all finite"
+    },
+    {
+      "name": "G2 rawdata2average back finite",
+      "pass": true,
+      "detail": "shape (3, 5, 4, 4)"
+    },
+    {
+      "name": "G2 replica == production averaging",
+      "pass": true,
+      "detail": "max rel 3.35e-16"
+    },
+    {
+      "name": "G2 production convention at pole <= 5%",
+      "pass": true,
+      "detail": "max rel err 3.0600e-02"
+    },
+    {
+      "name": "G2 production convention is at the scan minimum; every distinguishable alternative (ext-analog signs, one-sided, wrong conjugation pairing) is worse by >= 5x",
+      "pass": true,
+      "detail": "production 3.060e-02 (floor tie group: 4 variants), best distinguishable alternative 9.610e-01"
+    },
+    {
+      "name": "G1 Mie-anchor Cext",
+      "pass": true,
+      "detail": "ADDA 54.3059 vs Mie 53.3517 um^2, rel 1.79e-02"
+    },
+    {
+      "name": "G1 adda_call API",
+      "pass": true,
+      "detail": "back_matrix/back_mat_ring == manual Theta=180/Phi=0 slices"
+    },
+    {
+      "name": "G1 sphere B11 vs |S1(180)|^2",
+      "pass": true,
+      "detail": "ratio 1.01791 (DDA discretization error ~1.8% expected)"
+    },
+    {
+      "name": "G1 sphere diag(1,1,-1,-1)*M11",
+      "pass": true,
+      "detail": "max diag dev 0.00e+00"
+    },
+    {
+      "name": "G1 sphere off-diagonal",
+      "pass": true,
+      "detail": "rel offdiag 2.52e-16"
+    },
+    {
+      "name": "G1 Theta=180 ring phi-flat (sphere)",
+      "pass": true,
+      "detail": "max ring dev 4.88e-16"
+    },
+    {
+      "name": "G3 back_mat_array complete",
+      "pass": true,
+      "detail": "642/642 vertices finite (run+mirror fill)"
+    },
+    {
+      "name": "G3 sub_control back_mat_horiz_avg finite",
+      "pass": true,
+      "detail": "shape (5, 10, 4, 4)"
+    },
+    {
+      "name": "G3 cache round-trip",
+      "pass": true,
+      "detail": "f4 max dev B 0.00e+00, ring 0.00e+00"
+    },
+    {
+      "name": "G3 old store lacks back keys -> None (cache miss rule possible)",
+      "pass": true,
+      "detail": "read_data_from_netcdf tolerates pre-Phase-6 stores"
+    },
+    {
+      "name": "G3 mirror ring + back matrix rule (production shape, XY)",
+      "pass": true,
+      "detail": "ring 2.80e-14 rel, back-matrix 1.00e-25 abs (B scale 3.57e-11)"
+    },
+    {
+      "name": "G3 sym-branch (sub_control) == plain-branch (rawdata2average) back averaging",
+      "pass": true,
+      "detail": "max rel 2.22e-16 (pure code-path difference)"
+    },
+    {
+      "name": "G3 plate pole comparison (x=0.024)",
+      "pass": true,
+      "detail": "max rel err 1.4106e-02"
+    },
+    {
+      "name": "G3 export file count",
+      "pass": true,
+      "detail": "5 beta files"
+    },
+    {
+      "name": "G3 SSDB version bumped",
+      "pass": true,
+      "detail": "version=beta_0.9.1"
+    },
+    {
+      "name": "G3 SSDB backMat_index",
+      "pass": true,
+      "detail": "dtype int8, shape (4, 4)"
+    },
+    {
+      "name": "G3 SSDB backMat_data round-trip",
+      "pass": true,
+      "detail": "shape (16, 1, 10), max dev 9.33e-26 (scale 1.74e-18)"
+    },
+    {
+      "name": "G3 SSDB existing vars intact",
+      "pass": true,
+      "detail": "phaMat (16, 1, 10, 4095), extMat (3, 1, 10)"
+    }
+  ],
+  "gate2_convention_scan": {
+    "R[+1,-1] I|I": 0.9609997569168504,
+    "R[+1,+1] I|I": 0.03059960428256973,
+    "R[+1,+1] I|D": 1.9888875776975836,
+    "R[+1,+1] I|T": 2.0085763889628954,
+    "R[+1,+1] I|DT": 2.0085763889628954,
+    "R[+1,+1] D|I": 1.9888875776975836,
+    "R[+1,+1] D|D": 0.03059960428256973,
+    "R[+1,+1] D|T": 2.008576388955713,
+    "R[+1,+1] D|DT": 2.008576388955713,
+    "R[+1,+1] T|I": 2.008576388955713,
+    "R[+1,+1] T|D": 2.008576388955713,
+    "R[+1,+1] T|T": 0.03059960428256973,
+    "R[+1,+1] T|DT": 1.9888875776975836,
+    "R[+1,+1] DT|I": 2.0085763889628954,
+    "R[+1,+1] DT|D": 2.0085763889628954,
+    "R[+1,+1] DT|T": 1.9888875776975836,
+    "R[+1,+1] DT|DT": 0.03059960428256973,
+    "R[-1,-1] I|I": 0.03059976842567639,
+    "R[-1,+1] I|I": 0.960999728124333,
+    "R[+0,-1] I|I": 1.845343381486648,
+    "R[+0,+1] I|I": 1.8453434796458172,
+    "R[-1,+0] I|I": 1.8453433816298146,
+    "R[+1,+0] I|I": 1.8453434795026502
+  }
+}

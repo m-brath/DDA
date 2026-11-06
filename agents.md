@@ -66,12 +66,25 @@ reference patterns only.**
   `analysis/phase5_backlog_inventory.txt`.
 - Previous HPC ARO result files are **no longer accessible** — regression validation must
   rely on analytic tests (sphere/Mie, oblate ellipsoid) and 1.2-vs-1.4/1.5 cross-runs.
+- **Phase 6 (2026-11-06): backscatter Mueller matrix implemented** — exact
+  4x4 `mueller_scatgrid` Theta=180/Phi=0 slice extracted per vertex
+  (raw k-normalized units, + Phi-ring for mirror fill), cached in vertex
+  NetCDFs (`back_mat`/`back_mat_ring`, old stores => cache miss), mirror
+  fill-in with the `D=diag(1,1,-1,-1)` sign rule (verified exact on
+  computed twins), orientation-averaged via `pol_changer_back`
+  (convention: B_lab = R(+phi) B R(+phi) — NOT the ext-branch -phi;
+  pinned by gate scan vs the pipeline phase matrix: floor 3.1e-2 vs
+  0.96 for the ext analog), overview-mat storage, lambda^2/4pi^2 ->
+  m^2/sr conversion, SSDB export `backMat_data`/`backMat_index`,
+  database version **beta_0.9.1**. Gate suite `analysis/phase6_backscatter.py`,
+  results `analysis/phase6_results.json`, findings report §6.
 - **Modernization plan approved** (see `plans/DDA-modernization-plan.md`): code analysis,
   numpy-2 migration, configurable ADDA binary (1.2 / 1.4 / 1.5.0-alpha3), symmetry-based
   optimization, then production backlog. Status: **Phases 0+1+2+3 done, Phase 4 core done**
   (Phase 2: pipeline
   runs natively on numpy 2 / scipy 1.18 / py3.12 / macOS, proven by `analysis/phase2_equiv.py`;
-  internal Mueller artifact switched from ARTS-XML to **pickle**. Phase 3: config-driven ADDA
+  internal Mueller artifact switched from ARTS-XML to pickle (Phase 7 replaced pickle by
+  NetCDF4). Phase 3: config-driven ADDA
   binary + local no-queue mode + TRO repairs; equivalence suite `analysis/phase3_equiv.py`
   PASSES all gates — 1.2/1.4.0/1.5.0-alpha3 identical within solver noise, TRO `-orient avg`
   cross sections bit-identical, auto dpl heuristic identical; **production binary decision:
@@ -95,6 +108,22 @@ reference patterns only.**
   SSDB export localized + verified end-to-end (mat + full SSD NetCDF tree); golden
   baselines re-anchored to `baselines/adda_1.4.0/`. Remaining is operational
   (HPC submissions per runbook §5.6, optional published-DB cross-check).
+  **Phase 6 done** (2026-11-06): exact 4x4 backscatter Mueller matrix (ADDA
+  `mueller_scatgrid` Theta=180/Phi=0 slice) extracted per vertex, cached,
+  mirror-filled, orientation-averaged and exported to SSDB as
+  `backMat_data`/`backMat_index` (database version **beta_0.9.1**); the
+  backscatter matrix is stored *outside* the spherical-harmonic route, which
+  Brath et al. (2020) flag as unreliable at the exact backscatter direction.
+  Plan `plans/backscatter_matrix_plan.md`, report §6, gate suite
+  `analysis/phase6_backscatter.py`.
+   **Phase 7 done** (2026-11-06): internal Mueller artifact migrated
+   pickle → **NetCDF4** (`*_mueller_data.nc`, one file per run; schema:
+   report §7.1; writer/reader helpers in `acf`, atomic write,
+   `vertex_index` group attr is the sole ordering key). All gates bitwise
+   PASS (`analysis/mueller_nc_roundtrip_check.py`,
+   `analysis/mueller_nc_gate.py` incl. SSDB export double-reader
+   equivalence); all 12 local legacy `.pkl` artifacts migrated +
+   bitwise-verified via `analysis/migrate_pkl_to_nc.py`. Report §7.
 - **Project manual added** (`docs/DDA-manual.md`, 2026-11-06): the maintainer-facing
   single reference — physics theory, pipeline architecture/call graphs, config contract
   walkthrough, local/HPC runbooks, validation gates, gotcha catalogue. Read it alongside
@@ -204,8 +233,9 @@ notes; do not extend — report §1.6-9).
     fallback), `matlib.repmat`→`np.tile`, `posix_spawn.py` has a platform branch
     (Linux ctypes path unchanged; macOS uses subprocess) — every pipeline module now
     imports and runs locally. `typhon` must stay **0.10.0** (0.8.0 is broken on
-    py3.12; `ty.arts.xml` is gone — internal Mueller artifacts are **pickle** files
-    `*_mueller_data.pkl` now, not ARTS XML).
+    py3.12; `ty.arts.xml` is gone — internal Mueller artifacts went ARTS-XML →
+    pickle → **NetCDF4** files `*_mueller_data.nc` (Phase 7, see report), one
+    file per (T,f,size) run).
 
 ## Conventions & Gotchas
 
@@ -277,7 +307,24 @@ notes; do not extend — report §1.6-9).
 - In `avg_params.dat` (TRO `-orient avg`): zyz Euler convention; exploit habit symmetries to
   shrink ranges (e.g. `beta max=90` for an xy-symmetry plane; axysymmetrical → `gamma max=0`).
 - `force_new=True` in a config re-runs everything; default `False` skips completed cases —
-  idempotency is tracked by looking for existing output (mat/NetCDF) files.
+  idempotency is tracked by looking for existing output (mat/NetCDF) files (the
+  completed-case glob accepts `*_mueller_data.nc` (current), plus legacy `.pkl`/`.xml`).
+- **Mueller artifact (Phase 7)**: the per-run spherical-harmonic Mueller store is a
+  single **NetCDF4** file `<shape>_mueller_data.nc` (replaces Phase-2 `.pkl`, which
+  replaced ARTS-XML `.xml`). Schema: root dims `stokes=4`/`stokes2=16` + `float_vlen`
+  (float32), root provenance attrs mirroring the `_overview_data.mat`; one **group per
+  computed icosphere vertex** (name = the temp-cache `vertex_X…` id), carrying
+  `mueller_sph` (16 vlen arrays, complex64 via `.view(float32)` — lossless), `relerror`,
+  `ext_mat`, optional `back_mat`; group attr **`vertex_index` (int32)** = row into the
+  run's `vertices` array is the ONLY ordering key (group iteration order is never
+  trusted); uncomputed vertices have no group (loader yields `None`). Writers/readers:
+  `acf.write_mueller_array_to_netcdf` / `acf.load_mueller_array_from_netcdf`; sub_control
+  writes atomically (`.tmp` + `os.replace`); config flag `mueller_artifact_pickle=True`
+  writes a legacy `.pkl` twin (gates only, never production). `rawdata2average` reads
+  `.nc` first, falls back to `.pkl` with a deprecation warning; migrate old artifacts
+  with `analysis/migrate_pkl_to_nc.py` (bitwise-verified, keeps the `.pkl`). Per-vertex
+  `_temp_data_vertex_*.nc` intra-run caches are unchanged. Gates:
+  `analysis/mueller_nc_roundtrip_check.py` + `analysis/mueller_nc_gate.py`.
 - Results/intermediate files go to `<prefix_data>/adda_results/` on the cluster — outside
   this repo. This repo only holds inputs, source and scripts.
 - `SSD_scripts_deprecated/` and `old_configs/` are archives; never import from them in new code.

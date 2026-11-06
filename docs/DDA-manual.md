@@ -574,7 +574,7 @@ flowchart TD
     SUB --> SPHA["spherical_harmonics_for_adda.py<br/>expand_mueller_2_spharmonics"]
     SUB --> ICO["icosphere_grid.py<br/>vertex grids, rotation, barycentric interp"]
     SUB <--> CACHE[("per-vertex NetCDF cache<br/>&lt;shape&gt;_temp_data_vertex_X…Z….nc")]
-    SUB --> MAT[("&lt;shape&gt;_overview_data.mat")] & PKL[("&lt;shape&gt;_mueller_data.pkl<br/>complex64 SH coeffs per vertex")]
+    SUB --> MAT[("&lt;shape&gt;_overview_data.mat")] & MNC[("&lt;shape&gt;_mueller_data.nc<br/>complex64 SH coeffs per vertex,<br/>one group per vertex")]
 ```
 
 *Post-processing phase* (run later, per habit — see §3.3):
@@ -582,7 +582,7 @@ flowchart TD
 ```mermaid
 flowchart LR
     MAT[("&lt;shape&gt;_overview_data.mat")]
-    PKL[("&lt;shape&gt;_mueller_data.pkl<br/>complex64 SH coeffs per vertex")]
+    MNC[("&lt;shape&gt;_mueller_data.nc<br/>complex64 SH coeffs per vertex<br/>legacy .pkl fallback")]
     PROC["adda_process_aro_particles.py<br/>(selector/submitter, 19x19 grid config)"]
     SINGLE["adda_process_aro_particles_single.py<br/>(per-folder worker)"]
     AOA["aoa.rawdata2average - mueller2phase_reexpand<br/>- absorption rescale (adda_orientational_avg_…functions.py)"]
@@ -590,7 +590,7 @@ flowchart LR
     DEFN["definitions_for_netcdf.py<br/>(SSDB dims/vars/attrs)"]
     NC[("SSDB NetCDF tree SSD/…")]
 
-    MAT & PKL --> SINGLE
+    MAT & MNC --> SINGLE
     MC2["operator runs manually"] --> PROC -->|sub.check_call / sbatch| SINGLE
     CFG["adda_config_&lt;habit&gt;.py"] -.->|habit meta lookup| EXP
     SINGLE --> AOA --> EXP --> DEFN --> NC
@@ -631,7 +631,7 @@ flowchart LR
     subgraph WORK["&lt;prefix_data&gt;/adda_results/&lt;habit&gt;/&lt;job folder&gt;/<br/>job folder = habit_deqDDDum_freqFFF.FGHz_TTTTK"]
       VC[("vertex_*.nc cache<br/>TRANSIENT — deleted at job end")]
       OV[("_overview_data.mat<br/>permanent")]
-      MU[("_mueller_data.pkl<br/>permanent (idempotency marker)")]
+      MU[("_mueller_data.nc<br/>permanent (idempotency marker)<br/>legacy: .pkl/.xml")]
     end
     subgraph OUT["&lt;prefix_data&gt;/adda_results/"]
       HA[("&lt;habit&gt;_horizavg_test/<br/>&lt;shape&gt;_horiz_avg.mat,<br/>…_phasematrix.mat")]
@@ -643,7 +643,7 @@ flowchart LR
 ```
 
 Idempotency layers (ARO): **(1)** job-level — main control skips a (T,f,size) if the
-folder contains exactly one `*mueller_data.{xml,pkl}` and `force_new=False`;
+folder contains at least one `*mueller_data.{xml,pkl,nc}` and `force_new=False`;
 **(2)** vertex-level NetCDF cache (survives a killed/restarted *job*, deleted only when
 the job completes); **(3)** within a refinement pass, vertices identical to the previous
 icosphere level reuse cached expansions without touching ADDA.
@@ -720,7 +720,7 @@ Part 2 — resolution-class selection, idempotency check, dispatch:
 flowchart TD
     SEL{"fmin rule: coarsest class with fmin &gt;= f;<br/>current file is it?"}
     SEL -->|"no - wrong particle realisation"| SKIP2(["skip -&gt; next size"])
-    SEL -->|yes| DONE{"folder exists with exactly one<br/>*mueller_data.xml/.pkl and not force_new?"}
+    SEL -->|yes| DONE{"folder exists with a<br/>*mueller_data.xml/.pkl/.nc and not force_new?"}
     DONE -->|yes| SKIP2
     DONE -->|no| SUBMIT{"calc_type"}
     SUBMIT -->|mistral| SB1["sbatch_simple_improved … 'ADDA_T-f-D-shape'"]
@@ -765,7 +765,7 @@ flowchart TD
     AV["GL quadrature (4*2^L nodes) over alpha,gamma;<br/>beta-grid(5), theta_inc(10): average EXTINCTION matrices"]
     AV --> CONV{"eps_rel &lt;= delta=0.01 and L &gt;= 2?"}
     CONV -->|"no - refine to next level L"| G2(["back to icosphere vertices<br/>(part 1)"])
-    CONV -->|yes| OUT["save &lt;shape&gt;_overview_data.mat + &lt;shape&gt;_mueller_data.pkl<br/>delete vertex cache"]
+    CONV -->|yes| OUT["save &lt;shape&gt;_overview_data.mat + &lt;shape&gt;_mueller_data.nc<br/>delete vertex cache"]
 ```
 
 The mirror-fill transform ( $\varphi$ remap + Stokes signs + SH re-expansion) is sketched in
@@ -781,7 +781,7 @@ Run by hand per habit (or per folder) — this is deliberately decoupled from th
 flowchart LR
     P["python adda_process_aro_particles.py<br/>(interactive folder selector: all / index list / sort by F or D;<br/>'Update' marks folders missing β-entries)"]
     Q["adda_process_aro_particles_single.py &lt;folder&gt;<br/>(per folder; local: sub.check_call, cluster: sbatch)"]
-    R["1. aoa.rawdata2average:<br/>reads overview_data.mat + mueller_data.pkl<br/>→ ext_mat_horiz_avg (19beta x 19theta x 4x4, m^2)<br/>→ mueller horiz-avg SH coeffs (joblib-parallel)"]
+    R["1. aoa.rawdata2average:<br/>reads overview_data.mat + mueller_data.nc<br/>(legacy .pkl fallback + warning)<br/>→ ext_mat_horiz_avg (19beta x 19theta x 4x4, m^2)<br/>→ mueller horiz-avg SH coeffs (joblib-parallel)"]
     S["2. aoa.mueller2phase_reexpand(181, eps=0.001):<br/>spectral → fine spatial → re-expand;<br/>reshape_sphexp_2_common_exp → common layout"]
     T["3. abs = ext - sca;<br/>negative-a1 diagnostic: report fraction +<br/>rescale affected (beta,theta) nodes by 1+a1/sca; clamp a1 &gt;= 0"]
     U["4. IF env SSDB_EXPORT_NETCDF=1:<br/>a2s.export2SSDBnetCDF → SSD tree"]
@@ -817,7 +817,7 @@ Gate artifacts kept in `analysis/`: `phase5_tro_beta_gate.py/.log` ( $\beta$-fol
 matplotlib fftw pkg-config`; pip `typhon==0.10.0 shtns` (shtns: no osx-arm64 conda
 build; native wheel — rebuild with `pip install --no-build-isolation --no-deps shtns`
 while fftw+pkg-config are present). Never downgrade typhon (0.8.0 is broken on 3.12;
-`ty.arts.xml` is gone — Mueller artifacts are **pickle** files now).
+`ty.arts.xml` is gone — Mueller artifacts are NetCDF4 `*_mueller_data.nc`, Phase 7).
 
 **ADDA build** (works identically for `adda_1.2`, `adda_1.4`, `adda/`; never run the
 checked-in Linux ELF binaries under `adda_1.2/src/`):
@@ -900,6 +900,8 @@ casually; a new golden requires re-deriving the noise budget.
 | half-range $\beta$/$\theta$ reuse hypothesis | `phase4b_halfrange_check.py/.log` | **rejected**:$2.3\cdot 10^{-3}$…$7.2\cdot 10^{-2}$ discrepancy vs $10^{-11}$ noise |
 | TRO $\beta$-fold (0–90° avg file vs full range) | `phase5_tro_beta_gate.py/.log` | CrossSec $\le1.35\cdot 10^{-5}$ (= Romberg tol), Mueller $\le10^{-13}$ → PASS |
 | ADDA cost/accuracy | `phase4b_adda_benchmark.py`, `…_bench_results.json` | fig. 04; error budget discretization-dominated |
+| backscatter matrix (Phase 6) | `analysis/phase6_backscatter.py`, `phase6_results.json` | Mie pole agreement + convention pin + mirror-ring rule + SSDB backMat round-trip — all PASS |
+| Mueller artifact → NetCDF4 (Phase 7) | `analysis/mueller_nc_roundtrip_check.py` (20/20), `analysis/mueller_nc_gate.py` (W/X/R/E gates) | nc round-trip **bitwise** lossless; probe run + double-reader (`nc` vs legacy `pkl`) averaged dicts, phase chain and 5-file SSDB export (125 vars) **bit-identical**; 12/12 local `.pkl` artifacts migrated + bitwise-verified |
 
 Harness lessons that produced *false* failures — remember them when writing new gates:
 auto dpl is **quantized** (a $10^{-8}$ $\lambda$ typo changes N_dipoles and breaks comparisons —
@@ -1038,7 +1040,7 @@ Numbered for reference; several carry the bug-fix that neutralized them.
 2. **Output parsing is positional** (`ampl_scatgrid` col order s22,s11,s12,s21!) — re-verify on ADDA upgrades.
 3. **ADDA reruns are not bit-reproducible** at `-eps 3` (up to $8.3\cdot 10^{-4}$ at x=5) → all gates noise-based.
 4. **`-orient avg` + `-scat_grid`/`-Csca`/`-alldir` rejected** by ADDA 1.4/1.5.
-5. **typhon must stay 0.10.0**; `ty.arts.xml` is gone — internal Mueller artifacts are **pickle** (`*_mueller_data.pkl`); idempotency check accepts legacy `.xml` names too.
+5. **typhon must stay 0.10.0**; `ty.arts.xml` is gone — internal Mueller artifacts are **NetCDF4** (`*_mueller_data.nc`, schema in report §7.1; `rawdata2average` falls back to legacy `.pkl` with a deprecation warning); idempotency check accepts `.nc` plus legacy `.xml`/`.pkl` names.
 6. **shtns on osx-arm64**: conda-forge has no build; rebuild wheel in-env (`--no-build-isolation --no-deps`) against the env's fftw.
 7. **numpy-2 migration done** (Phase 2): `np.nan`, `np.complex128`, `trapezoid`, `np.tile`; `posix_spawn.py` has a macOS subprocess branch. Never reintroduce old aliases.
 8. **Config globals are exec-injected** — renaming a config global breaks the drivers silently; keep the field contract (§3.1).
