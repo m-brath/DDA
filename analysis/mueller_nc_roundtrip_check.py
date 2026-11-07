@@ -16,7 +16,10 @@ Checks
      - group names match the temp-cache zipname_vid ids,
      - root provenance attrs (incl. complex refr_index as [re, im]) and
        group attrs vertex_index / max_len_coeffs / max_ntrunc exact,
-     - relerror / ext_mat / back_mat / back_mat_ring bitwise (float32).
+     - relerror / ext_mat / back_mat / back_mat_ring bitwise (float32),
+      - sph_l / sph_m index variables present, aligned with mueller_sph,
+        matching the shtns index scheme; loader return_indices path; legacy
+        single-interleaved sph_indices store still loads correctly.
   2. error paths: duplicate / missing / out-of-range vertex_index ->
      ValueError (group order is never trusted).
 
@@ -87,7 +90,11 @@ def synth_run(n_keep=23, seed=20261106):
         max_ntrunc_array[i] = ntrunc
         sph = []
         for k in range(16):
-            m = int(rng.integers(1, 3 * (ntrunc + 1) ** 2))
+            # valid shtns coefficient lengths tri(L)=(L+1)(L+2)/2 with
+            # per-element truncation L <= vertex ntrunc (refinement picks a
+            # per-element L, exactly like grdtospec output in real runs)
+            L = int(rng.integers(1, ntrunc + 1))
+            m = (L + 1) * (L + 2) // 2
             sph.append((rng.standard_normal(m)
                         + 1j * rng.standard_normal(m)).astype(np.complex64))
         mueller_array[i] = sph
@@ -192,6 +199,7 @@ def test_roundtrip(run, ncfile):
               % len(ids))
 
         ok_aux = ok_grp = ok_ring = True
+        ok_sphidx = True
         for gname, grp in rg.groups.items():
             i = ids[gname]
             if int(grp.vertex_index) != i:
@@ -212,12 +220,103 @@ def test_roundtrip(run, ncfile):
                     ok_ring = False
             elif run['back_mat_ring_array'][i] is not None:
                 ok_ring = False
+            # sph_l / sph_m: present, positionally aligned with
+            # mueller_sph, and equal to the indices re-derived from each
+            # element's length
+            if ('sph_l' not in grp.variables
+                    or 'sph_m' not in grp.variables):
+                ok_sphidx = False
+            else:
+                ls_v = grp['sph_l'][:]
+                ms_v = grp['sph_m'][:]
+                if (len(ls_v) != len(run['mueller_array'][i])
+                        or len(ms_v) != len(run['mueller_array'][i])):
+                    ok_sphidx = False
+                else:
+                    for k, c in enumerate(run['mueller_array'][i]):
+                        el, em = acf.sph_lm_indices(len(c))
+                        if not (bitwise_equal(np.asarray(ls_v[k], np.int32), el)
+                                and bitwise_equal(
+                                    np.asarray(ms_v[k], np.int32), em)):
+                            ok_sphidx = False
         check(ok_grp, 'group attrs vertex_index(int32)/max_len/max_ntrunc')
         check(ok_aux, 'relerror/ext_mat/back_mat float32 bitwise')
         check(ok_ring, 'back_mat_ring present+bitwise (variable coverage)')
         check('backring' in rg.dimensions
               and rg.dimensions['backring'].size == run['ring_len'],
               "shared 'backring' dim")
+        check('int32_vlen' in rg.vltypes
+              and rg.vltypes['int32_vlen'].dtype == np.dtype(np.int32),
+              'int32_vlen type is int32')
+        check(ok_sphidx, 'sph_l/sph_m present + aligned with mueller_sph '
+              'in every group')
+
+    # --- loader with return_indices ---
+    loaded2, sphidx = acf.load_mueller_array_from_netcdf(
+        ncfile, n, return_indices=True)
+    check(all(bitwise_equal(x, y)
+              for i in run['keep']
+              for x, y in zip(loaded[i], loaded2[i]))
+          and all(loaded2[i] is None for i in holes),
+          'return_indices loader: coefficients unchanged')
+    ok_ld = True
+    for i in sorted(run['keep']):
+        idxs = sphidx[i]
+        if idxs is None or len(idxs) != 16:
+            ok_ld = False
+            break
+        for k, c in enumerate(run['mueller_array'][i]):
+            el, em = acf.sph_lm_indices(len(c))
+            if (len(idxs[k]) != 2 * len(c)
+                    or not bitwise_equal(idxs[k],
+                                         np.stack([el, em], axis=1).ravel())):
+                ok_ld = False
+    check(ok_ld, 'sph_indices via loader: 16 aligned int32 pair-arrays/vertex')
+    check(all(sphidx[i] is None for i in holes),
+          'sph_indices None at uncomputed vertices')
+
+
+def test_legacy_indices_fallback(run, ncfile):
+    """stores written with the first schema (single interleaved
+    'sph_indices' variable) must still load with correct indices"""
+    n = len(run['mueller_array'])
+    i0 = sorted(run['keep'])[0]
+    sph = run['mueller_array'][i0]
+    f = ncfile + '.legacy'
+    pid = acf.mueller_vertex_id(run['vertices'][i0])
+    with Dataset(f, 'w', format='NETCDF4') as rg:
+        rg.createDimension('stokes', 4)
+        rg.createDimension('stokes2', 16)
+        rg.createVLType(np.float32, 'float_vlen')
+        rg.createVLType(np.int32, 'int32_vlen')
+        rg.n_vertices = np.int32(n)
+        g = rg.createGroup(pid)
+        arr = np.ones(16, dtype=object)
+        for k, c in enumerate(sph):
+            arr[k] = c.astype(np.complex64).view(np.float32)
+        g.createVariable('mueller_sph', rg.vltypes['float_vlen'],
+                         ('stokes2',))[:] = arr
+        idx = np.ones(16, dtype=object)
+        for k, c in enumerate(sph):
+            el, em = acf.sph_lm_indices(len(c))
+            idx[k] = np.stack([el, em], axis=1).ravel()
+        g.createVariable('sph_indices', rg.vltypes['int32_vlen'],
+                         ('stokes2',))[:] = idx
+        g.vertex_index = np.int32(i0)
+
+    loaded, sidx = acf.load_mueller_array_from_netcdf(f, n,
+                                                      return_indices=True)
+    ok = (loaded[i0] is not None
+          and all(bitwise_equal(x, y) for x, y in zip(loaded[i0], sph)))
+    if ok:
+        for k, c in enumerate(sph):
+            el, em = acf.sph_lm_indices(len(c))
+            if (sidx[i0] is None
+                    or not bitwise_equal(sidx[i0][k],
+                                         np.stack([el, em], axis=1).ravel())):
+                ok = False
+                break
+    check(ok, 'legacy interleaved sph_indices store still loads correctly')
 
 
 def expect_valueerror(name, fn):
@@ -303,6 +402,7 @@ def main():
           % (run['vertices'].shape[0], len(run['keep'])))
 
     test_roundtrip(run, ncfile)
+    test_legacy_indices_fallback(run, ncfile)
     test_error_paths(run, ncfile)
 
     print()

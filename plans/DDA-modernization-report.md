@@ -1367,3 +1367,66 @@ HPC tree becomes accessible again.
   Phase 2) — glob accepts the name only for legacy directory detection.
 - Ring arrays remain temp-cache-only (final artifact carries the aggregated
   `back_mat` 4×4; shared `backring` dim prevents mixed lengths in one file).
+
+## 7.6 Addendum (2026-11-06): explicit sph_indices in the stores
+
+User request: store the (l,m) indices corresponding to every spherical-
+harmonic coefficient. Previously the pairing was only IMPLIED by the shtns
+storage order (m-blocks m=0..ntrunc, each block l=m..ntrunc, orthonormal +
+SHT_NO_CS_PHASE, m<0 via complex conjugate) and had to be re-derived from
+`len(coeffs)` (as `spha.map_sphexp` does).
+
+- `acf.sph_lm_indices(n_coeffs)` generates the `(l, m)` int32 arrays for a
+  triangular length `(ntrunc+1)(ntrunc+2)/2` (non-triangular lengths raise);
+  `acf.sph_lm_indices_verify()` cross-checks the scheme against shtns'
+  own `l`/`m`/`idx()` tables for ntrunc 1..4 and runs at module import
+  when shtns is importable.
+- `acf.write_variables` now writes a per-group variable **`sph_indices`**
+  (new root vlen type `int32_vlen`): element k = `[l0,m0, l1,m1, …]`,
+  aligned element-by-element with `mueller_sph[k]`. Since all stores go
+  through `write_variables`, this covers BOTH the final
+  `*_mueller_data.nc` artifact and the per-vertex `_temp_data_vertex_*.nc`
+  caches.
+- Readers: `read_data_from_netcdf` / `read_fulldata_from_netcdf` return
+  `ret["sph_indices"]`; `load_mueller_array_from_netcdf(...,
+  return_indices=True)` returns `(mueller_array, sph_indices)`. Stores
+  predating the addition simply lack the variable → `None` (coefficients
+  and layout unchanged — pure addition, no version bump needed).
+- `analysis/migrate_pkl_to_nc.py`: content-match detection now distinguishes
+  `True` / `'upgrade'` / `False`; re-running UPGRADES content-verified `.nc`
+  stores that lack correct `sph_indices` (safe rewrite, coefficients
+  re-verified against the `.pkl`). All **12 local stores upgraded, 0
+  failures**.
+- Gates (DDA env): round-trip check extended (per-group index presence +
+  alignment vs `sph_lm_indices`, `int32_vlen` type check, loader
+  `return_indices` path, incl. a fresh fix of the synthetic store to use
+  valid triangular coefficient lengths — the old random lengths were never
+  produced by `grdtospec`): **24/24 PASS**. `mueller_nc_gate.py --force-run`
+  (fresh sub_control write → `sph_indices` present in the pipeline artifact;
+  X3 double-writer coefficients still bitwise; R/E1/E2 double-reader +
+  SSDB export still bitwise identical): **all PASS**.
+
+## 7.7 Follow-up (2026-11-07): sph_l / sph_m split (self-describing layout)
+
+User feedback on 7.6: a single interleaved `sph_indices` array
+(`[l0,m0, l1,m1, …]`) is ambiguous when reading the file directly
+(ncdump / manual inspection) — impossible to tell l from m.
+
+- `write_variables` now writes TWO int32 vlen variables per group:
+  **`sph_l`** and **`sph_m`**, each aligned positionally with
+  `mueller_sph[k]`: coefficient `mueller_sph[k][j]` multiplies
+  `Y_{sph_l[k][j], sph_m[k][j]}`. Self-describing in any NetCDF browser;
+  `ncdump -h` shows both by name.
+- `acf.read_sph_indices(group)` is the single read path: prefers
+  `sph_l`/`sph_m`, falls back to the legacy interleaved `sph_indices`
+  (the 7.6 stores), else None. All readers and
+  `load_mueller_array_from_netcdf(return_indices=True)` hand out the same
+  interleaved pair arrays as before (API unchanged).
+- `migrate_pkl_to_nc.py`: content-verified stores lacking the split
+  variables are auto-UPGRADED (7.6 interleaved stores included); second
+  run idempotent. All **12 local stores upgraded, 0 failures**.
+- Gates: round-trip check extended (`sph_l`/`sph_m` content + alignment,
+  legacy-interleaved fallback test): **25/25 PASS**;
+  `mueller_nc_gate.py --force-run` (fresh pipeline write carries
+  `sph_l`/`sph_m`; X3/R/E1/E2 double-writer/double-reader + SSDB export
+  bitwise): **all PASS**.

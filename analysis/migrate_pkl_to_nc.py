@@ -19,8 +19,11 @@ supplies vertices + provenance + per-vertex ext/back arrays):
   5. never touch the .pkl unless --prune is given (then rename to
      .pkl.migrated, never delete).
 
-Existing .nc siblings: skipped as already-migrated when content-equal,
-refused without --force otherwise.
+Existing .nc siblings: skipped as already-migrated when content-equal
+(incl. self-describing sph_l/sph_m index variables), rewritten in place to
+ADD/UPGRADE the index variables when the coefficients match but the indices
+are missing or still in the legacy single-interleaved form, refused without
+--force otherwise.
 
 Note: per-vertex max_len_coeffs group attrs are re-derived from the
 coefficient lengths; per-vertex max_ntrunc is not stored in the legacy
@@ -41,6 +44,7 @@ import pickle
 import sys
 
 import numpy as np
+from netCDF4 import Dataset
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS = os.path.join(REPO, 'adda_python_scripts')
@@ -56,15 +60,35 @@ def bitwise_equal(a, b):
             and a.tobytes() == b.tobytes())
 
 
-def nc_matches_existing(ncfile, pklarr):
-    """True if an existing .nc already carries exactly this pkl's content."""
+def nc_has_selfdescribing_indices(ncfile):
+    """True if every vertex group carries the sph_l / sph_m variables
+    (the single interleaved 'sph_indices' variable does NOT count)."""
     try:
-        loaded = acf.load_mueller_array_from_netcdf(ncfile, len(pklarr))
+        with Dataset(ncfile, 'r') as rg:
+            for g in rg.groups.values():
+                if ('sph_l' not in g.variables
+                        or 'sph_m' not in g.variables):
+                    return False
+    except Exception:
+        return False
+    return True
+
+
+def nc_matches_existing(ncfile, pklarr):
+    """Match status of an existing .nc against this pkl's content:
+    True    = already carries exactly this content (incl. sph_indices),
+    'upgrade' = coefficients match but sph_indices are missing/stale
+              (pre-addition store) -> a safe rewrite adds them,
+    False   = content differs."""
+    try:
+        loaded, sphidx = acf.load_mueller_array_from_netcdf(
+            ncfile, len(pklarr), return_indices=True)
     except Exception:
         return False
     if len(loaded) != len(pklarr):
         return False
-    for a, b in zip(pklarr, loaded):
+    status = True
+    for a, b, sidx in zip(pklarr, loaded, sphidx):
         if a is None or b is None:
             if a is not b:
                 return False
@@ -74,7 +98,21 @@ def nc_matches_existing(ncfile, pklarr):
         for x, y in zip(a, b):
             if not bitwise_equal(np.asarray(x).astype(np.complex64), y):
                 return False
-    return True
+        if sidx is None or len(sidx) != len(a):
+            status = 'upgrade'
+            continue
+        for y, si in zip(b, sidx):
+            el, em = acf.sph_lm_indices(len(y))
+            if (si is None or not bitwise_equal(
+                    np.asarray(si, dtype=np.int32),
+                    np.stack([el, em], axis=1).ravel())):
+                status = 'upgrade'
+                break
+    if status is True and not nc_has_selfdescribing_indices(ncfile):
+        # correct content but stored as the legacy single interleaved
+        # sph_indices variable -> rewrite splits it into sph_l / sph_m
+        status = 'upgrade'
+    return status
 
 
 def migrate_one(pklf, matf, prune=False, force=False, check_only=False):
@@ -122,10 +160,15 @@ def migrate_one(pklf, matf, prune=False, force=False, check_only=False):
     meta['max_ntrunc'] = int(np.ravel(mat['max_ntrunc'])[0])
 
     if os.path.exists(ncfile):
-        if nc_matches_existing(ncfile, pklarr):
+        status = nc_matches_existing(ncfile, pklarr)
+        if status is True:
             print('  OK    %s already migrated (content-verified)' % base)
             return True
-        if not force:
+        if status == 'upgrade':
+            print('  UPGRADE %s: coefficients verified, rewriting .nc to '
+                  'add sph_indices' % base)
+            # safe: content verified against the pkl below anyway
+        elif not force:
             print('  SKIP  %s: existing .nc differs from pkl '
                   '(use --force to overwrite)' % pklf)
             return None

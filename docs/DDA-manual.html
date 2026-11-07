@@ -876,35 +876,9 @@ all grow in lockstep). One file per
 <h2 id="21-aro-call-graph-production-path">2.1 ARO call graph (production path)</h2>
 <p>Verified call graph (report §1.1, line numbers re-verified against current files):</p>
 <p><em>Solve phase</em> (one job per T, f, size):</p>
-<div class="mermaid" data-idx="1">
-flowchart TD
-    CFG["adda_config_<habit>.py<br/>(globals via exec-import)"] --> MC["adda_main_control.py<br/>loops T - f - size"]
-    MC -->|one job per T,f,size| SUB["adda_sub_control_spharmonics.py<br/>argv: Tidx fidx Didx config"]
-    CFG -.->|re-imported via exec| SUB
-    SUB -->|"per icosphere vertex"| ACF["acf.adda_call (adda_control_functions.py)<br/>builds ADDA CLI, parses ampl/mueller_scatgrid"]
-    ACF --> ADDA["ADDA binary (launcher + exe)"]
-    SUB --> SPHA["spherical_harmonics_for_adda.py<br/>expand_mueller_2_spharmonics"]
-    SUB --> ICO["icosphere_grid.py<br/>vertex grids, rotation, barycentric interp"]
-    SUB <--> CACHE[("per-vertex NetCDF cache<br/><shape>_temp_data_vertex_X…Z….nc<br/>SH coeffs + ext_mat + back_mat/ring")]
-    SUB --> MAT[("<shape>_overview_data.mat")] & MNC[("<shape>_mueller_data.nc<br/>complex64 SH coeffs per vertex,<br/>one group per vertex")]
-</div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-9e66c189b0c5.svg" alt="flow diagram 2"></div>
 <p><em>Post-processing phase</em> (run later, per habit — see §3.3):</p>
-<div class="mermaid" data-idx="2">
-flowchart LR
-    MAT[("<shape>_overview_data.mat")]
-    MNC[("<shape>_mueller_data.nc<br/>complex64 SH coeffs per vertex<br/>legacy .pkl fallback")]
-    PROC["adda_process_aro_particles.py<br/>(selector/submitter, 19x19 grid config)"]
-    SINGLE["adda_process_aro_particles_single.py<br/>(per-folder worker)"]
-    AOA["aoa.rawdata2average - mueller2phase_reexpand<br/>- absorption rescale (adda_orientational_avg_…functions.py)"]
-    EXP["adda2SSDBnetcdf_functions.py<br/>export2SSDBnetCDF"]
-    DEFN["definitions_for_netcdf.py<br/>(SSDB dims/vars/attrs)"]
-    NC[("SSDB NetCDF tree SSD/…")]
-
-    MAT & MNC --> SINGLE
-    MC2["operator runs manually"] --> PROC -->|sub.check_call / sbatch| SINGLE
-    CFG["adda_config_<habit>.py"] -.->|habit meta lookup| EXP
-    SINGLE --> AOA --> EXP --> DEFN --> NC
-</div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-011e03b4a965.svg" alt="flow diagram 3"></div>
 <h2 id="22-tro-call-graph">2.2 TRO call graph</h2>
 <div class="mermaidfig"><img src="figures/mermaid/mmd-dc4739f2f155.svg" alt="flow diagram 4"></div>
 <p>Gotchas specific to TRO (all verified): the mistral batch branch of
@@ -914,27 +888,7 @@ index is re-run); <code>liste</code> <strong>row 8 must carry the temperature</s
 folder gets named with the flat index as <code>T####K</code> (a loud warning guards this legacy
 path); <code>deq</code> in the folder name receives the equivalent <strong>radius</strong> (legacy naming).</p>
 <h2 id="23-artifact-data-flow-what-lives-where-what-is-transient">2.3 Artifact data flow (what lives where, what is transient)</h2>
-<div class="mermaid" data-idx="4">
-flowchart LR
-    subgraph INPUT["inputs (in repo)"]
-      SF["*.adda + *.meta.mat"]
-      SP["scat_params.dat<br/>(181x361 grid)"]
-      AV["avg_params.dat (TRO)"]
-      CF["adda_config_*.py"]
-    end
-    subgraph WORK["<prefix_data>/adda_results/<habit>/<job folder>/<br/>job folder = habit_deqDDDum_freqFFF.FGHz_TTTTK"]
-      VC[("vertex_*.nc cache<br/>TRANSIENT — deleted at job end")]
-      OV[("_overview_data.mat<br/>permanent")]
-      MU[("_mueller_data.nc<br/>permanent (idempotency marker)<br/>legacy: .pkl/.xml")]
-    end
-    subgraph OUT["<prefix_data>/adda_results/"]
-      HA[("<habit>_horizavg_test/<br/><shape>_horiz_avg.mat,<br/>…_phasematrix.mat")]
-      SSD[("SSD/… NetCDF tree")]
-    end
-    SF & SP & CF --> WORK
-    AV --> WORK
-    WORK --> OUT
-</div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-b5b831825e01.svg" alt="flow diagram 5"></div>
 <p>Idempotency layers (ARO): <strong>(1)</strong> job-level — main control skips a (T,f,size) if the
 folder contains at least one <code>*mueller_data.{xml,pkl,nc}</code> and <code>force_new=False</code>;
 <strong>(2)</strong> vertex-level NetCDF cache (survives a killed/restarted <em>job</em>, deleted only when
@@ -1132,19 +1086,7 @@ copying a config — the drivers <code>getattr</code>-probe them. The canonical 
 <p>Part 1 — startup and the nested loops:</p>
 <div class="mermaidfig"><img src="figures/mermaid/mmd-81cfe2baa00a.svg" alt="flow diagram 6"></div>
 <p>Part 2 — resolution-class selection, idempotency check, dispatch:</p>
-<div class="mermaid" data-idx="6">
-flowchart TD
-    SEL{"fmin rule: coarsest class with fmin >= f;<br/>current file is it?"}
-    SEL -->|"no - wrong particle realisation"| SKIP2(["skip -> next size"])
-    SEL -->|yes| DONE{"folder exists with a<br/>*mueller_data.xml/.pkl/.nc and not force_new?"}
-    DONE -->|yes| SKIP2
-    DONE -->|no| SUBMIT{"calc_type"}
-    SUBMIT -->|mistral| SB1["sbatch_simple_improved … 'ADDA_T-f-D-shape'"]
-    SUBMIT -->|thunder| SB2["sbatch_simple …"]
-    SUBMIT -->|local| LOC["sub.check_call python adda_sub_control_spharmonics.py Tidx fidx Didx config<br/>(sequential, synchronous!)"]
-    SB1 & SB2 & LOC --> SKIP2
-    SKIP2 -->|next iteration| SEL
-</div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-d909b454ffbe.svg" alt="flow diagram 7"></div>
 <blockquote>
 <p>⚠ local mode runs thousands of jobs <strong>synchronously in one foreground process</strong>.
 For anything beyond smoke tests, deselect sizes/frequencies in a probe config or run
@@ -1153,48 +1095,16 @@ the vertex loop in parallel (see §3.6).</p>
 <h3 id="one-job-adda_sub_control_spharmonicspy-per-t-f-size">One job: <code>adda_sub_control_spharmonics.py</code> (per T, f, size)</h3>
 <p>Part 1 — init and the icosphere vertex loop, per refinement level <em>L</em> = 0… (min 3 passes,
 max <code>limit_sph</code> = 4):</p>
-<div class="mermaid" data-idx="7">
-flowchart TD
-    A(["argv: Tidx fidx Didx config"]) --> B["re-exec config; resolve adda_binary/launcher/version"]
-    B --> C["folder: habit_deq{D:05.0f}um_freq{GHz:05.1f}GHz_T{K:04.0f}K"]
-    C --> D["m = sqrt(acf.eps_ice_matzler06(f, T))"]
-    D --> G["icosphere vertices (12/42/162/642/2562) + vpol vectors"]
-    G --> V["for each vertex"]
-    V --> MIR{"vertex on negative side of an ENABLED mirror plane<br/>AND fill-in data already present?"}
-    MIR -->|yes| FILL["use mirrored grid (SH re-expanded at fill time)"]
-    MIR -->|no| CACHE{"vertex cache .nc exists?"}
-    CACHE -->|no| SOLVE["acf.adda_call: ADDA -shape read … -prop vx vy vz …<br/>parse ampl_scatgrid (ext matrix) + mueller_scatgrid (181x361)<br/>+ backscatter slice (Theta=180/Phi=0 + ring)"]
-    SOLVE --> EXPAND["spha.expand_mueller_2_spharmonics(eps_sphexp)<br/>complex64 SH coeffs + per-element rel. error"]
-    EXPAND --> W["write vertex cache .nc"]
-    CACHE -->|yes| R["read cache"]
-    W & R & FILL --> NEXTV{"more vertices?"}
-    NEXTV -->|yes| V
-    NEXTV -->|no| CONT2(["cont. part 2: orientation average"])
-</div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-300ce2cdbd4d.svg" alt="flow diagram 8"></div>
 <p>Part 2 — orientation average, refinement loop, outputs:</p>
-<div class="mermaid" data-idx="8">
-flowchart TD
-    AV["GL quadrature (4*2^L nodes) over alpha,gamma;<br/>beta-grid(5), theta_inc(10): average EXTINCTION matrices"]
-    AV --> CONV{"eps_rel <= delta=0.01 and L >= 2?"}
-    CONV -->|"no - refine to next level L"| G2(["back to icosphere vertices<br/>(part 1)"])
-    CONV -->|yes| OUT["save <shape>_overview_data.mat + <shape>_mueller_data.nc<br/>delete vertex cache"]
-</div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-b9d9b4bd7819.svg" alt="flow diagram 9"></div>
 <p>The mirror-fill transform ( <span class="arithmatex">\(\varphi\)</span> remap + Stokes signs + SH re-expansion) is sketched in
 §1.7; the same vertex grid also answers <code>interpolation_weights_icosahedric_grid</code> queries
 during the averaging stage — barycentric interpolation, <code>aoa.pol_changer</code> for the Stokes
 polarization basis.</p>
 <h2 id="33-post-processing-folder-ssdb-netcdf">3.3 Post-processing: folder → SSDB NetCDF</h2>
 <p>Run by hand per habit (or per folder) — this is deliberately decoupled from the solves:</p>
-<div class="mermaid" data-idx="9">
-flowchart LR
-    P["python adda_process_aro_particles.py<br/>(interactive folder selector: all / index list / sort by F or D;<br/>'Update' marks folders missing β-entries)"]
-    Q["adda_process_aro_particles_single.py <folder><br/>(per folder; local: sub.check_call, cluster: sbatch)"]
-    R["1. aoa.rawdata2average:<br/>reads overview_data.mat + mueller_data.nc<br/>(legacy .pkl fallback + warning)<br/>→ ext_mat_horiz_avg (19beta x 19theta x 4x4, m^2)<br/>→ mueller horiz-avg SH coeffs (joblib-parallel)<br/>→ back_mat_horiz_avg (raw -> m^2/sr via lambda^2/4pi^2)"]
-    S["2. aoa.mueller2phase_reexpand(181, eps=0.001):<br/>spectral → fine spatial → re-expand;<br/>reshape_sphexp_2_common_exp → common layout"]
-    T["3. abs = ext - sca;<br/>negative-a1 diagnostic: report fraction +<br/>rescale affected (beta,theta) nodes by 1+a1/sca; clamp a1 >= 0"]
-    U["4. IF env SSDB_EXPORT_NETCDF=1:<br/>a2s.export2SSDBnetCDF → SSD tree"]
-    P --> Q --> R --> S --> T --> U
-</div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-d208fde87028.svg" alt="flow diagram 10"></div>
 <p>Notes: the 19$\times $19 ( <span class="arithmatex">\(\beta\)</span>, <span class="arithmatex">\(\theta_{\mathrm{inc}}\)</span>) grid and <code>eps_phase=0.001</code> are <strong>hard-coded</strong> in
 <code>adda_process_aro_particles.py:74–107</code> (independent of the solve-time 5$\times $10); the SSDB
 export is <strong>off by default</strong> (<code>SSDB_EXPORT_NETCDF=1</code> to enable); the habit processed is
@@ -1729,9 +1639,5 @@ window.MathJax = {tex: {inlineMath: [['\\(','\\)'], ['$','$']],
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
-<script type="module">
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-mermaid.initialize({startOnLoad:true, securityLevel:'loose', maxTextSize:200000});
-</script>
 </body>
 </html>
