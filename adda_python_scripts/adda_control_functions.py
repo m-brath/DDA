@@ -28,6 +28,11 @@ modes = { zipfile.ZIP_DEFLATED: 'deflated',
 
 from netCDF4 import Dataset
 
+try:
+    import shtns as _shtns
+except ImportError:          # storage helpers degrade gracefully without it
+    _shtns = None
+
 from posix_spawn import spawn_command
 
 
@@ -1319,8 +1324,79 @@ def mirror_phi_index_map(phis, subset, tol=1e-6):
 
 
 #==============================================================================
+#  Spherical-harmonic (l,m) index arrays
+#  The NetCDF stores keep the shtns coefficient arrays as-is (m-blocks m=0
+#  ..ntrunc, each block l=m..ntrunc, orthonormal + SHT_NO_CS_PHASE, m<0 via
+#  complex conjugate). The pairing coeff[j] <-> (l[j],m[j]) was only implied
+#  by that layout; sph_lm_indices() materializes it so it can be stored
+#  next to the coefficients. Verified against shtns.idx/l/m at import time
+#  when shtns is available (sph_lm_indices_verify).
+#==============================================================================
+
+def sph_lm_indices(n_coeffs):
+    """(l, m) index arrays (int32) for a shtns coefficient array of length
+    n_coeffs = (ntrunc+1)(ntrunc+2)/2, in storage order."""
+    r = int(round(np.sqrt(8.0 * n_coeffs + 1.0)))
+    if r * r != 8 * n_coeffs + 1 or r % 2 == 0:
+        raise ValueError(
+            'coefficient array length %d is not a shtns m>=0 triangular '
+            'count (ntrunc+1)(ntrunc+2)/2' % n_coeffs)
+    ntrunc = (r - 3) // 2
+    ls = np.concatenate([np.arange(m, ntrunc + 1) for m in range(ntrunc + 1)])
+    ms = np.concatenate([np.full(ntrunc + 1 - m, m)
+                         for m in range(ntrunc + 1)])
+    return ls.astype(np.int32), ms.astype(np.int32)
+
+
+def sph_lm_indices_verify(n=5):
+    """Assert the generated index scheme matches shtns (l, m, idx) for
+    ntrunc 1..n-1 (shtns requires lmax >= 1). Returns False when shtns
+    is unavailable."""
+    if _shtns is None:
+        return False
+    for ntrunc in range(1, n):
+        s = _shtns.sht(ntrunc, ntrunc, 1,
+                       _shtns.sht_orthonormal + _shtns.SHT_NO_CS_PHASE)
+        ls, ms = sph_lm_indices(s.nlm)
+        assert np.array_equal(ls, np.asarray(s.l, dtype=np.int32)), \
+            'shtns l mismatch at ntrunc %d' % ntrunc
+        assert np.array_equal(ms, np.asarray(s.m, dtype=np.int32)), \
+            'shtns m mismatch at ntrunc %d' % ntrunc
+        for j in range(s.nlm):
+            assert s.idx(int(ls[j]), int(ms[j])) == j, \
+                'shtns idx mismatch at ntrunc %d j %d' % (ntrunc, j)
+    return True
+
+
+if _shtns is not None:
+    sph_lm_indices_verify()
+
+
+#==============================================================================
 #  NetCDF routines
 #==============================================================================
+
+
+def read_sph_indices(group):
+    """Read the (l,m) index pairing of a group's mueller_sph.
+
+    Returns a list of per-element int32 pair arrays [l0,m0, l1,m1, ...]
+    (aligned element-by-element and positionally coefficient-by-coefficient
+    with mueller_sph), or None when the group carries no indices.
+
+    Current schema: separate sph_l / sph_m vlen variables (self-describing).
+    The short-lived first schema (single interleaved 'sph_indices'
+    variable) is still accepted for stores written with it.
+    """
+    if "sph_l" in group.variables and "sph_m" in group.variables:
+        ls = group["sph_l"][:]
+        ms = group["sph_m"][:]
+        return [np.stack([np.asarray(l, dtype=np.int32),
+                          np.asarray(m, dtype=np.int32)], axis=1).ravel()
+                for l, m in zip(ls, ms)]
+    if "sph_indices" in group.variables:  # legacy interleaved single var
+        return [np.asarray(p, dtype=np.int32) for p in group["sph_indices"][:]]
+    return None
 
 
 def read_data_from_separate_netcdf(filename, particle_id):
@@ -1354,6 +1430,13 @@ def read_data_from_netcdf(filename, particle_id):
                         np.complex128) for c in mueller_sph_array]   
                 ret["relerror"] = rootgrp[f"/{particle_id}/relerror"][:]
                 ret["ext_matrix"] = rootgrp[f"/{particle_id}/ext_mat"][:]
+
+                # explicit l/m index arrays (returned as int32 [l,m] pair
+                # arrays per element, see read_sph_indices). Stores written
+                # before this schema addition do not contain them -> None;
+                # the triangular order of mueller_sph is unchanged.
+                ret["sph_indices"] = read_sph_indices(
+                    rootgrp[f"/{particle_id}"])
 
                 group = rootgrp[f"/{particle_id}"]
                 ret["max_len_coeffs"] = group.max_len_coeffs
@@ -1398,6 +1481,10 @@ def read_fulldata_from_netcdf(filename):
                 ret["ext_matrix"] = np.array([g["ext_mat"][:] 
                     for g in rootgrp.groups.values()])
 
+                # l/m index arrays per element; None for pre-addition stores
+                ret["sph_indices"] = [read_sph_indices(g)
+                                      for g in rootgrp.groups.values()]
+
                 ret["max_len_coeffs"] = np.array([g.max_len_coeffs 
                     for g in rootgrp.groups.values()])
                 ret["max_ntrunc"] = np.array([g.max_ntrunc 
@@ -1422,13 +1509,36 @@ def write_variables(rootgrp, particle_id, mueller_sph, relerror, max_len_coeffs,
 
     vlen_t = rootgrp.vltypes["float_vlen"]
 
+    # int32 vlen type for the (l,m) indices (created once per file, where
+    # the float_vlen type is created: append_data_to_netcdf /
+    # write_mueller_array_to_netcdf)
+    if "int32_vlen" not in rootgrp.vltypes:
+        rootgrp.createVLType(np.int32, "int32_vlen")
+    vlen_i = rootgrp.vltypes["int32_vlen"]
+
     mueller_sph_array = np.ones(len(mueller_sph), dtype=object)
+    sph_l_array = np.ones(len(mueller_sph), dtype=object)
+    sph_m_array = np.ones(len(mueller_sph), dtype=object)
     for i, c in enumerate(mueller_sph):
         mueller_sph_array[i] = c.astype(np.complex64).view(np.float32)
+        # explicit l / m index arrays for every stored coefficient
+        ls, ms = sph_lm_indices(len(c))
+        sph_l_array[i] = ls
+        sph_m_array[i] = ms
 
     var_mueller = rootgrp.createVariable(f"/{particle_id}/mueller_sph",
                                          vlen_t, ("stokes2",))
     var_mueller[:] = mueller_sph_array
+
+    # sph_l[k] / sph_m[k] = l- and m-indices of element k, positionally
+    # aligned with mueller_sph[k]: mueller_sph[k][j] multiplies Y_{sph_l[k][j],
+    # sph_m[k][j]} (triangular m>=0 shtns order; m<0 via complex conjugate)
+    var_sph_l = rootgrp.createVariable(f"/{particle_id}/sph_l",
+                                       vlen_i, ("stokes2",))
+    var_sph_l[:] = sph_l_array
+    var_sph_m = rootgrp.createVariable(f"/{particle_id}/sph_m",
+                                       vlen_i, ("stokes2",))
+    var_sph_m[:] = sph_m_array
 
     var_relerror = rootgrp.createVariable(f"/{particle_id}/relerror", "f4",
                                           ("stokes2",))
@@ -1487,10 +1597,17 @@ def append_data_to_netcdf(filename, particle_id, mueller_sph, relerror,
 #  Mueller-array artifact: one NetCDF4 file per (T, f, size) run
 #  (replaces the *_mueller_data.pkl internal artifact, see
 #  plans/DDA-mueller-netcdf-migration-plan.md). Schema mirrors the per-vertex
-#  temp-cache stores: root dims stokes/stokes2 + float_vlen, one group per
-#  COMPUTED icosphere vertex (uncomputed = None -> no group), ordering via
-#  the group attr vertex_index (row index into the run's `vertices` array).
-#  Group-name-sorted iteration is explicitly NOT trusted for order.
+#  temp-cache stores: root dims stokes/stokes2 + float_vlen + int32_vlen, one
+#  group per COMPUTED icosphere vertex (uncomputed = None -> no group),
+#  ordering via the group attr vertex_index (row index into the run's
+#  `vertices` array). Group-name-sorted iteration is explicitly NOT trusted
+#  for order.
+#  Each mueller_sph element has parallel sph_l / sph_m elements (int32 vlen)
+#  giving the l- and m-index of every stored coefficient, positionally
+#  aligned with the coefficients (see sph_lm_indices / read_sph_indices).
+#  Stores predating this addition simply lack the variables -> readers
+#  return None. (The first schema iteration used a single interleaved
+#  'sph_indices' variable; it is still accepted by the readers.)
 #==============================================================================
 
 MUELLER_UNITS_NOTE = ('raw k-normalized mueller-grid units, m^2/sr '
@@ -1596,7 +1713,8 @@ def write_mueller_array_to_netcdf(filename, mueller_array, vertices,
               f"to file {filename}")
 
 
-def load_mueller_array_from_netcdf(filename, n_vertices=None):
+def load_mueller_array_from_netcdf(filename, n_vertices=None,
+                                   return_indices=False):
     """Load a *_mueller_data.nc written by write_mueller_array_to_netcdf.
 
     Returns:
@@ -1604,6 +1722,13 @@ def load_mueller_array_from_netcdf(filename, n_vertices=None):
         the run's `vertices` array: entry i is None for an uncomputed
         vertex, else a list of 16 complex64 coefficient arrays (raw
         stored data, no resampling).
+
+    return_indices=True: returns (mueller_array, sph_indices) instead,
+        where sph_indices[i] is None (uncomputed vertex or a store written
+        before the sph_l/sph_m schema addition) else a list of 16 int32
+        arrays [l0,m0, l1,m1, ...] aligned element-by-element with
+        mueller_array[i] (de-interleaved from the stored sph_l / sph_m
+        variables; triangular m>=0 shtns order).
 
     n_vertices defaults to the file's n_vertices root attr.
     Raises ValueError on missing / duplicate / out-of-range vertex_index
@@ -1622,6 +1747,7 @@ def load_mueller_array_from_netcdf(filename, n_vertices=None):
                     f'n_vertices explicitly')
 
         mueller_array = [None] * n_vertices
+        sph_indices = [None] * n_vertices
         seen = {}
         for gname, group in rootgrp.groups.items():
             try:
@@ -1641,6 +1767,10 @@ def load_mueller_array_from_netcdf(filename, n_vertices=None):
             seen[idx] = gname
             mueller_array[idx] = [c.view(np.complex64)
                                   for c in group["mueller_sph"][:]]
+            if return_indices:
+                sph_indices[idx] = read_sph_indices(group)
 
+    if return_indices:
+        return mueller_array, sph_indices
     return mueller_array
 
