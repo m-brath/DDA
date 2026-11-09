@@ -574,7 +574,7 @@ class EikonalModel:
 # ==============================================================================
 
 def eval_cell(shape_dir, shapelist_pat, f, T, alpha, beta_tilt, gamma,
-              prop_0, tag, workdir, cal):
+              prop_0, tag, workdir, cal, dump_npz=None):
     eps = acf.eps_ice_matzler06(f, T)
     m = np.sqrt(eps)
     lamb = C0 / f * 1e6
@@ -723,6 +723,18 @@ def eval_cell(shape_dir, shapelist_pat, f, T, alpha, beta_tilt, gamma,
                                                           abs(Cext_sum - Cext_add)))
     print('  ntrunc(full M)=%d   ntrunc(residual M)=%d' % (ntrunc_full, ntrunc_res))
     print('  |F_model| at Theta=180 / M11_adda: %.2e' % back_ratio)
+    if dump_npz:
+        # angular grids for manual figures (complex64/float32: ~1.5 MB/cell)
+        np.savez_compressed(
+            dump_npz, thetas=thetas, phis=phis,
+            s_add=s_add.astype(np.complex64), s_mod=s_mod.astype(np.complex64),
+            g=g.astype(np.complex64),
+            M11_full=M_full[:, :, 0].astype(np.float32),
+            M11_res=M_res[:, :, 0].astype(np.float32),
+            cal_c=sc, ntrunc_full=ntrunc_full, ntrunc_res=ntrunc_res,
+            ntrunc_res_fulleps=ntrunc_res_fulleps, x=x,
+            ratio_total=cell['ratio_total'])
+        print('  dumped angular grids -> %s' % dump_npz)
     return cell
 
 

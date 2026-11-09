@@ -143,6 +143,25 @@ reference patterns only.**
    `acf.sph_array_truncate` (0/None = historic worst-cell padding); gate
    `analysis/phase8_export_twin.py` PASS (bitwise kept content, removed
    tail <= noise budget, **15x smaller** beta files). Report §8.8.
+   **Phase 9A done** (2026-11-09, analysis-only): analytic forward-peak model
+   scan — eikonal screen model ray-marched on the exact voxels, residual
+   g = f - F_model re-expanded in SH, model re-added exactly at read/RT time
+   ("delta-scaling honestly"). G1 convention anchor fully PASS: Mie
+   triple-validated (scipy-D == mpmath == miepython == Wiscombe case-14,
+   <=5e-16), ADDA Cext vs analytic 0.23%/1.33% at dpl 70, calibration
+   c = 1.005-0.006j / 1.008-0.011j, **ADDA far-field origin = scatterer
+   center** (u0 = 0.000 lattice), port check <=7.4e-11. Verdict: **conditional
+   GO** — gated model+residual hybrid, NOT blanket subtraction: full-eps ntrunc
+   collapses face-on (25->6 at x=5, 179->81 at x=10) but the eikonal is
+   actively harmful at grazing incidence (|g|/|f| up to 1.73, Cext_model < 0;
+   single-pass phase thickness psi = |(m-1)k*chord| exceeds pi). Decide
+   residuals by the **full-eps** criterion, never own-eps. Backscatter theta=180
+   stays on the Phase-6 `backMat` route (model is wrong there). Nothing wired
+   into the pipeline (9B would add the per-cell gate + reconstruction in
+   `rawdata2average`); SSDB-format hybrid = no-go for now. Plan
+   `plans/forward_peak_plan.md`, scan `analysis/phase9_fwdmodel_scan.py` (+
+   `phase9_dump_grids.py` feeding the manual figures fig13-16), results
+   `analysis/phase9_results.json`, report §9.
 - **Project manual added** (`docs/DDA-manual.md`, 2026-11-06): the maintainer-facing
   single reference — physics theory, pipeline architecture/call graphs, config contract
   walkthrough, local/HPC runbooks, validation gates, gotcha catalogue. Read it alongside

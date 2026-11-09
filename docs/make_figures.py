@@ -17,6 +17,15 @@ Every figure is computed from real code / real measurement files in this repo:
   fig08_orientation_geometry  schematic (3D): Euler/ARO geometry + k-attached scattering grid
   fig09..fig12            baseline results (delegated to baselines/plot_baseline_figs.py,
                           data: baselines/adda_1.2/, mirrored into docs/figures for Appendix E)
+  fig13_forward_peak      exact-Mie peak evolution + measured SH-ntrunc demand vs x
+                          (data: analysis/phase9_results.json, mie via phase9 scan port)
+  fig14_eikonal_model     eikonal screen-model schematic + chord map of a real
+                          HongPlate voxel shape
+  fig15_delta_scaling     full/model/residual angular grids + ntrunc bars for three
+                          real scan cells (data: analysis/phase9_grids_*.npz, produced
+                          by analysis/phase9_dump_grids.py — ADDA re-solve, cached)
+  fig16_validity_map      per-cell model-validity map from the Phase-9A scan
+                          (data: analysis/phase9_results.json)
 
 Outputs: docs/figures/figNN_*.png (300 dpi) — referenced by the manual.
 """
@@ -459,6 +468,352 @@ def fig_orientation_geometry():
     savefig(fig, 'fig08_orientation_geometry.png')
 
 
+# ------------------------------------------------- Fig 13-16 (Phase 9) ---
+def _p9():
+    """import the Phase-9A scan module (validated Mie port + shape parser)."""
+    sys.path.insert(0, REPO)
+    import analysis.phase9_fwdmodel_scan as p9
+    return p9
+
+
+def _p9_results():
+    return json.load(open(os.path.join(REPO, 'analysis', 'phase9_results.json')))
+
+
+def fig_forward_peak():
+    """Why the SH truncant grows with x: the diffraction peak (exact Mie) and
+    the measured per-vertex SH ntrunc demand of the production pipeline."""
+    p9 = _p9()
+    m = np.sqrt(acf.eps_ice_matzler06(887e9, 230.0))
+    xs = (1.0, 2.0, 5.0, 10.0)
+    cols = dict(zip(xs, plt.cm.viridis(np.linspace(0.15, 0.9, len(xs)))))
+    th = np.linspace(0.0, 180.0, 3601)
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12.4, 3.9))
+    for xv in xs:
+        an, bn = p9.mie_coeffs(m, xv)
+        S1, _ = p9.mie_S(an, bn, th)
+        I = np.abs(S1) ** 2
+        ax1.plot(th, I, lw=1.1, color=cols[xv], label='x = %g' % xv)
+        ax2.plot(th, I, lw=1.5, color=cols[xv], label='x = %g' % xv)
+    ax1.set_xlim(0, 180)
+    ax1.set_xlabel(r'$\theta$ [deg]')
+    ax1.set_ylabel(r'$|S_1(\theta)|^2$   (Mie, ice at 887 GHz/230 K)')
+    ax1.set_yscale('log')
+    ax1.legend(framealpha=0.7, ncol=2, fontsize=8)
+    ax1.set_title('(a) whole sphere: the forward peak is a\nlarge-x phenomenon '
+                  '(Rayleigh x=1 has NO spike)')
+    ax2.set_xlim(0, 50)
+    ax2.set_yscale('log')
+    ax2.set_xlabel(r'$\theta$ [deg]')
+    ax2.legend(framealpha=0.7, fontsize=8)
+    for xv, ls in ((5.0, '--'), (10.0, ':')):
+        w = 219.9 / xv                       # first sphere minimum, a = Dveq/2
+        ax2.axvline(w, color=cols[xv], ls=ls, lw=1.0)
+        ax2.text(w + 1, 1.5, r'$\approx 220°/x$', color=cols[xv], fontsize=8,
+                 rotation=90, va='bottom')
+    ax2.set_title('(b) zoom: peak narrows as $\\lambda/a$ — resolving\nit costs '
+                  r'$\propto x$ spectral order')
+    # measured SH demand (production expansion rule, HongPlate scan cells)
+    xx = np.linspace(0.3, 11, 200)
+    ax3.plot(xx, xx + 4 * xx ** (1 / 3) + 2, color='0.45', lw=1.4, ls='-',
+             label='Mie partial-wave demand\n'
+                   r'$n_{\max}=x+4x^{1/3}+2$ (Wiscombe)')
+    ax3.axhline(180, color='tab:red', lw=1.0, ls='--')
+    ax3.text(0.42, 205, 'Nyquist cap of the static 361-$\\varphi$ ring',
+             color='tab:red', fontsize=7.5)
+    cells = _p9_results()['cells']
+    def pick(suf):
+        cc = [c for c in cells if c['tag'].startswith('HongPlate')
+              and c['tag'].endswith(suf)]
+        return sorted(cc, key=lambda c: c['x'])
+    for suf, marker, name in (('_face', 'o', 'face-on (eikonal valid)'),
+                              ('_t60', 's', '60° tilt (mixed validity)')):
+        cc = pick(suf)
+        ax3.scatter([c['x'] for c in cc], [c['ntrunc_full'] for c in cc],
+                    marker=marker, s=46, color='tab:blue',
+                    label='full Mueller ntrunc, ' + name)
+        ax3.scatter([c['x'] for c in cc],
+                    [c['ntrunc_res_fulleps'] for c in cc], marker=marker, s=46,
+                    facecolors='none', edgecolors='tab:green',
+                    label='residual ntrunc (full-eps), ' + name)
+    ax3.set_xlabel('size parameter x = $\\pi D_{veq}/\\lambda$')
+    ax3.set_ylabel('achieved SH ntrunc')
+    ax3.set_yscale('log')
+    ax3.set_ylim(2, 400)
+    ax3.set_title('(c) measured cost: ntrunc grows like x — and the\nanalytic-'
+                  'model RESIDUAL breaks the growth (9A)')
+    ax3.legend(framealpha=0.7, fontsize=6.8, loc='lower right')
+    savefig(fig, 'fig13_forward_peak.png')
+
+
+def _chord_max(grid, d, shat, ds_frac=0.25):
+    """max interior chord length (µm) over all parallel rays along shat,
+    marched on the voxel grid (same recipe as the Phase-9A eikonal model)."""
+    box = np.array(grid.shape)
+    cen = (box - 1) / 2.0
+    ru = (np.indices(box).reshape(3, -1).T - cen) * d      # physical corner lattice
+    e1 = np.cross(shat, [0.0, 0.0, 1.0])
+    n1 = np.linalg.norm(e1)
+    if n1 < 1e-9:
+        e1 = np.array([1.0, 0.0, 0.0])
+    else:
+        e1 = e1 / n1
+    e2 = np.cross(shat, e1)
+    xi = ru @ e1
+    eta = ru @ e2
+    dp = d
+    xig = np.arange(xi.min(), xi.max() + dp, dp)
+    etag = np.arange(eta.min(), eta.max() + dp, dp)
+    GG = np.meshgrid(xig, etag, indexing='ij')
+    rho = GG[0].ravel()[:, None] * e1 + GG[1].ravel()[:, None] * e2
+    R = np.abs(ru).max() + 2 * d
+    ns = int(np.ceil(2 * R / (d * ds_frac))) + 1
+    sp = -R + np.arange(ns) * d * ds_frac
+    best = 0.0
+    for i0 in range(0, rho.shape[0], 400):
+        pts = rho[i0:i0 + 400, None, :] + sp[None, :, None] * shat[None, None, :]
+        idx = np.rint(pts / d + cen).astype(np.int64)
+        ok = np.all((idx >= 0) & (idx < box), axis=-1)
+        inside = np.zeros(idx.shape[:2], dtype=bool)
+        ii = idx[ok]
+        inside[ok] = grid[ii[:, 0], ii[:, 1], ii[:, 2]]
+        best = max(best, inside.sum(axis=1).max())
+    return best * d * ds_frac
+
+
+def fig_eikonal_model():
+    """Schematic of the eikonal screen model + phase thickness vs incidence
+    tilt marched through the REAL HongPlate voxels (validity knob)."""
+    import glob as _glob
+    from matplotlib.patches import Rectangle
+    p9 = _p9()
+    path = _glob.glob(os.path.join(
+        REPO, 'adda_shape_files', 'HongPlate_Id9',
+        '*Dveq00541um_Mass*Freq0887.000GHz.adda'))[0]
+    vox = p9.parse_shape(path)
+    u = vox - vox.min(axis=0)
+    N = u.shape[0]
+    D = 541.0                                     # um (meta diameter_vol_eq)
+    d = (D / 2) * (4 * np.pi / (3 * N)) ** (1 / 3)
+    box = u.max(axis=0) + 1
+    grid = np.zeros(tuple(box), dtype=bool)
+    grid[u[:, 0], u[:, 1], u[:, 2]] = True
+    Dmax = box[0] * d
+    t = box[2] * d
+    fig = plt.figure(figsize=(11.8, 4.4))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.0], wspace=0.24)
+
+    # ---------- (a) schematic on the slab defined by the real shape
+    ax = fig.add_subplot(gs[0])
+    ax.set_aspect('equal')
+    ax.add_patch(Rectangle((-Dmax / 2, -t / 2), Dmax, t, fc='tab:blue',
+                           ec='tab:blue', alpha=0.30, hatch='++', lw=1.2))
+    # incident plane wave from below (face-on)
+    for xc in np.linspace(-0.42, 0.42, 7) * Dmax:
+        ax.annotate('', xy=(xc, -t / 2 - 4), xytext=(xc, -t / 2 - 130),
+                    arrowprops=dict(arrowstyle='-|>', color='tab:red', lw=1.2))
+    ax.text(0, -t / 2 - 158, r'incident plane wave $e^{iks}$',
+            color='tab:red', fontsize=8.5, ha='center')
+    # highlighted voxel-marched ray + chord
+    xr = 0.16 * Dmax
+    ax.plot([xr, xr], [-t / 2 - 130, t / 2 + 140], color='k', lw=1.0, ls='--')
+    ax.annotate('', xy=(xr, t / 2 + 140), xytext=(xr, t / 2 + 20),
+                arrowprops=dict(arrowstyle='-|>', color='k', lw=1.0))
+    ax.plot([xr, xr], [-t / 2, t / 2], color='tab:orange', lw=4,
+            solid_capstyle='round')
+    ax.annotate('chord $\\ell(\\rho)$ — marched through\nthe exact voxels',
+                xy=(xr, 0), xytext=(xr + 0.10 * Dmax, 0.16 * Dmax),
+                fontsize=8, color='tab:orange',
+                arrowprops=dict(arrowstyle='->', color='tab:orange', lw=0.8))
+    # exit phase screen + diffracted fan
+    ax.plot([-Dmax / 2, Dmax / 2], [t / 2 + 100] * 2, color='tab:purple',
+            lw=1.2, ls=':')
+    ax.text(Dmax / 2, t / 2 + 112, r'screen $\rho$', fontsize=8,
+            color='tab:purple', ha='right')
+    for ang in (-25, 0, 25):
+        aa = np.deg2rad(90 - ang)
+        L = 0.15 * Dmax
+        ax.annotate('', xy=(L * np.cos(aa), t / 2 + 100 + L * np.sin(aa)),
+                    xytext=(0, t / 2 + 100),
+                    arrowprops=dict(arrowstyle='-|>', color='tab:purple',
+                                    lw=1.1))
+    ax.text(0.11 * Dmax, t / 2 + 0.22 * Dmax,
+            r'$\propto e^{-ik\,\hat{n}\cdot\rho}$', color='tab:purple',
+            fontsize=8.5)
+    # dimension arrows
+    ax.annotate('', xy=(-Dmax / 2, t / 2 + 30), xytext=(Dmax / 2, t / 2 + 30),
+                arrowprops=dict(arrowstyle='<->', color='0.3', lw=0.9))
+    ax.text(0, t / 2 + 42, '$D_{max}$ = %.0f µm' % Dmax, fontsize=8,
+            ha='center', color='0.3')
+    ax.text(-Dmax / 2 - 12, 0, 't = %.0f µm' % t, fontsize=8, color='0.3',
+            ha='right', va='center', rotation=90)
+    ax.text(0, -t / 2 - 260,
+            '$\\varphi(s)=e^{ik[s+(m-1)\\,\\ell(\\rho)]}$'
+            '  (single-pass eikonal)      '
+            '$G(\\rho)=\\int(m^{2}-1)\\,\\varphi\\,ds$\n'
+            '$S_{model}=\\frac{k^{3}}{4\\pi}\\iint G(\\rho)\\,'
+            'e^{-ik\\hat{n}\\cdot\\rho}\\,d^{2}\\rho$'
+            '   × one calibrated constant c',
+            fontsize=8.5, ha='center',
+            bbox=dict(fc='w', ec='0.6', alpha=0.92))
+    ax.set_xlim(-0.62 * Dmax, 0.62 * Dmax)
+    ax.set_ylim(-t / 2 - 315, t / 2 + 0.30 * Dmax)
+    ax.set_xticks([]); ax.set_yticks([])
+    for sp_ in ax.spines.values():
+        sp_.set_visible(False)
+    ax.set_title('(a) the general-case model: ray-march the exact voxel '
+                 'geometry,\nthen radiate analytically from the exit phase '
+                 'screen', fontsize=9.5)
+
+    # ---------- (b) phase thickness vs incidence tilt (real voxel march)
+    ax2 = fig.add_subplot(gs[1])
+    m_ice = np.sqrt(acf.eps_ice_matzler06(887e9, 230.0))
+    k = 2 * np.pi / (p9.C0 / 887e9 * 1e6)
+    betas = np.arange(0.0, 91.0, 15.0)
+    psi = np.array([abs(m_ice - 1) * k
+                    * _chord_max(grid, d, np.array(
+                        [np.sin(np.deg2rad(b)), 0, np.cos(np.deg2rad(b))]))
+                    for b in betas])
+    ax2.plot(betas, psi, lw=1.6, color='tab:blue',
+             label=r'$\psi_{max}(\beta)$ marched through the real x=5 HongPlate voxels')
+    ax2.axhline(np.pi, color='tab:green', lw=1.1, ls='--')
+    ax2.text(2, np.pi + 0.5, r'$\psi=\pi$: single-pass eikonal limit',
+             color='tab:green', fontsize=8)
+    for b, lab, col, off in ((0, 'face-on: scan model WINS\n'
+                              '(ntrunc 25→6, 55→41)', 'tab:green', (7, 5.5)),
+                             (60, 'tilted: already failing\n'
+                              '(Cext_model/Cext = −0.29)', 'tab:red', (5, 2.2)),
+                             (90, 'edge-on: worst failure\n'
+                              '(TIR at exit faces, $\\psi\\approx$ %.0f rad)'
+                              % psi[-1], 'tab:red', (-52, -1.5))):
+        i = int(np.argmin(np.abs(betas - b)))
+        ax2.scatter([betas[i]], [psi[i]], s=55, color=col, zorder=4)
+        ax2.annotate(lab, xy=(betas[i], psi[i]),
+                     xytext=(betas[i] + off[0], max(psi[i] + off[1], 1.0)),
+                     fontsize=7.5, color=col,
+                     arrowprops=dict(arrowstyle='->', color=col, lw=0.8))
+    ax2.set_xlabel('incidence tilt $\\beta$ vs plate axis [deg]')
+    ax2.set_ylabel(r'$\psi_{max}=|(m-1)k|\;\ell_{max}$  [rad]')
+    ax2.set_xlim(-3, 95)
+    ax2.set_ylim(0, max(psi[-1] * 1.12, np.pi * 2.2))
+    ax2.legend(fontsize=7.5, framealpha=0.7, loc='upper left')
+    ax2.set_title('(b) why the model has an activation domain: grazing '
+                  'incidence\nmultiplies chord (→ TIR, multi-pass) and '
+                  r'$\psi$; ice $n$ = %.2f at 887 GHz' % m_ice.real,
+                  fontsize=9.5)
+    savefig(fig, 'fig14_eikonal_model.png')
+
+
+def fig_delta_scaling():
+    """Real angular grids: full field vs model vs residual, and the ntrunc bars
+    (win / poster child / harmful cells) — data from phase9_dump_grids.py."""
+    import subprocess
+    tags = [('HP_x2_face', 'x=2 face-on — model WIN'),
+            ('HP_x5_face', 'x=5 face-on — poster child'),
+            ('HP_x5_edge', 'x=5 edge-on — model HARMFUL')]
+    npzs = [os.path.join(REPO, 'analysis', 'phase9_grids_%s.npz' % t)
+            for t, _ in tags]
+    if not all(os.path.exists(p) for p in npzs):
+        subprocess.run([sys.executable,
+                        os.path.join(REPO, 'analysis', 'phase9_dump_grids.py')],
+                       check=True)
+    fig, axes = plt.subplots(3, 3, figsize=(11.8, 9.2))
+    for r, ((tag, rtitle), npz) in enumerate(zip(tags, npzs)):
+        dd = np.load(npz)
+        th = dd['thetas']
+        sl = slice(None), 0                      # phi = 0 scattering-plane slice
+        f0 = np.abs(dd['s_add'][:, :, 0][sl])
+        m0 = np.abs(dd['s_mod'][:, :, 0][sl])
+        g0 = np.abs(dd['g'][:, :, 0][sl])
+        axf, axg, axb = axes[r]
+        c = th <= 40
+        axf.semilogy(th[c], f0[c], lw=1.3, color='tab:blue', label='ADDA full field')
+        axf.semilogy(th[c], m0[c], lw=1.3, ls='--', color='tab:orange',
+                     label='eikonal model (calibrated)')
+        axf.set_xlim(0, 40)
+        axf.set_xlabel(r'$\theta$ [deg]')
+        if r == 0:
+            axf.set_ylabel(r'$|s_{11}(\theta)|$  (fwd, log)')
+        axf.legend(fontsize=6.5, framealpha=0.7)
+        axf.set_title('%s: peak shape captured?' % rtitle, fontsize=9)
+        axg.semilogy(th, f0, lw=1.1, color='tab:blue', label='full |f|')
+        axg.semilogy(th, g0, lw=1.1, color='tab:red', label='residual |g|=|f−F|')
+        axg.set_xlim(0, 180)
+        axg.set_xlabel(r'$\theta$ [deg]')
+        if r == 0:
+            axg.set_ylabel(r'$|s_{11}(\theta)|$  (sphere, log)')
+        axg.set_title(r'whole sphere: $\,$ $|g|/|f|$ (L2) = %.3f'
+                      % float(dd['ratio_total']), fontsize=9)
+        axg.legend(fontsize=6.5, framealpha=0.7)
+        vals = [int(dd['ntrunc_full']), int(dd['ntrunc_res']),
+                int(dd['ntrunc_res_fulleps'])]
+        lab = ['full\nfield', 'residual\nown-eps', 'residual\nfull-eps']
+        colr = ['tab:blue', '0.6', 'tab:green']
+        axb.barh(range(3), vals, color=colr)
+        axb.set_yticks(range(3), lab)
+        axb.invert_yaxis()
+        axb.set_xlim(0, max(vals) * 1.35)
+        axb.set_xlabel('SH ntrunc (production rule)')
+        for i, v in enumerate(vals):
+            axb.text(v + max(vals) * 0.02, i, str(v), va='center', fontsize=8)
+        axb.set_title('spectral order: %s'
+                      % ('model HARMFUL — not usable'
+                         if float(dd['ratio_total']) > 1.02
+                         else ('REDUCED %.1fx' % (vals[0] / vals[2])
+                               if vals[2] < vals[0] else 'NOT reduced')),
+                      fontsize=9,
+                      color='tab:red' if float(dd['ratio_total']) > 1.02
+                      else 'k')
+    savefig(fig, 'fig15_delta_scaling.png')
+
+
+def fig_validity_map():
+    """When is the model safe? Cext sanity vs residual fraction, per scan cell."""
+    d = _p9_results()
+    cells = d['cells']
+    fig, ax = plt.subplots(figsize=(7.2, 4.8))
+    mk = {'face': 'o', 't60': 's', 'edge': '^', 'along': 'D'}
+    sc = None
+    for c in cells:
+        xr = c['Cext_model'] / c['Cext_adda']
+        yv = c['ratio_total']
+        gain = c['ntrunc_res_fulleps'] / max(c['ntrunc_full'], 1)
+        mkr = 'o'
+        for k_, v in mk.items():
+            if c['tag'].endswith(k_):
+                mkr = v
+        sc = ax.scatter([xr], [yv], s=24 + c['ntrunc_full'] * 1.3, marker=mkr,
+                        c=[gain], cmap='RdYlGn_r', vmin=0.2, vmax=1.6,
+                        edgecolors='k', linewidths=0.6, zorder=3)
+    ax.axhline(1.0, color='k', lw=1.0, ls='--')
+    ax.text(0.02, 1.03, r'above: $|g|>|f|$ — model actively HARMFUL',
+            fontsize=8)
+    ax.axvspan(0.6, 1.5, color='tab:green', alpha=0.08, zorder=0)
+    ax.text(1.05, 1.78, 'model Cext plausible\n(0.6–1.5 ×)', ha='center',
+            fontsize=8, color='tab:green')
+    for tag, dx, dy in (('HongPlate_Id9_x5_edge', -0.13, 0.16),
+                        ('HongPlate_Id9_x5_t60', -0.36, -0.34),
+                        ('HongColumn_Id7_x5_along', 0.10, -0.32),
+                        ('HongPlate_Id9_x10_face', 0.10, 0.10)):
+        c = next(cc for cc in cells if cc['tag'] == tag)
+        ax.annotate(tag.replace('HongPlate_Id9_', 'HP ').replace(
+            'HongColumn_Id7_', 'HC ').replace('_x', ' x'),
+                    (c['Cext_model'] / c['Cext_adda'], c['ratio_total']),
+                    xytext=(c['Cext_model'] / c['Cext_adda'] + dx,
+                            c['ratio_total'] + dy), fontsize=7.5,
+                    arrowprops=dict(arrowstyle='->', lw=0.7, color='0.35'))
+    ax.set_xlabel(r'$C_{ext,\,model}/C_{ext,\,ADDA}$   (model sanity check)')
+    ax.set_ylabel(r'residual fraction $|g|/|f|$')
+    ax.set_ylim(-0.65, 2.05)
+    ax.set_xlim(-0.7, 2.0)
+    cbar = fig.colorbar(sc, ax=ax, pad=0.02)
+    cbar.set_label('ntrunc gain  res(full-eps)/full\n(green = reduction)')
+    ax.set_title('Phase-9A scan, all 15 cells: marker = orientation '
+                 '(circle face,\nsquare 60°, triangle edge, diamond along-column)'
+                 '\nsize = full-field ntrunc', fontsize=9.5)
+    savefig(fig, 'fig16_validity_map.png')
+
+
 # ---------------------------------------------------------- Fig 09–12 ---
 def fig_baseline_set():
     """Appendix E figures: regenerate the baseline report figures (data:
@@ -489,5 +844,9 @@ if __name__ == '__main__':
     fig_sym_closure()
     fig_backlog()
     fig_orientation_geometry()
+    fig_forward_peak()
+    fig_eikonal_model()
+    fig_delta_scaling()
+    fig_validity_map()
     fig_baseline_set()
     print('done.')

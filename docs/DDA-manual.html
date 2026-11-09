@@ -72,7 +72,7 @@ and debug the pipeline safely.</p>
 </tr>
 <tr>
 <td><strong><a href="#part-1--theory">1</a></strong></td>
-<td>DDA, shape model &amp; resolution scheme, ice dielectric, Mueller matrices, orientation averaging (ARO/TRO), spherical harmonics, mirror symmetry, SSDB format</td>
+<td>DDA, shape model &amp; resolution scheme, ice dielectric, Mueller matrices, orientation averaging (ARO/TRO), spherical harmonics (+ adaptive grids), mirror symmetry, SSDB format, analytic diffraction-peak model &amp; residual storage</td>
 </tr>
 <tr>
 <td><strong><a href="#part-2--architecture--data-flow">2</a></strong></td>
@@ -270,6 +270,14 @@ The old HPC results are <em>not accessible</em> — regression validation theref
 <li><strong>Phase 7 done (2026-11-06):</strong> the internal per-run Mueller artifact is a single
   <strong>NetCDF4</strong> file <code>&lt;shape&gt;_mueller_data.nc</code> (replaces <code>.pkl</code>, which replaced ARTS-XML);
   all 12 local legacy artifacts migrated bitwise (§2.3; report §7).</li>
+<li><strong>Phase 8 done (2026-11-07):</strong> size-parameter-adaptive scattering grid
+  (<code>scatgrid_adaptive=True</code> config switch — still OFF in production habit configs;
+  laws + gate twins in report §8) and export-side SH cap
+  (<code>export_sph_margin=10</code>, 15× smaller beta files) (§1.6.1).</li>
+<li><strong>Phase 9A done (2026-11-09):</strong> analytic diffraction-peak model scanned
+  (analysis-only): <strong>conditional GO</strong> for a gated model+residual hybrid — big
+  spectral savings where the eikonal model is valid (face-on cells), actively
+  harmful at grazing incidence. Nothing wired into the pipeline yet (§1.9; report §9).</li>
 <li><strong>Production ADDA binary: 1.4.0</strong> (locally built; equivalence-gated against 1.2 and
   1.5.0-alpha3, §4.2). Cluster branch configs still default to 1.2 until an MPI 1.4
   build exists there — override with <code>ADDA_BINARY</code>/<code>ADDA_VERSION</code> (§3.5).</li>
@@ -718,7 +726,8 @@ Mueller <span class="arithmatex">\(\le10^{-13}\)</span> → the fold is exact to
 (<code>analysis/phase5_tro_beta_gate.py</code>, PASS, report §5.3).</p>
 <h2 id="16-spherical-harmonic-expansion-over-the-scattering-angles">1.6 Spherical-harmonic expansion over the scattering angles</h2>
 <p>Every ADDA solve returns the Mueller grid <span class="arithmatex">\(M_1,\dots,M_{16}(\theta,\varphi)\)</span> on the
-<span class="arithmatex">\(181\times361\)</span> scattering grid. Rather than storing
+scattering grid — <span class="arithmatex">\(181\times361\)</span> static in production, or the size-parameter-adaptive
+grid of §1.6.1. Rather than storing
 130k floats $\times $16 per vertex, the pipeline stores a <strong>spectral representation</strong> per vertex
 (<code>spherical_harmonics_for_adda.py</code>):</p>
 <ul>
@@ -744,6 +753,30 @@ Mueller <span class="arithmatex">\(\le10^{-13}\)</span> → the fold is exact to
 orientation is then a <strong>Wigner rotation of coefficients</strong>, and phase-matrix products
 needed by radiative transfer stay fast; the post-processing additionally <em>re-expands</em> the
 averaged phase matrix on the fly to <code>eps_phase=0.001</code> on the 19$\times $19 grid (§3.3 step 2).</p>
+<h3 id="161-adaptive-scattering-grid-phase-8">1.6.1 Adaptive scattering grid (Phase 8)</h3>
+<p>The static <span class="arithmatex">\(181\times361\)</span> grid grossly over-samples small-<span class="arithmatex">\(x\)</span> solves. With
+<code>scatgrid_adaptive=True</code> (config switch, §3.1; <strong>still OFF in production habit configs</strong>
+— probe configs <code>adda_config_phase8_hp_{adaptive,static}.py</code> only) the per-run
+<code>scat_params_adaptive.dat</code> is generated from the size parameter <span class="arithmatex">\(x=\pi D_{veq}/\lambda\)</span>:</p>
+<ul>
+<li><strong>phi:</strong> even periodic ring, <code>nphi = 2·ntrunc_cap + 2</code>, endpoint <strong>excluded</strong>
+  (<span class="arithmatex">\(\varphi_{max}=360-360/n\varphi\)</span>); <code>ntrunc_cap = ceil(6·(x+4x^{1/3}+2))</code> — the
+  scattering grid must accommodate <span class="arithmatex">\(2\,n_{\text{trunc}}\)</span> longitudes (§1.9 for why
+  <span class="arithmatex">\(n_{\text{trunc}}\propto x\)</span>). A duplicate <span class="arithmatex">\(\varphi=0/360\)</span> row injects FFT aliasing
+  error <span class="arithmatex">\(\propto\Delta\varphi^2\)</span> (measured <span class="arithmatex">\(3.2\cdot10^{-2}\)</span> twin failure), and odd
+  rings break the Phase-4 mirror <span class="arithmatex">\(\varphi\)</span>-index map (180° must be a ring node);</li>
+<li><strong>theta:</strong> <span class="arithmatex">\(n_\theta\le\min(181,\max(\text{cap}+2,\ \pi x/0.1+1))\)</span>; the exact
+  <span class="arithmatex">\(\theta=0\)</span> and <span class="arithmatex">\(\theta=180\)</span> rows are always kept (forward extinction parse,
+  Phase-6 backscatter slice);</li>
+<li><code>spha.sph_expansion</code> initial truncation is <span class="arithmatex">\((n_{lons}-1)//2\)</span> (shtns needs
+  <span class="arithmatex">\(n_\varphi&gt;2m_{max}\)</span> on even rings; identical value 180 for the static grid);</li>
+<li>provenance in overview mat + nc root attrs (<code>size_parameter</code>, <code>scatgrid_ntrunc_cap</code>,
+  <code>scatgrid_adaptive</code>); measured per-solve speedups ~8–17× at small <span class="arithmatex">\(x\)</span>, ~2× at <span class="arithmatex">\(x=5\)</span>;</li>
+<li><strong>export side:</strong> the SSDB writer additionally caps the <em>stored</em> SH dimension at
+  <code>acf.scatgrid_ntrunc_cap(x, margin=export_sph_margin=10)</code> — beta files became
+  <strong>15× smaller</strong> with bitwise-identical kept content (gate
+  <code>analysis/phase8_export_twin.py</code>, report §8.8).</li>
+</ul>
 <h2 id="17-mirror-symmetry-exploitation-phase-4">1.7 Mirror-symmetry exploitation (Phase 4)</h2>
 <p>If the <strong>voxel set</strong> is invariant under reflection at a coordinate plane of the particle
 frame, the Mueller grid of the mirrored orientation is obtained from the solved one by
@@ -871,6 +904,85 @@ all grow in lockstep). One file per
 <p>The derived quantities consumers usually want (C_ext, SSA, asymmetry parameter g) are
 <strong>not</strong> stored — they are computed downstream by the published-DB tooling
 (<code>arts-sspdb-interface/</code>). Full variable table: Appendix C.</p>
+<h2 id="19-analytic-diffraction-peak-model-residual-storage-phase-9a-scanned-not-yet-in-the-pipeline">1.9 Analytic diffraction-peak model + residual storage (Phase 9A — scanned, not yet in the pipeline)</h2>
+<p><em>Status: scanned and gated end-to-end (2026-11-09, <code>analysis/phase9_fwdmodel_scan.py</code>,
+report §9) — <strong>no pipeline code changed</strong>. This section documents the mechanism and the
+measured activation domain; §1.9.4 lists the go-forward design.</em></p>
+<h3 id="191-the-physics-the-peak-is-where-the-spectral-cost-lives">1.9.1 The physics: the peak is where the spectral cost lives</h3>
+<p>At small <span class="arithmatex">\(x\)</span> the pattern is a smooth dipole-like <span class="arithmatex">\(\cos^2\theta\)</span> — no spike. As <span class="arithmatex">\(x\)</span> grows,
+the <strong>diffraction peak</strong> takes over (extinction paradox: <span class="arithmatex">\(C_{ext}\to 2G\)</span>, the peak alone
+carries it), with width <span class="arithmatex">\(\Delta\theta\sim\lambda/D\)</span> and Airy-like sidelobes set by the
+projected <strong>silhouette</strong> (not <span class="arithmatex">\(D_{veq}\)</span>):</p>
+<p><img alt="Mie peak evolution + measured SH demand" src="figures/fig13_forward_peak.png" /></p>
+<p>This is exactly what drives the per-vertex <strong>SH cost</strong> of the current pipeline: resolving
+an angular structure of width <span class="arithmatex">\(\lambda/D\)</span> needs spectral order
+<span class="arithmatex">\(n_{\text{trunc}}\propto x\)</span> — the Mie partial-wave demand
+<span class="arithmatex">\(n_{\max}=x+4x^{1/3}+2\)</span> (Wiscombe) is the same law that the Phase-8 grid budgets use,
+and the measured production ntrunc (panel (c)) follows it and even <strong>saturates the static
+grid's Nyquist cap</strong> (ntrunc 179 ≈ 180) at <span class="arithmatex">\(x=10\)</span>, tilted orientations. Storage and
+rotation cost scale <span class="arithmatex">\(\propto n_{\text{trunc}}^2\)</span> — the peak is the single biggest
+data/cost item at large <span class="arithmatex">\(x\)</span>.</p>
+<h3 id="192-the-mechanism-subtract-the-peak-store-the-residual-delta-scaling-honestly">1.9.2 The mechanism: subtract the peak, store the residual ("delta-scaling, honestly")</h3>
+<p>Instead of storing the densely-sampled peak numerically, split the <strong>amplitude</strong> field</p>
+<div class="arithmatex">\[
+  s(\theta,\varphi) \;=\; s_{\text{model}}(\theta,\varphi)\;+\;g(\theta,\varphi)
+\]</div>
+<p>where <span class="arithmatex">\(s_{\text{model}}\)</span> is an <strong>analytic</strong> far field (below) and <span class="arithmatex">\(g\)</span> is the smooth
+DDA residual. Only <span class="arithmatex">\(g\)</span> needs a grid + SH storage; at read/RT time the model is
+re-evaluated <strong>exactly</strong> and re-combined (Mueller is quadratic in the amplitudes, so the
+split must happen at <em>amplitude</em> level — subtracting Mueller grids would destroy the
+interference cross-terms). The peak is fully resolved (it is analytic — no resolution is
+<em>bought back</em>), the identity <span class="arithmatex">\(f=F_{model}+g\)</span> is exact by construction, and <span class="arithmatex">\(C_{ext}\)</span>
+(exact from the forward amplitude column) comes out of the same identity.</p>
+<p>The general-case forward model (any voxel habit): eikonal internal field <strong>ray-marched
+through the exact voxel geometry</strong>, then radiated by a Helmholtz surface integral —</p>
+<div class="arithmatex">\[
+  \varphi(s)=e^{ik[s+(m-1)\,\ell(\rho)]},\qquad
+  G(\rho)=\int(m^2-1)\,\varphi\,ds,\qquad
+  S_{\text{model}}=\frac{k^3}{4\pi}\iint G(\rho)\,e^{-ik\hat n\cdot\rho}\,d^2\rho
+\]</div>
+<p>with <strong>one</strong> global calibration constant <span class="arithmatex">\(c\)</span> per run (complex):</p>
+<p><img alt="Eikonal screen model schematic + validity knob" src="figures/fig14_eikonal_model.png" /></p>
+<p>The convention machinery is fully pinned by the G1 sphere anchor (exact Mie, triple-
+validated scipy/mpmath/miepython): ADDA's <code>ampl_scatgrid</code> columns = BH <span class="arithmatex">\(s_1..s_4\)</span>,
+far-field phase origin = <strong>scatterer center</strong> (fitted offset 0.000 lattice units), and
+<span class="arithmatex">\(c=1.005\!-\!0.006j\)</span> at <span class="arithmatex">\(x=1.9\)</span> / <span class="arithmatex">\(1.008\!-\!0.011j\)</span> at <span class="arithmatex">\(x=3.8\)</span> — conventions agree at
+0.5% across <span class="arithmatex">\(x\)</span>.</p>
+<h3 id="193-measured-big-wins-but-a-real-activation-domain">1.9.3 Measured: big wins, but a real activation domain</h3>
+<p><img alt="Full vs model vs residual on three real cells" src="figures/fig15_delta_scaling.png" /></p>
+<p>The model <strong>captures the peak shape</strong> (even the Airy zeros) for near-normal incidence:
+HongPlate face-on <span class="arithmatex">\(|g|/|f|\)</span> = 0.03–0.31 and the residual needs far fewer SH coefficients
+(ntrunc 25→<strong>6</strong> at <span class="arithmatex">\(x=5\)</span>; 55→41 at <span class="arithmatex">\(x=10\)</span>; 179→81 at <span class="arithmatex">\(x=10\)</span> tilted). It is <strong>actively
+harmful</strong> at grazing incidence (plate edge-on, tilted <span class="arithmatex">\(x=5\)</span>): the single-pass eikonal
+ignores internal TIR, reflection and multiple scattering once the phase thickness
+<span class="arithmatex">\(\psi=|(m-1)k\,\ell|\)</span> grows (panel (b) of fig14 shows <span class="arithmatex">\(\psi\)</span>: ≈0.7 rad face-on →
+≈2 rad at <span class="arithmatex">\(60°\)</span> → ≈21 rad edge-on vs the <span class="arithmatex">\(\pi\)</span> single-pass limit); there <span class="arithmatex">\(|g|&gt;|f|\)</span> and
+even <span class="arithmatex">\(C_{ext,model}&lt;0\)</span>:</p>
+<p><img alt="Validity map, all 15 scan cells" src="figures/fig16_validity_map.png" /></p>
+<p>Two metric rules that decide these numbers (and that any future hybrid must respect):</p>
+<ul>
+<li><strong>full-eps vs own-eps</strong>: the residual's acceptable SH error must be judged against the
+  <strong>full field's</strong> M11 norm (the model is re-added exactly, so its absolute error rides
+  on top for free). The historic <em>own</em>-eps rule (relative to the matrix being expanded)
+  is misleading for hybrids — e.g. it "raised" the <span class="arithmatex">\(x=1\)</span> face residual ntrunc from 5 to
+  23 although the residual is only 3% of the field (full-eps reads 3);</li>
+<li>the <span class="arithmatex">\(x=10\)</span> t60 <strong>full</strong> field already sits at the static grid's Nyquist cap
+  (179≈180) — full-field twins of large-<span class="arithmatex">\(x\)</span> runs are grid-limited (report §9.3).</li>
+</ul>
+<p>Backscatter: the model contributes nothing at <span class="arithmatex">\(\theta=180\)</span> (its field is off by
+<span class="arithmatex">\(10^{-2}\dots8\times\)</span> there, no consistent scale) — the Phase-6 exact <code>backMat_data</code>
+route (§1.4, §1.8) stays mandatory and a hybrid would exempt that ring, as Brath et al.
+(2020) already flag the exact-backscatter direction as unreliable in the SH route anyway.</p>
+<h3 id="194-verdict-and-phase-9b-design-consequences">1.9.4 Verdict and Phase-9B design consequences</h3>
+<p><strong>Conditional GO — a per-cell <em>gated</em> hybrid, not a blanket subtraction.</strong> Design sketch
+(report §9.4): per (vertex, β) decision from cheap measurements — <span class="arithmatex">\(c\)</span>-fit consistency,
+<span class="arithmatex">\(C_{ext,model}&gt;0\)</span> sanity band, <span class="arithmatex">\(\psi\)</span> bound — deciding model+residual vs plain full
+field; mixed runs store the per-cell flag in the nc metadata; <code>rawdata2average</code>
+reconstructs. Payoff target is the <strong>internal</strong> solve/expand cost at large <span class="arithmatex">\(x\)</span>; the
+<strong>SSDB-format</strong> hybrid is a NO-GO for now (Phase-8.8 export caps already give 15×; the
+residual route would additionally need a format change + consumer cooperation). Before
+building it, 9B must benchmark against a plain adaptive-eps re-balance (no model) —
+Phase-8's laws already capture part of the same trend.</p>
 <hr />
 <h1 id="part-2-architecture-data-flow">Part 2 — Architecture &amp; data flow</h1>
 <h2 id="21-aro-call-graph-production-path">2.1 ARO call graph (production path)</h2>
@@ -1229,13 +1341,26 @@ casually; a new golden requires re-deriving the noise budget.</p>
 <td><code>analysis/mueller_nc_roundtrip_check.py</code> (20/20), <code>analysis/mueller_nc_gate.py</code> (W/X/R/E gates)</td>
 <td>nc round-trip <strong>bitwise</strong> lossless; probe run + double-reader (<code>nc</code> vs legacy <code>pkl</code>) averaged dicts, phase chain and 5-file SSDB export (125 vars) <strong>bit-identical</strong>; 12/12 local <code>.pkl</code> artifacts migrated + bitwise-verified</td>
 </tr>
+<tr>
+<td>analytic-grid twin (Phase 8)</td>
+<td><code>analysis/phase8_scatgrid_twin.py</code>, <code>phase8_endtoend_twin.py</code>, <code>phase8_export_twin.py</code></td>
+<td>adaptive vs static grid: all PASS (margin ≥4); full-pipeline 22×42 vs 181×361 twin: d_ext <span class="arithmatex">\(7.6\cdot10^{-16}\)</span>, d_sph <span class="arithmatex">\(1.9\cdot10^{-3}\)</span>; export cap keeps content bitwise, <strong>15×</strong> smaller beta files</td>
+</tr>
+<tr>
+<td>forward-peak convention anchor (Phase 9A)</td>
+<td><code>analysis/phase9_fwdmodel_scan.py</code> (G1), <code>phase9_results.json</code></td>
+<td>Mie triple-anchor ≤<span class="arithmatex">\(5\cdot10^{-16}\)</span>; ADDA Cext vs analytic 0.23%/1.33% at dpl 70; calibration c=1.005/1.008 (cross-x dev 0.55%); far-field origin = scatterer center (0.000 lattice); port check ≤<span class="arithmatex">\(7.4\cdot10^{-11}\)</span></td>
+</tr>
 </tbody>
 </table>
 <p>Harness lessons that produced <em>false</em> failures — remember them when writing new gates:
 auto dpl is <strong>quantized</strong> (a <span class="arithmatex">\(10^{-8}\)</span> <span class="arithmatex">\(\lambda\)</span> typo changes N_dipoles and breaks comparisons —
 compute <span class="arithmatex">\(\lambda\)</span>/eq_rad exactly like <code>make_baseline.py</code>), and a scalar <code>theta=90.0</code> emits
 <code>z=6.12e-17</code> instead of exact <code>-prop 1 0 0</code>, rotating the <span class="arithmatex">\(\varphi\)</span> reference (up to <span class="arithmatex">\(2\cdot 10^{-2}\)</span> Mueller
-difference at x=5 — use the vector branch).</p>
+difference at x=5 — use the vector branch). Third trap (report §8.8/§9.2): <em>relative</em>
+per-element gate metrics explode on cancellation channels — Rayleigh-limit Mueller
+channels are pure noise; gate against the cell's physical intensity scale plus the
+store's measured noise plateau.</p>
 <h2 id="43-where-the-accuracy-lives-error-budget-recap">4.3 Where the accuracy lives (error budget recap)</h2>
 <div class="arithmatex">\[
 \varepsilon_{\mathrm{total}} \;\approx\;
@@ -1460,6 +1585,11 @@ Missing config keys degrade to <code>'n/a'</code> (<code>getattr(ac, …, 'n/a')
 <li><strong>Phase-6 backscatter data</strong>: the raw <code>back_matrix</code>/<code>back_mat_ring</code> are <strong>k-normalized</strong> (dimensionless) — never treat them as µm²/sr before the <code>rawdata2average</code> <span class="arithmatex">\(\lambda^2/4\pi^2\)</span> conversion. Vertex caches / overview mats predating Phase 6 carry no back keys → treated as cache misses (forced ADDA re-runs); <code>rawdata2average</code> on old stores warns and leaves <code>backMat</code> NaN. The <span class="arithmatex">\(B\)</span>-matrix polarization convention is <span class="arithmatex">\(R(+\varphi)\)</span> on <strong>both</strong> sides — using the extinction branch's <span class="arithmatex">\(-\varphi\)</span> is wrong (gate floor 3e-2 vs 0.96 error).</li>
 <li><strong>Near-pole phase-matrix off-diagonals carry a few-% pole-interpolation artifact</strong> (pipeline <code>mueller2phase</code>, known): if a consumer cross-checks <code>backMat</code> vs <code>phaMat($180°-\theta_{\mathrm{inc}}$)</code>, expect that floor — <code>backMat</code> at the exact point is the cleaner value (report §6.5).</li>
 <li><strong>netCDF4 raises <code>IndexError</code> (not <code>KeyError</code>) for missing variables</strong> — the cache readers catch both; a pre-Phase-6 store previously crashed <code>read_data_from_netcdf</code> (caught by the Phase-6 gate).</li>
+<li><strong>Mie reference conventions (Phase 9A, pinned):</strong> the B&amp;H 5.12 log-derivative (D) form with <em>downward</em> recurrence (as in <code>analysis/phase6_backscatter.py</code>) is <strong>validated</strong> (== 40-digit mpmath == miepython == published Wiscombe MIEV0 case-14). Do <strong>not</strong> "fix" it with an explicit psi/chi/tau series replacing <span class="arithmatex">\(D_n(mx)\)</span> by <span class="arithmatex">\(\tau_n'/\tau_n\)</span> — that is not a valid B&amp;H formula (gives negative Qext for lossy <span class="arithmatex">\(m\)</span>; an earlier debug round chased it). Angular series: <span class="arithmatex">\(\pi_n=-\mathrm{lpmv}(1,n,\mu)/\sin\theta\)</span> (scipy lpmv carries the CS phase), <span class="arithmatex">\(\tau_n=n(n+1)P_n(\mu)-\mu\pi_n\)</span>, pole limits <span class="arithmatex">\(\pi_n(\pm1)=\pm n(n+1)/2\)</span> signed.</li>
+<li><strong>own-eps SH ntrunc is misleading for hybrid/residual products</strong> (relative tolerance on a small field): judge residuals at the FULL-field M11 scale (report §9.2). Log-space convention fits are poisoned by model zeros — fit in amplitude space.</li>
+<li><strong>ADDA far-field phase origin = scatterer center</strong> (fitted lattice offset 0.000, Phase 9A G1) — analytic-model ports must center on the scatterer, not the voxel-box corner (the <code>mueller_scatgrid</code>-vs-ampl port check at ≤7e-11 confirms the rest of the frame port).</li>
+<li><strong>Size-grid shape globs are 4-digit zero-padded</strong> (<code>Dveq01078um</code>, not <code>Dveq1078um</code>) — a bare-number glob silently matches nothing (or worse, the wrong class).</li>
+<li><strong>At <span class="arithmatex">\(x\gtrsim10\)</span> the full-field SH content saturates the static grid's Nyquist cap</strong> (ntrunc 179 ≈ 180 on the 361-<span class="arithmatex">\(\varphi\)</span> ring): large-<span class="arithmatex">\(x\)</span> full-field twins are grid-limited, not expansion-limited (report §9.3).</li>
 </ol>
 <h1 id="appendix-e-baseline-simulation-results">Appendix E — Baseline simulation results</h1>
 <p>The frozen regression set behind §4.1: six ADDA runs mirroring the exact CLI of

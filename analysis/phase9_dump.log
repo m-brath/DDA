@@ -1,0 +1,29 @@
+[SHTns 3.7.5] built Nov  3 2026, 00:04:47, id: neon,ishioka
+
+cell HP_x2_face  x=2.00 D=215um N=1560 d=14.97um
+  port(M from ampl vs ADDA mueller file) rel=4.24e-11
+  calib fit: c=0.206-0.838j (dev 1.154)  u0dev=[-0.02 -0.02  0.  ]  res=3.30e-02
+  L2  |g|/|f| total=2.619e-01  <30deg=4.969e-02  <60deg=1.534e-01  30-60=3.337e-01  >60deg=3.307e-01
+  Cext adda=8.257e+04 model=8.632e+04 ident-err=3.74e+03
+  ntrunc(full M)=10   ntrunc(residual M)=9
+  |F_model| at Theta=180 / M11_adda: 9.04e-01
+  dumped angular grids -> /Users/u242031/projekte/DDA/analysis/phase9_grids_HP_x2_face.npz
+
+cell HP_x5_face  x=5.02 D=541um N=25540 d=14.80um
+  port(M from ampl vs ADDA mueller file) rel=3.24e-11
+  calib fit: c=0.152-0.656j (dev 1.073)  u0dev=[0.02 0.02 0.02]  res=5.24e-03
+  L2  |g|/|f| total=1.982e-01  <30deg=1.085e-01  <60deg=1.204e-01  30-60=2.815e-01  >60deg=3.028e-01
+  Cext adda=1.101e+06 model=1.261e+06 ident-err=1.60e+05
+  ntrunc(full M)=25   ntrunc(residual M)=34
+  |F_model| at Theta=180 / M11_adda: 1.07e+00
+  dumped angular grids -> /Users/u242031/projekte/DDA/analysis/phase9_grids_HP_x5_face.npz
+
+cell HP_x5_edge  x=5.02 D=541um N=25540 d=14.80um
+  port(M from ampl vs ADDA mueller file) rel=4.05e-11
+  calib fit: c=-4.202+3.712j (dev 6.399)  u0dev=[-1.64  0.02 -0.02]  res=3.29e-01
+  L2  |g|/|f| total=1.727e+00  <30deg=1.604e+00  <60deg=1.685e+00  30-60=2.286e+00  >60deg=2.293e+00
+  Cext adda=1.547e+06 model=-6.82e+05 ident-err=2.23e+06
+  ntrunc(full M)=129   ntrunc(residual M)=58
+  |F_model| at Theta=180 / M11_adda: 3.26e-01
+  dumped angular grids -> /Users/u242031/projekte/DDA/analysis/phase9_grids_HP_x5_edge.npz
+done
