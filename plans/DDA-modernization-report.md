@@ -1430,3 +1430,209 @@ User feedback on 7.6: a single interleaved `sph_indices` array
   `mueller_nc_gate.py --force-run` (fresh pipeline write carries
   `sph_l`/`sph_m`; X3/R/E1/E2 double-writer/double-reader + SSDB export
   bitwise): **all PASS**.
+
+---
+
+# Phase 8 — Size-parameter-adaptive scattering grid ✅ (2026-11-07)
+
+Scope: replace the fixed 181x361 ADDA `-scat_grid` output grid with a grid
+whose angular resolution scales with the size parameter x = pi*Dveq/lambda.
+Motivation: at the small-x end of the size grid the fixed grid is grossly
+oversampled (x=0.02 stores ntrunc~10 of an available 180), costing solve time
+(scat-grid evaluation is part of every ADDA run) and I/O; at the same time
+the export/SH machinery should eventually exploit the same band-limit. The
+spherical-harmonic route itself is unchanged (SSDB stays SH coefficients).
+
+## 8.1 Budget law (as implemented)
+
+Two separate requirements, both physical:
+
+- **phi / SH degree cap**: `ntrunc_cap = ceil(margin * (x + 4x^(1/3) + 2))`
+  (`acf.scatgrid_ntrunc_cap`) — Wiscombe-style partial-wave band-limit times
+  a Nyquist/safety margin. Calibrated default **margin = 6.0** (floor 8):
+  the ACTUAL eps_sphexp=5e-3-limited stored ntrunc on the production static
+  grid is 10 (x=0.02), 25-26 (x=0.5), 78-81 (x=5), 48 (x=10) — i.e. 3-6x the
+  raw Wiscombe count, because the eps criterion measures the round-trip on
+  the Gaussian-interpolated field and under-sees linear-interpolation error
+  at the forward/attached-frame pole structure. margin 3-4 truncates the eps
+  target at x~5 (observed relerr 1.2e-2 > 1e-2 gate), margin 6 passes
+  everywhere.
+- **theta resolution**: `ntheta = min(181, max(cap+2, ceil(pi*x/kappa)+1, 5))`
+  with calibrated default **kappa = 0.1 rad** (angular features scale as
+  1/x; kappa=0.17 would exactly reproduce the production 1° grid at the
+  x=10 limit — 0.1 gives headroom). Uniform 0..180 range grid; the
+  production grid stays the resolution ceiling.
+
+Grid-file conventions (`acf.write_scat_grid_params`):
+
+- **phi is a proper periodic RING, endpoint EXCLUDED** (max = 360-360/nphi).
+  The historic static `scat_params.dat` (0..360 inclusive, 361 points)
+  duplicates phi=0/360; on fine grids the shtns FFT tolerates it, on coarse
+  grids the duplicate injects aliasing error ~dphi^2 — this produced a
+  3.2e-2 rel-L2 twin mismatch at x=5 (per-element, M11/M16-dominant pattern)
+  before the fix. phi=0 and phi=180 remain exact ring nodes.
+- **nphi = 2*ntrunc_cap + 2 (EVEN)** so 360/nphi divides 180° and the
+  Phase-4/6 mirror phi maps (phi -> -phi, 180-phi, 180+phi, see
+  `MIRROR_PHIMAP`) map the ring exactly onto itself — `mirror_phi_index_map`
+  otherwise raises (observed: 'phi grid cannot represent mirror XY, max dev
+  4.39 deg' for the odd 2cap+1 ring).
+- `spha.sph_expansion` initial truncation switched to
+  **ntrunc = (nlons-1)//2** — required by shtns' `nphi > 2*mmax` rule for
+  EVEN nlons; identical value (180) for the static 361-point grid, so the
+  static path is untouched.
+
+Gauss-node theta grids were tried (mode='gauss' kept in `acf` for
+experiments only) and **rejected**: GL nodes lack near-pole samples and the
+forward/backscatter-attached polarization-frame structure at theta=0/180 is
+exactly what breaks — 0.48 rel-L2 on M34/M44 already at x=0.02, invariant in
+ntrunc. Uniform theta is production.
+
+## 8.2 Implementation
+
+- `acf`: `sph_ntrunc_physical`, `scatgrid_ntrunc_cap`, `scat_grid_sizes`,
+  `theta_values_gauss` (experimental), `write_scat_grid_params`,
+  `replace_scat_grid_inp` (Phase-8 header block before `adda_call`).
+- `adda_sub_control_spharmonics.py`: per config switch `scatgrid_adaptive`
+  (default False → historic static file unchanged); when on, writes a
+  job-local `scat_params_adaptive.dat` into the run's storage_path and
+  swaps the `-scat_grid_inp` argument. Provenance recorded in the overview
+  mat AND the mueller nc root attrs: `size_parameter`,
+  `scatgrid_ntrunc_cap` (-1 = static), `scatgrid_adaptive`.
+- Config knobs: `scatgrid_margin` (6.0), `scatgrid_theta_kappa` (0.1),
+  `scatgrid_theta_mode` ('uniform'), `scatgrid_floor_ntrunc` (8).
+- Constraints preserved by construction: exact theta=0 row (forward
+  extinction parse = row 0), exact theta=180 row + phi=0 ring node (Phase-6
+  backscatter), mirror phi maps (even ring), 181-theta ceiling.
+
+## 8.3 Calibration gate suite `analysis/phase8_scatgrid_twin.py`
+
+Cases x~0.02/0.5/5/10 on HongPlate shape files at lambda=1315.79 um
+(Matzler ice eps in range), ADDA 1.4 seq, static 181x361 reference run
+twice (solver-noise floor) + 3 kappas x 3 margins adaptive runs. Gates:
+ext/back matrices vs 5x-noise floor, SH coefficient L2 distance (matched by
+(l,m) via `acf.sph_lm_indices` — ragged arrays of different ntrunc must NOT
+be prefix-matched) vs max(5x-noise, 2*eps_sphexp), relerr of the adaptive
+representation vs 1.25x the static one, and grid-independent RT moments
+taken from the SH coefficients themselves (c00, c10/c00, c00(M22) kept
+ABSOLUTE scaled by c00(M11) — ratio gates explode on cancellation-dominated
+cross-pol). Final run (even-ring + (nlons-1)//2): **all PASS for margin>=4**
+at every x; margin 3 fails only at x=5 (relerr 1.19e-2, cap below content
+need — expected, documented). Speedups per solve at production defaults
+(margin 6, kappa 0.1): ~8-10x (x=0.02), ~17x (x=0.5), ~2x (x=5), ~1.2x
+(x=10, noise-dominated). Data: `analysis/phase8_results.json`.
+
+## 8.4 End-to-end twin `analysis/phase8_endtoend_twin.py`
+
+Full-pipeline probe configs `adda_config_phase8_hp_adaptive.py` /
+`adda_config_phase8_hp_static.py` (HongPlate_Id9, Dveq=10um, 337-GHz-class
+shape file — the one main_control selects for 228 GHz — 228 GHz, T=190K,
+subpaths phase8_hp_adaptive / phase8_hp_static): the adaptive run used the
+**22x42** grid vs the static twin's 181x361. Comparison over all 642
+geometrically matched vertices (ext/back 4x4 per vertex, SH coefficients
+matched by (l,m), orientation-averaged ext_mat_horiz_avg):
+
+| metric | adaptive vs static (same vintage) | gate |
+|---|---|---|
+| d_ext (per-vertex, rel) | 7.6e-16 | 1e-8 |
+| d_back (rel) | 2.7e-13 | 1e-2 |
+| d_sph (rel to \|int M11 dOm\|) | 1.9e-3 | 1e-2 |
+| d_ext_horiz_avg (rel) | 4.0e-17 | 1e-2 |
+| GATE | **PASS** | |
+
+Extinction is machine-identical because the forward (theta=0,phi=0) row is
+an exact grid node of BOTH grids and the underlying dipole solution does not
+depend on the scat grid at all (single-ADDAD-run fact: ext sensitivity to
+scat grid = 0, verified by probe). d_sph 1.9e-3 is the expected
+representation-level difference (adaptive initial cap 20 vs static 180,
+both eps-limited) and is well inside eps_sphexp.
+
+**Vintage lesson**: comparing against the older `phase6_hp_sym` store showed
+a 4.5e-8 ext max-diff concentrated in 12/642 vertices that is NOT grid-
+induced (identical comparisons with the fresh static run: 7.6e-16; direct
+adda_call probes at those vertices: <=2e-17 for every grid/shape-file
+combination; 192- vs 337-GHz-class shape files even give bit-identical ext
+at x=0.024). End-to-end twins must compare runs of the SAME pipeline
+vintage; golden-comparison against frozen old stores only ever bounds
+cumulative pipeline evolution.
+
+Probe internal-storage note: the adaptive nc store is slightly LARGER
+(39.2 MB vs 37.1 MB) because with initial cap 20 the eps loop keeps up to
+ntrunc 20 on most vertices where the static-start (cap 180) run prunes to
+~10; the 'sph expansion has bigger error than set accuracy!' lines in
+probe logs are the eps criterion being unreachable within the cap on the
+coarse grid (d_sph 1.9e-3 < eps proves harmlessness). Internal artifact size
+is not the Phase-8 saving target — the SOLVE cost is; the export-size
+problem (ntrunc=181 / 16,653-coefficient saturation in the SSDB export) is
+the remaining export-side workstream.
+
+## 8.5 Decisions
+
+- Production defaults FIXED: margin 6.0, kappa 0.1, theta_mode 'uniform',
+  floor 8, even periodic phi ring (2*cap+2 points), ntrunc=(nlons-1)//2.
+- `scatgrid_adaptive` stays **off** in the production habit configs for now
+  (probe configs only); flipping is a one-line config change pending the
+  export-side adaptivity decision (below).
+- Static `scat_params.dat` untouched — full backward compatibility.
+
+## 8.6 Files touched / created
+
+- touched: `adda_python_scripts/adda_control_functions.py` (grid helpers +
+  nc provenance attrs), `adda_python_scripts/adda_sub_control_spharmonics.py`
+  (adaptive grid insertion + provenance), `adda_python_scripts/
+  spherical_harmonics_for_adda.py` (ntrunc formula).
+- created: `adda_python_scripts/adda_config_phase8_hp_adaptive.py`,
+  `adda_config_phase8_hp_static.py` (end-to-end probe twins),
+  `analysis/phase8_scatgrid_twin.py`, `analysis/phase8_endtoend_twin.py`,
+  `analysis/phase8_results.json`.
+
+## 8.7 Deferred / follow-on
+
+- **Export-side adaptivity** — DONE same day, see §8.8 below.
+- Optional Mie forward-peak subtraction spike for the small-x regime.
+- Production config flip decision (solve-side `scatgrid_adaptive` + export
+  cap now both available and gated) at the next production run.
+
+## 8.8 Export-side adaptivity (follow-on, 2026-11-07) ✅
+
+Problem (measured on the production phase6_hp_sym SSDB export, x=0.024):
+`mueller2phase_reexpand` pads every (beta, theta_inc, element) cell to the
+WORST cell (`reshape_sphexp_2_common_exp(np.max(max_ntrunc_pha))`), and at
+small x a minority of cells never meet eps_phase on the fine re-expansion
+grid (pole-interpolation ripple in `mueller2phase_core`) — `sph_expansion`
+then keeps the FULL ntrunc-181 triangle of ~1e-20 noise coefficients. The
+export dimension `sph_coeffs_scat` saturates at 16,653 while median content
+is ~561 (ntrunc 32) — 11 MB per beta-file for 3% content.
+
+Fix (`adda_process_aro_particles_single.py`): cap the common export ntrunc
+at `acf.scatgrid_ntrunc_cap(x, margin=export_sph_margin)` (x computed from
+`diameter_volume_equ` [metres!] x 1e6 / `wavelength` [micrometres] — unit
+trap found during the gate), truncate per cell with the new
+`acf.sph_array_truncate` (m-major block layout), then reshape to the capped
+common expansion. `export_sph_margin` config knob (default **10.0** —
+larger than the solve-side 6.0 because rotations + pole interpolation push
+legitimate content above the raw Mueller band-limit: observed median phase
+content ntrunc 32 at x=0.024 where mueller content was 20; 0/None =
+historic behaviour). Batch driver `adda_process_aro_particles.py` carries
+the knob; `adda_process_aro_particles_single.py` gained a `__main__` guard
+so gate scripts can import its function.
+
+Gate `analysis/phase8_export_twin.py` (probe store phase8_hp_adaptive,
+full processing run twice — margin None vs 10.0 — into separate avg/SSDB
+trees):
+- kept coefficients (l <= cap) **bitwise identical**;
+- abs_vector + ext_mat_horiz_avg **bitwise unchanged** (they read c00 only);
+- removed-tail L2 bounded by eps_phase*|int M11 dOmega|(cell) +
+  1.2*sqrt(n_removed)*N_store with N_store = store noise plateau measured
+  from the l>=0.78*Lfull band of the uncapped store (physical content never
+  reaches that band at x <= 10): ratio **0.24** PASS;
+- SSDB netcdf tree **15.1x smaller** (13.1 MB -> 0.9 MB, 5 beta files).
+
+Gate-metric lesson (2nd occurrence of the same trap): per-element *relative*
+gates explode on cancellation channels — M22-M11 / M33-class elements vanish
+in the Rayleigh limit and carry only ~1e-2-relative processing noise, which
+no cap can fix. Gate against the cell's physical intensity scale plus the
+store's own noise plateau instead.
+
+Deferred: float32+deflate for the remaining coefficient payload; re-running
+the production SSDB export stores under the cap; x=5/x=10 export twins when
+larger local stores exist.

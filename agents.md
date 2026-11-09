@@ -124,6 +124,25 @@ reference patterns only.**
    `analysis/mueller_nc_gate.py` incl. SSDB export double-reader
    equivalence); all 12 local legacy `.pkl` artifacts migrated +
    bitwise-verified via `analysis/migrate_pkl_to_nc.py`. Report §7.
+   **Phase 8 done** (2026-11-07): size-parameter-adaptive ADDA scattering
+   grid (`scatgrid_adaptive=True` config switch; budget law
+   `ntrunc_cap = ceil(6·(x+4x^{1/3}+2))` for phi + separate theta law
+   `ntheta ≤ min(181, max(cap+2, πx/0.1+1))`; even periodic phi ring
+   `nphi=2cap+2`, endpoint EXCLUDED; `spha.sph_expansion` initial truncation
+   now `(nlons-1)//2`). Per-run `scat_params_adaptive.dat` in storage_path;
+   provenance in overview mat + nc root attrs (`size_parameter`,
+   `scatgrid_ntrunc_cap`=-1 static, `scatgrid_adaptive`). Gates:
+   `analysis/phase8_scatgrid_twin.py` (all PASS margin≥4; margin 3 fails at
+   x=5 as expected) + `analysis/phase8_endtoend_twin.py` (22x42 vs 181x361
+   full-pipeline twin: d_ext 7.6e-16, d_sph 1.9e-3 — PASS). Per-solve
+   speedups ~8-17x at small x, ~2x at x=5, ~1.2x at x=10. Switch still OFF
+   in production habit configs (probe configs
+   `adda_config_phase8_hp_{adaptive,static}.py` only). **Export-side
+   adaptivity done** (same day): SSDB export caps `sph_coeffs_scat` at
+   `acf.scatgrid_ntrunc_cap(x, margin=export_sph_margin=10.0)` via
+   `acf.sph_array_truncate` (0/None = historic worst-cell padding); gate
+   `analysis/phase8_export_twin.py` PASS (bitwise kept content, removed
+   tail <= noise budget, **15x smaller** beta files). Report §8.8.
 - **Project manual added** (`docs/DDA-manual.md`, 2026-11-06): the maintainer-facing
   single reference — physics theory, pipeline architecture/call graphs, config contract
   walkthrough, local/HPC runbooks, validation gates, gotcha catalogue. Read it alongside
@@ -333,6 +352,34 @@ notes; do not extend — report §1.6-9).
   legacy interleaved `sph_indices` variable). Per-vertex
   `_temp_data_vertex_*.nc` intra-run caches are unchanged. Gates:
   `analysis/mueller_nc_roundtrip_check.py` + `analysis/mueller_nc_gate.py`.
+ - **Adaptive scattering grid (Phase 8)**: enabled per config via
+   `scatgrid_adaptive=True` (+ `scatgrid_margin` 6.0 / `scatgrid_theta_kappa`
+   0.1 / `scatgrid_theta_mode` 'uniform'). Grid-file conventions that MUST
+   hold (see `acf.write_scat_grid_params` header): phi is an EVEN periodic
+   ring of `nphi=2*cap+2` points with endpoint EXCLUDED (max=360-360/nphi) —
+   duplicate phi=0/360 injects FFT aliasing error ∝ Δφ² (3.2e-2 twin failure
+   at x=5 before the fix), and odd rings break `mirror_phi_index_map`
+   (180° must be a ring node); theta keeps exact 0 and 180 rows (forward
+   extinction parse = row 0; Phase-6 backscatter ring); theta never exceeds
+   the production 181. `spha.sph_expansion` initial truncation is
+   `(nlons-1)//2` (shtns requires nphi > 2*mmax on even rings; same value
+   180 for the historic 361-point static grid). Gauss-node theta mode exists
+   in `acf` for experiments only — it fails the gates (no near-pole samples).
+ - **Twin-gate vintage rule (Phase 8)**: end-to-end comparisons must use runs
+   of the SAME pipeline vintage; old frozen stores (e.g. `phase6_hp_sym`)
+   differ from fresh reruns by ~4.5e-8 ext at 12/642 vertices for reasons
+   unrelated to the tested change. Also: SH coefficient arrays of different
+   ntrunc must be compared matched by (l,m) via `acf.sph_lm_indices`, never
+   by raw prefix.
+ - **Export truncation (Phase 8)**: `adda_process_aro_particles_single.py`
+   caps the SSDB `sph_coeffs_scat` dimension at
+   `acf.scatgrid_ntrunc_cap(x, margin=export_sph_margin)` (default 10.0,
+   set 0/None for the historic worst-cell padding; rationale + gate: report
+   §8.8). Unit trap: in overview mats / `rawdata2average` output_data the
+   diameter (`diameter_volume_equ`) is in **metres** while `wavelength` is
+   in **micrometres** — convert before computing x. Gate metrics must use
+   the cell's physical intensity scale + measured store noise plateau, never
+   per-element relative norms (Rayleigh-limit channels are pure noise).
 - Results/intermediate files go to `<prefix_data>/adda_results/` on the cluster — outside
   this repo. This repo only holds inputs, source and scripts.
 - `SSD_scripts_deprecated/` and `old_configs/` are archives; never import from them in new code.
