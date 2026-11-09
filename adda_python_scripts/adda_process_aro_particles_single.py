@@ -12,6 +12,7 @@ Created on Tue Feb  3 10:58:25 2015
 
 import os
 import numpy as np
+import adda_control_functions as acf
 import adda_orientational_avg_spharmonics_functions as aoa
 import scipy.io as sio
 import spherical_harmonics_for_adda as spha
@@ -86,14 +87,49 @@ def adda_process_single_AroParticle(config,folder):
             core_limit=ncores_reduced)
 
 
-    phase_mat=spha.reshape_sphexp_2_common_exp(np.max(max_ntrunc_pha[:]),
-                                               np.max(max_len_coeffs_pha[:]),phase_mat)
+    # ------------------------------------------------------------------
+    # Phase 8: x-dependent export truncation for the SSDB sph_coeffs_scat
+    # dimension. mueller2phase_reexpand pads every (beta, theta_inc) cell to
+    # the WORST cell — at small x some cells never meet eps_phase on the
+    # fine re-expansion grid (pole-interpolation ripple) and keep a full
+    # ntrunc~181 triangle of ~1e-20 noise coefficients (measured on the
+    # x=0.024 production export: dimension 16653, all content beyond index
+    # ~600 is < 1e-20 in absolute value). Physically the phase-matrix band
+    # limit follows the same partial-wave budget as the Mueller grid, so the
+    # common export ntrunc is capped at acf.scatgrid_ntrunc_cap(x,
+    # margin=export_sph_margin). The margin is larger than the solve-side
+    # 6.0 because rotations + pole interpolation push legitimate content
+    # above the raw Mueller band-limit (observed median content ntrunc ~32
+    # at x=0.024). export_sph_margin=0/None keeps the historic worst-cell
+    # padding. Gate: analysis/phase8_export_twin.py.
+    # ------------------------------------------------------------------
+    margin_exp=config.get('export_sph_margin',10.0)
+
+    max_ntrunc_common=int(np.max(max_ntrunc_pha[:]))
+
+    if margin_exp:
+        # diameter_volume_equ is stored in METRES, wavelength in MICROMETRES
+        # (see rawdata2average provenance) -> convert to a common unit
+        x_sph=(np.pi*float(output_data['diameter_volume_equ'])*1e6
+               /float(output_data['wavelength']))
+        cap_exp=acf.scatgrid_ntrunc_cap(x_sph,margin=margin_exp)
+        if cap_exp<max_ntrunc_common:
+            print('Export sph cap: x=%.4f margin=%.2f -> ntrunc %d (was %d)'
+                  %(x_sph,margin_exp,cap_exp,max_ntrunc_common))
+            phase_mat=[[ [acf.sph_array_truncate(c,cap_exp) for c in row]
+                        for row in beta_i] for beta_i in phase_mat]
+            max_ntrunc_common=cap_exp
+
+    max_len_common=(max_ntrunc_common+1)*(max_ntrunc_common+2)//2
+
+    phase_mat=spha.reshape_sphexp_2_common_exp(max_ntrunc_common,
+                                               max_len_common,phase_mat)
 
     output_data['eps_phase']=eps
     output_data['phase_matrix_sph']=phase_mat
 #    output_data['phase_matrix_sph_old']=phase_mat.copy()
-    output_data['max_ntrunc']=int(np.max(max_ntrunc_pha[:]))
-    output_data['max_len_coeffs']=int(np.max(max_len_coeffs_pha[:]))
+    output_data['max_ntrunc']=max_ntrunc_common
+    output_data['max_len_coeffs']=max_len_common
 
     #==========================================================================
 
@@ -225,28 +261,31 @@ def adda_process_single_AroParticle(config,folder):
 
 #==============================================================================
 # preperations
+# (importable as a module: the CLI tail only runs as __main__, so gate/
+#  driver scripts can import adda_process_single_AroParticle)
 #==============================================================================
 
+if __name__ == '__main__':
 
-#folder
-folder=sys.argv[1]
+    #folder
+    folder=sys.argv[1]
 
 
-#folder debug
-#folder='HexPlaAggCrystal_Id20_deq00197um_freq166.9GHz_T0270K'
+    #folder debug
+    #folder='HexPlaAggCrystal_Id20_deq00197um_freq166.9GHz_T0270K'
 
-# folder='IconSnow_Id28_deq01159um_freq005.0GHz_T0270K'
-#folder='HongPlate_Id9_deq00999um_freq164.0GHz_T0190K'
-#folder='HongPlate_Id9_deq00735um_freq671.0GHz_T0230K'
-#folder='HexPlaAggCrystal_Id20_deq00986um_freq164.1GHz_T0230K'
+    # folder='IconSnow_Id28_deq01159um_freq005.0GHz_T0270K'
+    #folder='HongPlate_Id9_deq00999um_freq164.0GHz_T0190K'
+    #folder='HongPlate_Id9_deq00735um_freq671.0GHz_T0230K'
+    #folder='HexPlaAggCrystal_Id20_deq00986um_freq164.1GHz_T0230K'
 
-print(folder)
+    print(folder)
 
-#==============================================================================
-# the actual processing
-#==============================================================================
-with ty.utils.Timer():
-    nc_file_list=adda_process_single_AroParticle(config,folder)
+    #==========================================================================
+    # the actual processing
+    #==========================================================================
+    with ty.utils.Timer():
+        nc_file_list=adda_process_single_AroParticle(config,folder)
 
 
 

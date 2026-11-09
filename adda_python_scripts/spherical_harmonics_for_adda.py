@@ -159,7 +159,10 @@ def sph_expansion(f_true,theta,phi,eps=0,diagnostics=False):
 #    elif nlats>=nlons:
 #        ntrunc = int(min([nlats,nlons])/2.)-1
 
-    ntrunc=int(np.floor(nlons/2))
+    # initial truncation: (nlons-1)//2 keeps shtns' nphi > 2*mmax rule for
+    # EVEN nlons (periodic adaptive rings, Phase 8) and reproduces the
+    # historic floor(nlons/2)=180 for the static 361-point production grid
+    ntrunc=(nlons-1)//2
     
     if ntrunc>nlats-1:
         ntrunc=nlats-1

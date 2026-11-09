@@ -86,6 +86,163 @@ def extinction_matrix(s11,s12,s21,s22,lamb):
     return K
 
 #==============================================================================
+#  Size-parameter-adaptive scattering grid (Phase 8)
+#------------------------------------------------------------------------------
+#  The angular structure of any scattered field is band-limited by the number
+#  of significant partial waves, ~ x + 4x^(1/3) + 2 (Wiscombe 1979-80 style
+#  criterion; x = pi*Dveq/lambda). Orientation averaging only makes fields
+#  smoother. Hence the ADDA (-scat_grid) output grid does NOT need a fixed
+#  181x361 sampling at small x — it should scale with the size parameter.
+#
+#  The grid must still provide everything the pipeline extracts from it:
+#    - an exact theta=0 row (forward ampl_scatgrid column -> extinction matrix)
+#    - an exact theta=180 point + full phi ring (Phase 6 backscatter matrix)
+#    - phi range 0..360 with BOTH endpoints (historic production convention;
+#      parsing does np.unique + reshape, mirror_phi_index_map works on any
+#      uniform ring)
+#  spha.sph_expansion caps its initial ntrunc at min(floor(nphi/2),
+#  nlats_eff-1), nlats_eff = ntheta (ntheta even) or ntheta-1 (odd). The
+#  sizes returned by scat_grid_sizes() realize an effective cap of exactly
+#  'ntrunc_cap' with the production convention reproduced at
+#  ntrunc_cap=179/180 (-> 181x361).
+#
+#  NOTE on the error metric: spha.sph_expansion measures its round-trip
+#  residual on the *interpolated Gaussian* grid, so a too-coarse theta grid
+#  hides linear-interpolation error from the criterion. The safety 'margin'
+#  is therefore a physical Nyquist margin, calibrated by the twin gate
+#  analysis/phase8_scatgrid_twin.py — not the eps criterion.
+#==============================================================================
+
+def sph_ntrunc_physical(x):
+    #physical band-limit of the scattering angles in SH degree (partial-wave
+    #count); smooth, continuous, monotonically increasing in x
+    x=max(float(x), 0.)
+    return x + 4.0*np.cbrt(x) + 2.0
+
+
+def scatgrid_ntrunc_cap(x, margin=6.0, floor_ntrunc=8):
+    #initial shtns truncation cap that an adaptive grid should realize;
+    #margin is a Nyquist/safety factor on the physical band-limit. The
+    #calibrated default 6.0 comes from the Phase-8 twin gate
+    #(analysis/phase8_scatgrid_twin.py): the ACTUAL eps_sphexp-limited
+    #stored ntrunc is 10 (x=0.02), 26 (x=0.5), 81 (x=5), 48 (x=10) — i.e.
+    #3-6x the raw Wiscombe count — and margin 6 keeps the grid cap above
+    #that for all sizes (margin 4 truncates the eps target at x~0.5-5).
+    return int(max(float(floor_ntrunc),
+                   np.ceil(margin*sph_ntrunc_physical(x))))
+
+
+def scat_grid_sizes(ntrunc_cap, x=0.0, kappa=0.17, theta_mode='uniform'):
+    #(ntheta, nphi) for the ADDA scat_params grid.
+    #nphi = 2*cap+1 gives floor(nphi/2) = cap exactly (Fourier/phi content
+    #follows the partial-wave SH cap).
+    #theta resolution is a SEPARATE, scale-invariant requirement: angular
+    #features of a scatterer at size parameter x have width ~1/x rad (the
+    #diffraction peak plus the propagation-attached polarization-frame
+    #structure at theta=0/180), so linear-interpolation-safe sampling needs
+    #~2pi/kappa samples per feature: ntheta ~ pi*x/kappa + 1. The calibrated
+    #default kappa=0.17 rad reproduces the production 181-point grid at the
+    #x=10 size-parameter limit exactly (18.5*10+1 ~ 186, capped at 181), so
+    #the adaptive grid is never finer and never coarser-in-x than today's
+    #static one; savings come from phi and from small x. Gauss-node theta
+    #mode ('gauss') is kept for experiments only — it LACKS near-pole
+    #samples and fails the twin gate (Phase 8: 0.48 rel L2 on M34/M44
+    #already at x=0.02).
+    ntrunc_cap = int(ntrunc_cap)
+    # EVEN number of phi points: spacing 360/nphi then divides 180 deg, so
+    # the Phase-4/6 mirror phi maps (phi -> -phi, 180-phi, 180+phi) map the
+    # periodic ring exactly onto grid nodes (mirror_phi_index_map). Odd
+    # counts put 180 deg between nodes -> fill-in raises.
+    nphi = 2 * ntrunc_cap + 2
+    if theta_mode == 'uniform':
+        ntheta = max(ntrunc_cap + 2,
+                     int(np.ceil(np.pi * float(x) / kappa)) + 1,
+                     5)
+        ntheta = min(ntheta, 181)   # production grid is the resolution ceiling
+        return ntheta, nphi
+    elif theta_mode == 'gauss':
+        return ntrunc_cap + 3, nphi
+    else:
+        raise ValueError("theta_mode must be 'uniform' or 'gauss'")
+
+
+def theta_values_gauss(ntrunc_cap):
+    #theta [deg] ascending: 0, Gauss-Legendre nodes (cos-theta Gauss points),
+    #180 — ascending; first entry 0 keeps ampl_data_temp[0] the forward row
+    ngl = int(ntrunc_cap) + 1
+    nodes, _ = np.polynomial.legendre.leggauss(ngl)
+    th = np.degrees(np.arccos(np.sort(nodes)))
+    return np.concatenate(([0.0], th, [180.0]))
+
+
+def write_scat_grid_params(fname, ntrunc_cap, x=0.0, kappa=0.17,
+                           theta_mode='uniform'):
+    #write an ADDA '-scat_grid_inp' grid file and return the path; phi is
+    #always the production-style uniform range grid 0..360 (both endpoints),
+    #theta either uniform 0..180 (adaptive ntheta, see scat_grid_sizes) or
+    #the experimental Gauss-node 'values' list
+    ntheta, nphi = scat_grid_sizes(ntrunc_cap, x=x, kappa=kappa,
+                                   theta_mode=theta_mode)
+    head = ("# Scattering-angle grid auto-generated by "
+            "acf.write_scat_grid_params\n"
+            "# adaptive (Phase 8): ntrunc_cap={N} mode={mode} "
+            "-> {nt} theta x {np} phi\n"
+            "# comments are not allowed inside the lists (pairs,values)\n\n"
+            "# grid or pairs\n"
+            "global_type=grid\n\n"
+            "theta:\n"
+            ).format(N=int(ntrunc_cap), mode=theta_mode, nt=ntheta, np=nphi)
+    if theta_mode == 'uniform':
+        head += ("#range or values\n"
+                 "type=range\n"
+                 "#number of points (number of intervals + 1)\n"
+                 "N={nt}\n"
+                 "min=0\n"
+                 "max=180\n\n"
+                 ).format(nt=ntheta)
+    else:
+        th = theta_values_gauss(ntrunc_cap)
+        head += ("#range or values\n"
+                 "type=values\n"
+                 "N={nt}\n"
+                 "values=\n"
+                 ).format(nt=ntheta)
+        head += ''.join('%.10f\n' % v for v in th) + '\n'
+    # phi: proper PERIODIC ring — endpoint excluded (max = 360 - 360/nphi),
+    # unlike the historic static scat_params.dat whose 0..360 181x361 grid
+    # duplicates phi=0/360 and thereby injects an aliasing error into the
+    # periodic-FFT (shtns) analysis that grows as dphi^2 on coarser grids
+    # (Phase 8 twin at x=5: 3.2e-2 rel L2 on M11 for nphi=169 vs 361).
+    # phi=0 and phi=180 remain exact grid rows (j=0 and j=(nphi-1)/2).
+    phi_max = 360.0 * (nphi - 1) / nphi
+    tail = ("phi:\n"
+            "#range or values\n"
+            "type=range\n"
+            "#number of points (number of intervals + 1)\n"
+            "N={np}\n"
+            "min=0\n"
+            "max={pmax:.10f}\n"
+            ).format(np=nphi, pmax=phi_max)
+    with open(fname, 'w') as fh:
+        fh.write(head + tail)
+    return fname
+
+
+def replace_scat_grid_inp(static_clo, gridfile):
+    #swap the argument of '-scat_grid_inp' inside a static_clo list (or
+    #append the pair if absent); returns a NEW list, input untouched
+    clo=list(static_clo)
+    if '-scat_grid_inp' in clo:
+        i=clo.index('-scat_grid_inp')
+        if i+1>=len(clo):
+            raise RuntimeError("static_clo: '-scat_grid_inp' without argument")
+        clo[i+1]=str(gridfile)
+    else:
+        clo=clo+['-scat_grid_inp', str(gridfile)]
+    return clo
+
+
+#==============================================================================
 # Adda call
 #==============================================================================
 
@@ -1373,6 +1530,38 @@ if _shtns is not None:
 
 
 #==============================================================================
+#  Truncate an m>=0 triangular shtns coefficient array to a smaller ntrunc
+#  (m-major block order: block m covers l=m..ntrunc, cf. sph_lm_indices).
+#  Used by the Phase-8 export side to cap the SSDB sph_coeffs_scat dimension
+#  at an x-dependent budget instead of the worst-cell padding.
+#==============================================================================
+
+def sph_array_truncate(coeffs, ntrunc_target):
+    """return coeffs (1-D shtns m>=0 triangular array) truncated to
+    ntrunc_target; arrays already at or below the target pass through."""
+    coeffs = np.asarray(coeffs)
+    n = coeffs.size
+    r = int(round(np.sqrt(8.0 * n + 1.0)))
+    if r * r != 8 * n + 1 or r % 2 == 0:
+        raise ValueError(
+            'coefficient array length %d is not a shtns m>=0 triangular '
+            'count (ntrunc+1)(ntrunc+2)/2' % n)
+    ntrunc = (r - 3) // 2
+    L = int(ntrunc_target)
+    if L >= ntrunc:
+        return coeffs
+    out = np.empty((L + 1) * (L + 2) // 2, dtype=coeffs.dtype)
+    src = 0
+    dst = 0
+    for m in range(L + 1):
+        keep = L + 1 - m
+        out[dst:dst + keep] = coeffs[src:src + keep]
+        src += ntrunc + 1 - m   # source block length
+        dst += keep
+    return out
+
+
+#==============================================================================
 #  NetCDF routines
 #==============================================================================
 
@@ -1681,6 +1870,15 @@ def write_mueller_array_to_netcdf(filename, mueller_array, vertices,
         rootgrp.n_vertices = np.int32(n_vertices)
         rootgrp.max_len_coeffs = np.int32(meta.get('max_len_coeffs', 0))
         rootgrp.max_ntrunc = np.int32(meta.get('max_ntrunc', 0))
+        # Phase 8 provenance: size parameter + adaptive scatgrid cap
+        # (-1 = historic static grid); optional keys, readers must tolerate
+        # their absence in pre-Phase-8 stores
+        if 'size_parameter' in meta:
+            rootgrp.size_parameter = float(meta['size_parameter'])
+        if 'scatgrid_ntrunc_cap' in meta:
+            rootgrp.scatgrid_ntrunc_cap = np.int32(meta['scatgrid_ntrunc_cap'])
+        if 'scatgrid_adaptive' in meta:
+            rootgrp.scatgrid_adaptive = int(bool(meta['scatgrid_adaptive']))
         rootgrp.created = datetime.datetime.now(
             datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 

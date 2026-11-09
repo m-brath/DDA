@@ -203,6 +203,60 @@ if np.size(shape_str)==0:
     static_clo=read_shape_str+static_clo
 
 
+#==============================================================================
+# Adaptive scattering grid (Phase 8): size-parameter-scaled ADDA (theta,phi)
+# output grid. Enabled per config via scatgrid_adaptive=True (+ optional
+# scatgrid_margin / scatgrid_floor_ntrunc); otherwise the historic static
+# scat_params file from scat_param_path is used unchanged. Rationale + grid
+# conventions: acf.write_scat_grid_params (Phase 8 header). The generated
+# grid is job-local (one file per (T,f,size) run) and recorded in the run
+# provenance (overview mat + mueller nc root attrs).
+#==============================================================================
+
+if 'scatgrid_adaptive' not in locals():
+    scatgrid_adaptive=False
+
+if 'scatgrid_margin' not in locals():
+    scatgrid_margin=6.0
+
+if 'scatgrid_floor_ntrunc' not in locals():
+    scatgrid_floor_ntrunc=8
+
+if 'scatgrid_theta_mode' not in locals():
+    scatgrid_theta_mode='uniform'
+
+if 'scatgrid_theta_kappa' not in locals():
+    scatgrid_theta_kappa=0.1
+
+if scatgrid_adaptive:
+
+    size_param_x=np.pi*D/lamb
+
+    scatgrid_cap=acf.scatgrid_ntrunc_cap(size_param_x, margin=scatgrid_margin,
+                                         floor_ntrunc=scatgrid_floor_ntrunc)
+
+    scatgrid_file=os.path.join(storage_path,'scat_params_adaptive.dat')
+    acf.write_scat_grid_params(scatgrid_file, scatgrid_cap,
+                               x=size_param_x, kappa=scatgrid_theta_kappa,
+                               theta_mode=scatgrid_theta_mode)
+
+    static_clo=acf.replace_scat_grid_inp(static_clo, scatgrid_file)
+
+    print('Adaptive scattering grid: x=%.4f ntrunc_cap=%d theta_mode=%s '
+          'kappa=%.3f grid %dx%d -> %s'
+          %(size_param_x, scatgrid_cap, scatgrid_theta_mode,
+            scatgrid_theta_kappa,
+            *acf.scat_grid_sizes(scatgrid_cap, x=size_param_x,
+                                 kappa=scatgrid_theta_kappa,
+                                 theta_mode=scatgrid_theta_mode),
+            scatgrid_file))
+
+else:
+
+    size_param_x=np.pi*D/lamb
+    scatgrid_cap=None
+
+
 
 #permittivity of Ice
 eps_ice=acf.eps_ice_matzler06(frequencies[findex],T)
@@ -998,6 +1052,12 @@ output_data['mueller_matrix_filename']=shape_name+'_mueller_data'
 output_data['shape_name']=shape_name
 output_data['max_len_coeffs']=int(np.max(max_len_array))
 output_data['max_ntrunc']=int(np.max(max_ntrunc_array))
+# Phase 8 provenance: size parameter + adaptive-grid settings ('static'
+# when the historic fixed scat_params file was used)
+output_data['size_parameter']=size_param_x
+output_data['scatgrid_adaptive']=scatgrid_adaptive
+output_data['scatgrid_ntrunc_cap']=(-1 if scatgrid_cap is None
+                                    else int(scatgrid_cap))
 
 ## save overview data
 
@@ -1027,6 +1087,11 @@ mue_meta['adda_version']=adda_version
 mue_meta['adda_binary']=adda_binary
 mue_meta['max_len_coeffs']=int(np.max(max_len_array))
 mue_meta['max_ntrunc']=int(np.max(max_ntrunc_array))
+# Phase 8 provenance (see overview mat comment)
+mue_meta['size_parameter']=size_param_x
+mue_meta['scatgrid_adaptive']=scatgrid_adaptive
+mue_meta['scatgrid_ntrunc_cap']=(-1 if scatgrid_cap is None
+                                 else int(scatgrid_cap))
 
 print(f'Saving mueller array in {netcdf_name}')
 acf.write_mueller_array_to_netcdf(netcdf_name+'.tmp', mueller_array,

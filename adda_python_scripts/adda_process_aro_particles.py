@@ -96,6 +96,11 @@ parallel=True
 #accuracy of spherical harmonics representation of phase matrix
 eps_phase=0.001
 
+# Phase 8: x-dependent export truncation of the SSDB sph_coeffs_scat
+# dimension (0/None = historic worst-cell padding). See the comment block
+# in adda_process_aro_particles_single.py; gate: analysis/phase8_export_twin.py
+export_sph_margin=10.0
+
 
 #crystal_type='SingleCrystal'
 crystal_type='Aggregate'
@@ -152,6 +157,7 @@ config['database_path']=database_path
 config['ncores']=ncores
 config['parallel']=parallel
 config['eps_phase']=eps_phase
+config['export_sph_margin']=export_sph_margin
 config['crystal_type']=crystal_type
 config['pristine_type']=pristine_type
 config['orientation_type']=orientation_type
