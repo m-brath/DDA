@@ -1,0 +1,167 @@
+[SHTns 3.7.5] built Nov  3 2026, 00:04:47, id: neon,ishioka
+
+==== G1: sphere convention anchor (exact Mie) ====
+PASS  G1 Mie anchor x=1.887   Cext rel 0.00e+00 S1(grid) rel 9.31e-16 coef-vs-miepython 3.49e-16
+PASS  G1 Mie anchor x=3.773   Cext rel 3.33e-16 S1(grid) rel 3.66e-15 coef-vs-miepython 5.60e-16
+PASS  G1 ADDA Cext vs analytic x=1.887   ADDA 3.66973e+06 um^2 vs analytic 3.6612e+06 um^2 (dev 0.233%)
+  x=1.887: box=(43, 43, 43) dpl=71.735  c=1.005288-0.006077j  |c|=1.00531 arg=-0.00604  u0dev=0.000 lattices  fitres=7.58e-05
+PASS  G1 ADDA Cext vs analytic x=3.773   ADDA 1.63297e+07 um^2 vs analytic 1.61156e+07 um^2 (dev 1.328%)
+  x=3.773: box=(85, 85, 85) dpl=70.792  c=1.008203-0.010751j  |c|=1.00826 arg=-0.01066  u0dev=0.000 lattices  fitres=1.74e-04
+PASS  G1 c consistent across x   |c1/c2-1|=0.0055 (c1=1.00529-0.00608j c2=1.00820-0.01075j)
+PASS  G1 far-field origin = scatterer center (u0~0)   max |u0| = 0.000 lattice units
+PASS  G1 fit residual small   worst rel phase-fit residual 1.74e-04
+
+cell HongPlate_Id9_x1_face  x=1.00 D=108um N=1152 d=8.30um
+  port(M from ampl vs ADDA mueller file) rel=2.65e-11
+  calib fit: c=0.097-0.889j (dev 1.267)  u0dev=[0. 0. 0.]  res=9.30e-04
+  L2  |g|/|f| total=3.101e-02  <30deg=3.543e-02  <60deg=2.952e-02  30-60=2.545e-02  >60deg=3.177e-02
+  Cext adda=7960 model=8585 ident-err=6.26e+02
+  ntrunc(full M)=5   ntrunc(residual M)=23
+  |F_model| at Theta=180 / M11_adda: 9.92e-01
+
+cell HongPlate_Id9_x1_t60  x=1.00 D=108um N=1152 d=8.30um
+  port(M from ampl vs ADDA mueller file) rel=2.99e-11
+  calib fit: c=-0.041-0.827j (dev 1.330)  u0dev=[-0.02  0.    0.  ]  res=4.40e-02
+  L2  |g|/|f| total=3.653e-01  <30deg=3.238e-01  <60deg=3.437e-01  30-60=3.539e-01  >60deg=3.888e-01
+  Cext adda=4491 model=6594 ident-err=2.10e+03
+  ntrunc(full M)=49   ntrunc(residual M)=103
+  |F_model| at Theta=180 / M11_adda: 1.02e+00
+
+cell HongPlate_Id9_x2_face  x=2.00 D=215um N=1560 d=14.97um
+  port(M from ampl vs ADDA mueller file) rel=4.24e-11
+  calib fit: c=0.206-0.838j (dev 1.154)  u0dev=[-0.02 -0.02  0.  ]  res=3.30e-02
+  L2  |g|/|f| total=2.619e-01  <30deg=4.969e-02  <60deg=1.534e-01  30-60=3.337e-01  >60deg=3.307e-01
+  Cext adda=8.257e+04 model=8.632e+04 ident-err=3.74e+03
+  ntrunc(full M)=10   ntrunc(residual M)=9
+  |F_model| at Theta=180 / M11_adda: 9.04e-01
+
+cell HongPlate_Id9_x2_t60  x=2.00 D=215um N=1560 d=14.97um
+  port(M from ampl vs ADDA mueller file) rel=3.79e-11
+  calib fit: c=0.360-0.826j (dev 1.043)  u0dev=[-0.02 -0.02  0.03]  res=9.70e-02
+  L2  |g|/|f| total=5.007e-01  <30deg=4.835e-01  <60deg=4.992e-01  30-60=5.160e-01  >60deg=5.060e-01
+  Cext adda=1.024e+05 model=1.387e+05 ident-err=3.62e+04
+  ntrunc(full M)=76   ntrunc(residual M)=160
+  |F_model| at Theta=180 / M11_adda: 1.28e-01
+
+cell HongPlate_Id9_x2_edge  x=2.00 D=215um N=1560 d=14.97um
+  port(M from ampl vs ADDA mueller file) rel=3.27e-11
+  calib fit: c=-0.795-4.885j (dev 5.200)  u0dev=[-1.19 -0.02 -0.02]  res=4.38e-01
+  L2  |g|/|f| total=9.994e-01  <30deg=8.182e-01  <60deg=8.889e-01  30-60=9.772e-01  >60deg=2.022e+00
+  Cext adda=1.09e+05 model=1.24e+05 ident-err=1.50e+04
+  ntrunc(full M)=102   ntrunc(residual M)=97
+  |F_model| at Theta=180 / M11_adda: 3.89e+00
+
+cell HongPlate_Id9_x5_face  x=5.02 D=541um N=25540 d=14.80um
+  port(M from ampl vs ADDA mueller file) rel=3.24e-11
+  calib fit: c=0.152-0.656j (dev 1.073)  u0dev=[0.02 0.02 0.02]  res=5.24e-03
+  L2  |g|/|f| total=1.982e-01  <30deg=1.085e-01  <60deg=1.204e-01  30-60=2.815e-01  >60deg=3.028e-01
+  Cext adda=1.101e+06 model=1.261e+06 ident-err=1.60e+05
+  ntrunc(full M)=25   ntrunc(residual M)=34
+  |F_model| at Theta=180 / M11_adda: 1.07e+00
+
+cell HongPlate_Id9_x5_t60  x=5.02 D=541um N=25540 d=14.80um
+  port(M from ampl vs ADDA mueller file) rel=5.68e-11
+  calib fit: c=-0.403-0.207j (dev 1.423)  u0dev=[0.25 0.02 0.08]  res=5.38e-02
+  L2  |g|/|f| total=1.206e+00  <30deg=1.103e+00  <60deg=1.216e+00  30-60=1.470e+00  >60deg=1.149e+00
+  Cext adda=1.012e+06 model=-2.947e+05 ident-err=1.31e+06
+  ntrunc(full M)=68   ntrunc(residual M)=79
+  |F_model| at Theta=180 / M11_adda: 3.05e-03
+
+cell HongPlate_Id9_x5_edge  x=5.02 D=541um N=25540 d=14.80um
+  port(M from ampl vs ADDA mueller file) rel=4.41e-11
+  calib fit: c=-4.202+3.712j (dev 6.399)  u0dev=[-1.64  0.02 -0.02]  res=3.29e-01
+  L2  |g|/|f| total=1.727e+00  <30deg=1.604e+00  <60deg=1.685e+00  30-60=2.286e+00  >60deg=2.293e+00
+  Cext adda=1.547e+06 model=-6.82e+05 ident-err=2.23e+06
+  ntrunc(full M)=129   ntrunc(residual M)=58
+  |F_model| at Theta=180 / M11_adda: 3.26e-01
+
+cell HongPlate_Id9_x10_face  x=10.02 D=1078um N=203910 d=14.76um
+  port(M from ampl vs ADDA mueller file) rel=4.12e-11
+  calib fit: c=0.104-0.645j (dev 1.105)  u0dev=[0.02 0.02 0.03]  res=5.25e-02
+  L2  |g|/|f| total=3.104e-01  <30deg=2.038e-01  <60deg=2.053e-01  30-60=2.581e-01  >60deg=1.509e+00
+  Cext adda=1.033e+07 model=1.182e+07 ident-err=1.49e+06
+  ntrunc(full M)=55   ntrunc(residual M)=55
+  |F_model| at Theta=180 / M11_adda: 8.23e+00
+=============================================
+delta            = 52.68969109692097
+eps              = 47.895594664468184
+delta < eps = False
+sph expansion has bigger error than set accuracy!
+=============================================
+delta            = 19.690813705636504
+eps              = 18.874582981157097
+delta < eps = False
+sph expansion has bigger error than set accuracy!
+
+cell HongPlate_Id9_x10_t60  x=10.02 D=1078um N=203910 d=14.76um
+  port(M from ampl vs ADDA mueller file) rel=3.96e-11
+  calib fit: c=0.124-0.504j (dev 1.012)  u0dev=[-0.06  0.02  0.09]  res=1.83e-02
+  L2  |g|/|f| total=6.746e-01  <30deg=6.567e-01  <60deg=6.788e-01  30-60=8.729e-01  >60deg=6.014e-01
+  Cext adda=8.143e+06 model=9.985e+06 ident-err=1.84e+06
+  ntrunc(full M)=179   ntrunc(residual M)=179
+  |F_model| at Theta=180 / M11_adda: 5.17e-02
+
+cell HongPlate_Id9_x10_edge  x=10.02 D=1078um N=203910 d=14.76um
+  port(M from ampl vs ADDA mueller file) rel=7.40e-11
+  calib fit: c=2.946-3.522j (dev 4.016)  u0dev=[ 0.    0.02 -0.02]  res=1.94e-01
+  L2  |g|/|f| total=8.423e-01  <30deg=5.167e-01  <60deg=7.040e-01  30-60=1.695e+00  >60deg=2.362e+00
+  Cext adda=3.586e+06 model=2.499e+06 ident-err=1.09e+06
+  ntrunc(full M)=57   ntrunc(residual M)=64
+  |F_model| at Theta=180 / M11_adda: 9.30e-03
+
+cell HongColumn_Id7_x2_along  x=1.96 D=211um N=1456 d=14.99um
+  port(M from ampl vs ADDA mueller file) rel=5.42e-11
+  calib fit: c=0.425-0.710j (dev 0.912)  u0dev=[0.   0.   0.12]  res=4.47e-02
+  L2  |g|/|f| total=6.836e-01  <30deg=7.131e-01  <60deg=6.775e-01  30-60=6.408e-01  >60deg=7.004e-01
+  Cext adda=8.403e+04 model=1.457e+05 ident-err=6.17e+04
+  ntrunc(full M)=30   ntrunc(residual M)=49
+  |F_model| at Theta=180 / M11_adda: 7.85e-01
+
+cell HongColumn_Id7_x2_t60  x=1.96 D=211um N=1456 d=14.99um
+  port(M from ampl vs ADDA mueller file) rel=3.97e-11
+  calib fit: c=0.490-1.493j (dev 1.574)  u0dev=[-0.06  0.    0.08]  res=4.61e-02
+  L2  |g|/|f| total=5.195e-01  <30deg=5.442e-01  <60deg=4.900e-01  30-60=4.455e-01  >60deg=6.270e-01
+  Cext adda=1.52e+05 model=1.983e+05 ident-err=4.64e+04
+  ntrunc(full M)=19   ntrunc(residual M)=11
+  |F_model| at Theta=180 / M11_adda: 3.29e-01
+
+cell HongColumn_Id7_x5_along  x=4.87 D=524um N=22454 d=14.97um
+  port(M from ampl vs ADDA mueller file) rel=4.77e-11
+  calib fit: c=0.893-0.098j (dev 0.145)  u0dev=[0.02 0.02 0.23]  res=7.57e-02
+  L2  |g|/|f| total=1.228e+00  <30deg=1.300e+00  <60deg=1.236e+00  30-60=1.056e+00  >60deg=1.175e+00
+  Cext adda=1.531e+06 model=2.516e+05 ident-err=1.28e+06
+  ntrunc(full M)=29   ntrunc(residual M)=55
+  |F_model| at Theta=180 / M11_adda: 8.25e-02
+
+cell HongColumn_Id7_x5_t60  x=4.87 D=524um N=22454 d=14.97um
+  port(M from ampl vs ADDA mueller file) rel=4.47e-11
+  calib fit: c=-0.887-0.643j (dev 1.997)  u0dev=[ 0.3   0.03 -0.05]  res=3.46e-01
+  L2  |g|/|f| total=1.445e+00  <30deg=1.385e+00  <60deg=1.506e+00  30-60=1.851e+00  >60deg=9.980e-01
+  Cext adda=7.938e+05 model=2.031e+05 ident-err=5.91e+05
+  ntrunc(full M)=47   ntrunc(residual M)=41
+  |F_model| at Theta=180 / M11_adda: 9.39e-02
+FAIL  9A residual L2 ratio finite+bounded   max |g|/|f| over cells = 1.727
+PASS  9A port check exact   max rel dev 7.40e-11
+FAIL  9A Cext identity exact   max abs err 2.23e+06 um^2
+FAIL  9A ntrunc reduction at x>=2   worst ntrunc_res/ntrunc_full at x>=2: 2.105
+
+wrote /Users/u242031/projekte/DDA/analysis/phase9_results.json
+wrote /Users/u242031/projekte/DDA/analysis/phase9_fwdmodel_table.txt
+cell                        x    D[um]  N_dip   |g|/|f|   L2<30   L2<60   L2>60   Cext_m/Cext_a   ntrunc full/res   calib c dev
+-------------------------------------------------------------------------------------------------------------------------------
+HongPlate_Id9_x1_face        1.0     108    1152  3.101e-02 3.543e-02 2.952e-02 3.177e-02      1.0786           5/23      1.260
+HongPlate_Id9_x1_t60         1.0     108    1152  3.653e-01 3.238e-01 3.437e-01 3.888e-01      1.4683          49/103     1.323
+HongPlate_Id9_x2_face        2.0     215    1560  2.619e-01 4.969e-02 1.534e-01 3.307e-01      1.0453          10/9       1.148
+HongPlate_Id9_x2_t60         2.0     215    1560  5.007e-01 4.835e-01 4.992e-01 5.060e-01      1.3537          76/160     1.038
+HongPlate_Id9_x2_edge        2.0     215    1560  9.994e-01 8.182e-01 8.889e-01 2.022e+00      1.1371         102/97      5.173
+HongPlate_Id9_x5_face        5.0     541   25540  1.982e-01 1.085e-01 1.204e-01 3.028e-01      1.1453          25/34      1.067
+HongPlate_Id9_x5_t60         5.0     541   25540  1.206e+00 1.103e+00 1.216e+00 1.149e+00     -0.2912          68/79      1.415
+HongPlate_Id9_x5_edge        5.0     541   25540  1.727e+00 1.604e+00 1.685e+00 2.293e+00     -0.4410         129/58      6.365
+HongPlate_Id9_x10_face      10.0    1078  203910  3.104e-01 2.038e-01 2.053e-01 1.509e+00      1.1445          55/55      1.099
+HongPlate_Id9_x10_t60       10.0    1078  203910  6.746e-01 6.567e-01 6.788e-01 6.014e-01      1.2262         179/179     1.006
+HongPlate_Id9_x10_edge      10.0    1078  203910  8.423e-01 5.167e-01 7.040e-01 2.362e+00      0.6968          57/64      3.995
+HongColumn_Id7_x2_along      2.0     211    1456  6.836e-01 7.131e-01 6.775e-01 7.004e-01      1.7337          30/49      0.907
+HongColumn_Id7_x2_t60        2.0     211    1456  5.195e-01 5.442e-01 4.900e-01 6.270e-01      1.3051          19/11      1.565
+HongColumn_Id7_x5_along      4.9     524   22454  1.228e+00 1.300e+00 1.236e+00 1.175e+00      0.1644          29/55      0.144
+HongColumn_Id7_x5_t60        4.9     524   22454  1.445e+00 1.385e+00 1.506e+00 9.980e-01      0.2558          47/41      1.986
+

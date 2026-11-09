@@ -1636,3 +1636,150 @@ store's own noise plateau instead.
 Deferred: float32+deflate for the remaining coefficient payload; re-running
 the production SSDB export stores under the cap; x=5/x=10 export twins when
 larger local stores exist.
+
+---
+
+# 9. Phase 9A — analytic forward-peak model scan (2026-11-09)
+
+Plan: `plans/forward_peak_plan.md`. Scan: `analysis/phase9_fwdmodel_scan.py`
+(analysis-only; **no pipeline/config/export/baseline file was touched**).
+Outputs: `analysis/phase9_results.json`, `analysis/phase9_fwdmodel_table.txt`,
+log `analysis/phase9_scan.log`. Question: can an analytic model F of the
+diffraction peak be subtracted at amplitude level so that only the smooth
+residual g = f − F_model needs the expensive high-ntrunc SH storage, with the
+model re-added exactly at read/RT time?
+
+## 9.1 Convention anchor G1 — everything pinned (all PASS)
+
+Exact-Mie sphere cells (lossy ice m at 150 GHz, dpl ≈ 71, x = 1.887 / 3.773):
+
+- **Mie reference triple-validated**: own scipy D-recurrence port ==
+  mpmath 40-digit (Cext rel ≤ 3e-16, S1 grid path incl. poles ≤ 4e-15) ==
+  miepython coefficients (≤ 6e-16). miepython reproduced the published
+  Wiscombe MIEV0 case-14 S1(0) = 0.584080+0.190515j exactly. The B&H 5.12
+  D-recurrence inherited from `phase6_backscatter.py` is **correct** — an
+  intermediate debug round chased an "explicit psi/chi/tau" variant that is
+  NOT a valid B&H formula (negative Qext for lossy m); banned in code comment.
+- **ADDA Cext vs analytic**: 0.23% (x=1.89) / 1.33% (x=3.77) at dpl 70 —
+  DDA discretization level, conventions consistent.
+- **Amplitude calibration c = 1.005−0.006j (x=1.9) / 1.008−0.011j (x=3.8)**,
+  cross-x deviation 0.55% → ADDA `ampl_scatgrid` columns = BH s1..s4 with the
+  standard k·f normalization, model prefactor (k³/4π)∫(m²−1)φ e^{−ikn·r}d³r
+  exact at that level.
+- **Fitted far-field origin offset u0 = 0.000 lattice units** → ADDA's
+  far-field phase origin IS the scatterer center (definite finding; earlier
+  hypothesis "lattice box corner" is dead).
+- Amplitude-space LS fit residual ≤ 1.7e-4. Log-space fitting is unusable
+  (model zeros poison it) — the scan fit works in amplitude space.
+- Eikonal angular machinery separately validated on a voxel sphere at x=0.3:
+  fitted |c|=0.614 ≈ 3/(m²+2)=0.582 (the Rayleigh-Gans missing
+  Clausius-Mossotti/depolarization factor), fitres 4e-5.
+- Port self-check per production cell: Mueller rebuilt from parsed `ampl`
+  equals ADDA's own `mueller_scatgrid` to ≤ 7.4e-11.
+
+## 9.2 Eikonal screen model — scan metrics
+
+Model: voxel-exact eikonal internal field along −shat rays (φ(s)=e^{ik[s+(m−1)chord(s)]}),
+Helmholtz radiation integral over the illuminated screen, chunked (x=10 cell:
+>200k dipoles); single global complex calibration c fitted per cell on the
+FULL sphere (amplitude-space LS; c=0 ⇒ g=f, so |g|/|f| ≤ 1 is only achievable
+when the model actually explains intensity). ntrunc via the production
+`expand_mueller_2_spharmonics` rule, **two eps criteria**: own-eps (historic
+relative rule on the matrix being expanded) and **full-eps** (eps from the
+FULL-field M11 norm — the fair consumer criterion for a hybrid product, since
+the model is re-added exactly and its error rides on top for free).
+
+Table (15 cells, full column and both residual columns; condensed):
+
+```
+cell                    x    |g|/|f|  Cext_m/a   ntrunc full / res(own) / res(full-eps)
+HP x1 face            1.0    0.031    1.08          5  /  23 /   3
+HP x1 t60             1.0    0.365    1.47         49  / 103 /  24
+HP x2 face            2.0    0.262    1.05         10  /   9 /   3
+HP x2 t60             2.0    0.501    1.35         76  / 160 /  56
+HP x2 edge            2.0    0.999    1.14        102  /  97 /  80
+HP x5 face            5.0    0.198    1.15         25  /  34 /   6
+HP x5 t60             5.0    1.206   -0.29         68  /  79 /  99
+HP x5 edge            5.0    1.727   -0.44        129  /  58 / 113
+HP x10 face          10.0    0.310    1.14         55  /  55 /  41
+HP x10 t60           10.0    0.675    1.23        179  / 179 /  81
+HP x10 edge          10.0    0.842    0.70         57  /  64 /  55
+HC x2 along           2.0    0.684    1.73         30  /  49 /  28
+HC x2 t60             2.0    0.520    1.31         19  /  11 /   8
+HC x5 along           4.9    1.228    0.16         29  /  55 /  80
+HC x5 t60             4.9    1.445    0.26         47  /  41 /  65
+```
+
+Own-eps residual ntrunc is NOT decision-relevant: it inherits the historic
+relative-tolerance artifact (x1 face: residual M11 norm 3e-2 of full but
+own-eps ntrunc 23 > full's 5; x2 t60 160 vs 76). Under full-eps the same
+cells read 3 and 56. **Use full-eps for hybrid decisions.**
+
+## 9.3 Findings
+
+1. **Model works where the eikonal validity conditions hold** (thin phase
+   thickness, near-normal incidence): HongPlate **face** orientations at ALL
+   x: |g|/|f| = 0.03–0.31, Cext_model/Cext_adda = 1.05–1.15, and full-eps
+   ntrunc collapses 5→3, 10→3, 25→**6** (x=5!), 55→41. x10 t60 also wins
+   big: 179 (grid-Nyquist-saturated) → 81.
+2. **Model actively harmful at grazing/grazing incidence** (plate edge-on,
+   t60 at x=5): |g|/|f| up to 1.73, Cext_model negative (−0.44×) — internal
+   TIR + multiple scattering ignored by single-pass eikonal; |(m−1)k·chord|
+   ≫ π. HC along-beam at x=5: phase thickness ≈ 8.6 rad, Cext_model = 0.16×,
+   fitted |c| collapses (cdev 0.14) — model garbage there.
+3. **Cell-level validity is measurable without the full field**: the fitted
+   calibration magnitude |c_fit/c_global| deviates strongly exactly in the
+   broken cells (dev > 1.4: x2 edge 5.2, x5 edge 6.4, x10 edge 4.0, HC x5
+   along 0.14, HC x5 t60 2.0), and Cext_model ≤ 0 or < 0.5× flags them too.
+   A per-solve validity gate is therefore cheap (the c-fit costs ms).
+4. **Backscatter (θ=180) is NOT represented by the model** — |F_model(180)|
+   vs ADDA's M11(180) ranges 1e-2 … 8.2 across cells (no consistent scale).
+   Phase-6's separate `backMat_data` route (outside the SH expansion) stays
+   mandatory; the hybrid would exempt the exact-backscatter ring as planned.
+5. Summary gates as run: PASS G1 (all 7) + port check; FAIL residual-bounded
+   (1.73 — driven entirely by the known-invalid orientations); FAIL ntrunc
+   reduction under own-eps (2.105). Under the full-eps criterion 10/13 x≥2
+   cells show reduction (0.24–0.96); all 3 losses are validity-broken cells.
+   Gate code updated to report the full-eps criterion.
+6. Side finding (recorded as code comment): the x=10 t60 FULL field already
+   saturates ntrunc 179 ≈ the 361-φ-ring Nyquist cap 180 — production runs at
+   x≈10 are grid-limited in SH space, which bounds any full-field comparison.
+
+## 9.4 Verdict: **conditional GO** (gated hybrid), not universal
+
+- The delta-scaling idea is **physically proven end-to-end** (conventions
+  exact, model family validated, up to 4.2× ntrunc reduction and ~40×
+  coefficient-count reduction at x=5 face; storage ∝ ntrunc²).
+- A plain model-subtraction pipeline over all orientations would be **wrong**:
+  ~1/3 of the scanned orientation space has the eikonal model harmful; the
+  activation domain is x,orientation dependent and must be gated, not assumed.
+- **9B design consequence**: per-(vertex,β) gate (cheap: c-fit + Cext_model>0
+  + phase-thickness bound |(m−1)·k·chord_max| ≲ π) decides model+residual vs
+  plain full field; hybrid stored like today for non-qualifying cells. The
+  icosphere ARO vertex grid mixes both kinds per run — reconstruction in
+  `rawdata2average` must know the per-cell flag (store in nc root/group attrs).
+- **SSDB-hybrid decision: NO-GO for now** (as planned for 9A): the exported
+  sph_coeffs are already capped (Phase 8.8, 15× smaller); the residual route
+  additionally demands a format change + consumer cooperation. Internal
+  (per-vertex caches + sub-control solve cost) is where 9B would pay: the
+  ntrunc-179→81 class cells dominate the orientation-expansion refinement
+  cost at large x.
+- Cheaper alternative the scan also evidences: since face/near-face wins are
+  largest where ntrunc_full is largest, a **pure adaptive-eps refinement
+  re-balance** (no model) could capture part of the same cost — not
+  investigated here (Phase-8 laws already exist); 9B should compare against
+  that baseline before building the full hybrid.
+
+## 9.5 Files & caveats
+
+- `analysis/phase9_fwdmodel_scan.py` (untracked): ADDA command mirror +
+  verbatim frame/Mueller ports, `EikonalModel.iter_G_chunks`, amplitude-space
+  `fit_convention`, triple Mie anchor, both ntrunc criteria. Reruns re-solve
+  ADDA (noise-based gates only — Phase-3 caveat).
+- Shape glob note: size-grid names are 4-digit zero-padded (`Dveq01078um`).
+- Known scan simplifications (not fixed): G3 Fraunhofer-vs-ray-march baseline
+  not run; only 887-GHz shape class; single frequency; production mirror-
+  fill-in not modelled (all vertices computed); TRO path untouched (no grid).
+- miepython 3.3.1 + mpmath now installed in the DDA env (live, not in any
+  requirements doc); PyMieScatt installed but BROKEN on scipy 1.18
+  (`scipy.integrate.trapz` gone) — do not use.
