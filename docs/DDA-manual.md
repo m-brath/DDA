@@ -100,6 +100,7 @@ DDA/
 ├── adda_1.4/                   ADDA 1.4.0  ← PRODUCTION BINARY (Phase-3 decision)
 ├── adda_1.2/                   ADDA 1.2    (golden baselines were made with this)
 ├── adda_shape_files/           particle geometries: <habit>/Dmax…_Dveq…_Mass…_Freq…GHz.adda(+.meta.mat)
+│                               ← NOT in git: external 1.8 GB input, provision a clone by hand (§1.2)
 ├── adda_aux_input/             avg_params.dat files (TRO '-orient avg' integration control)
 ├── arts-sspdb-interface/       upstream read-only tooling for the *published* ARTS database
 ├── plans/                      modernization plan + running findings report (READ before touching code)
@@ -112,6 +113,9 @@ DDA/
 > `<prefix_data>/adda_results/…` (cluster) or `<repo>/adda_results/…` (local mode).
 > The old HPC results are *not accessible* — regression validation therefore relies on
 > `baselines/` (golden ADDA outputs) and the equivalence suites in `analysis/`.
+>
+> **The geometry inputs are outside git as well.** `adda_shape_files/` (1.8 GB) is untracked;
+> a fresh clone must be provisioned by hand before anything habit-related can run (§1.2).
 
 ### 0.2 Glossary
 
@@ -238,6 +242,36 @@ never do, so a voxelized hexagon is *never* an exactly C6-symmetric model; ideal
 C6 exists sub-voxel only, and exploiting it would cost a boundary-layer discretization
 error. This is why rotation symmetries (`sym_Zobj`) are parked while mirror symmetries
 are exploited.
+
+### Shape-data provisioning (this folder is NOT in git)
+
+`adda_shape_files/` is untracked and gitignored: 1.8 GB of input geometry (970 `.adda` +
+970 `.meta.mat`, six habit folders). It was committed in the initial snapshot and **purged
+from the entire repository history on 2026-11-10** — it was 95 % of the object store and its
+largest blob (170 MB) exceeded GitHub's 100 MB push limit (findings + gate table: report §10).
+
+- **A fresh clone has no geometry.** Every habit config, `analysis/inventory.py`,
+  `baselines/make_baseline.py` and the gate suites glob this folder, so nothing that touches
+  a habit runs until it is populated — `git clone` alone is not enough.
+- **Copy the tree** into `<repo>/adda_shape_files/` keeping the layout
+  `<habit>/Dmax…_Dveq…_Mass…_Freq…GHz.adda` + sibling `.meta.mat` (any missing sibling makes
+  that size invisible to the pipeline, see above). Authoritative sources, in order of trust:
+  1. the pre-purge git bundle `../DDA-prepurge-2026-11-10.bundle` — byte-verified archive of
+     all 1940 files: `git fetch <bundle> refs/heads/main:refs/heads/prepurge-backup` then
+     `git archive prepurge-backup adda_shape_files | tar -x -C .` (then drop the temp ref);
+  2. the HPC working copy under the cluster prefix (Mistral/Thunder — confirm the exact path
+     before relying on it);
+  3. this checkout's own working tree.
+- **Verify after provisioning:**
+
+  ```sh
+  find adda_shape_files -type f | wc -l   # expect 1940 = 970 .adda + 970 .meta.mat
+  python analysis/inventory.py            # habit×size×frequency table must be non-empty
+  ```
+
+- **Do not put it back into git** (`git add -f` defeats the ignore rule and reintroduces the
+  unpushable 170 MB blob). If the geometry ever needs versioning, use a separate data repo or
+  a citable archive (zenodo), not this history.
 
 ### The 5-resolution scheme
 
@@ -1642,6 +1676,8 @@ Numbered for reference; several carry the bug-fix that neutralized them.
 26. **ADDA far-field phase origin = scatterer center** (fitted lattice offset 0.000, Phase 9A G1) — analytic-model ports must center on the scatterer, not the voxel-box corner (the `mueller_scatgrid`-vs-ampl port check at ≤7e-11 confirms the rest of the frame port).
 27. **Size-grid shape globs are 4-digit zero-padded** (`Dveq01078um`, not `Dveq1078um`) — a bare-number glob silently matches nothing (or worse, the wrong class).
 28. **At $x\gtrsim10$ the full-field SH content saturates the static grid's Nyquist cap** (ntrunc 179 ≈ 180 on the 361-$\varphi$ ring): large-$x$ full-field twins are grid-limited, not expansion-limited (report §9.3).
+29. **History rewriting physically DELETES the purged paths from the working tree.** `git filter-repo` ends with `git reset --hard` on a non-bare repo (its `cleanup()` sets `reset = not GitUtils.is_repository_bare(...)`), so a path it removes from history is erased from disk — **gitignore does not protect it**, because gitignore never applies to entries in the index. Hit on 2026-11-10: purging `adda_shape_files/` wiped the 1.8 GB live copy (recovered from the pre-purge bundle, 1940/1940 files hash-verified — report §10.4). Rule: untrack first (`git rm -r --cached <path>` + commit) or rewrite in a **bare** clone, and always `git bundle create ../backup.bundle --all` first.
+30. **`adda_shape_files/` is not in git** (1.8 GB of external input, purged 2026-11-10, report §10): a fresh clone cannot run any habit config, gate suite or baseline until the folder is provisioned by hand (§1.2 "Shape-data provisioning"; restore recipe also in `agents.md`). Never `git add -f` it back — that reintroduces the 170 MB blob and the unpushable history.
 
 # Appendix E — Baseline simulation results
 

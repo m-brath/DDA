@@ -1783,3 +1783,99 @@ cells read 3 and 56. **Use full-eps for hybrid decisions.**
 - miepython 3.3.1 + mpmath now installed in the DDA env (live, not in any
   requirements doc); PyMieScatt installed but BROKEN on scipy 1.18
   (`scipy.integrate.trapz` gone) — do not use.
+
+---
+
+# 10. Repo slimming — `adda_shape_files/` purged from git history ✅ (2026-11-10)
+
+## 10.1 Why
+
+The shape geometry was committed in the root snapshot (old `9e9e53d`, 2026-11-03):
+**1940 files** (970 `.adda` + 970 `.meta.mat`), 1.8 GB of worktree data and **1.72 GiB of
+blobs = 95 % of the object store** (1886 of 2215 in-pack objects; pack 313 MB, `.git` 369 MB).
+The largest single blob is 170 MB, i.e. **above GitHub's 100 MB hard push limit** — the history
+was unpushable as it stood. The last commit (old `f8223d5`) added `adda_shape_files/` to
+`.gitignore`, but **gitignore has no effect on already-tracked files**, so that cleanup had
+been left half done: the files were still tracked and still in history.
+
+Crucially, **exactly one commit ever contained the data** (the root commit; no later commit
+touched it), which makes a history rewrite both safe and cheap.
+
+## 10.2 What was done
+
+1. **Backup first**: `git bundle create ../DDA-prepurge-2026-11-10.bundle --all` → 353 MB,
+   `git bundle verify` reports a complete history. This bundle is currently the **only
+   archive of the shape data** — keep it until an off-repo home for the geometry is set up.
+2. `pip install git-filter-repo` in the DDA env (2.47.0).
+3. **Dry run** in a throwaway `git clone --no-hardlinks --no-checkout` +
+   `git filter-repo --path adda_shape_files --invert-paths --force`. Gate: full
+   `git ls-tree -r HEAD` listing compared against the original listing minus the
+   `adda_shape_files/` rows → **no difference** (all 415 surviving entries keep identical
+   mode/type/blob SHA). 26 commits parsed, `.git` 368M → 44M, `git fsck --full --strict` clean.
+4. **Real run** in the umbrella repo: same filter command (`--force`, because the repo is not
+   a fresh clone; `filter-repo` then removes the `origin` remote by design), followed by
+   `git reflog expire --expire=now --all && git gc --prune=now --aggressive` — the latter is
+   what actually reclaims the space.
+
+## 10.3 Gate table (all PASS)
+
+| item | before | after |
+|---|---|---|
+| HEAD | `f8223d5` | `1fb8635` |
+| root commit | `9e9e53d` | `8bd7d4e` |
+| commit count | 26 | 26 |
+| log fingerprint `git log --format='%ad\|%an\|%s' \| shasum` | `26cf01af0343f61e68df54e87c9deab832422f2b` | identical |
+| tracked files | 2355 | 415 |
+| tracked under `adda_shape_files` | 1940 | 0 |
+| `git rev-list --all --objects \| grep -c adda_shape_files` | 1886+ | **0** |
+| gitlink SHAs (`adda`, `adda-gui`, `adda_python_scripts`, `SSD_scripts_deprecated`, `arts-sspdb-interface`) | 5 | byte-identical |
+| `git fsck --full --strict` | clean | clean |
+| largest blob | 170 MB (GitHub-blocking) | 7.7 MB |
+| `.git` size | 369 MB | **44 MB** |
+| worktree `adda_shape_files/` | 1.8 GB / 1940 files | 1.8 GB / 1940 files (§10.4) |
+| smoke: `analysis/inventory.py` | — | same habit/size table (reads shapes from disk) |
+| smoke: `baselines/check_baselines.py` | — | sphere Mie regression all `[OK]` |
+
+Old SHAs stay reachable through the bundle; **no tracked file cites a bare commit SHA**
+(grep over `*.md` for `[0-9a-f]{7}`), so the re-hash dangles no documentation reference.
+
+## 10.4 Incident: `filter-repo` deleted the worktree copy — fully recovered
+
+After the real run, `adda_shape_files/` on disk had collapsed to 8 KB (only `.DS_Store`):
+**the 1.8 GB of geometry was gone from the working tree.** Cause, read from
+`git_filter_repo.py` (`RepoFilter.run` → `cleanup`):
+
+```python
+#   If we need a reset, do a reset --hard
+reset = not GitUtils.is_repository_bare(target_working_dir)
+```
+
+On a **non-bare** repo `filter-repo` ends with `git reset --hard` onto the rewritten HEAD.
+The index still held the 1940 shape files (they were tracked at the old HEAD), the new HEAD
+does not contain them → git removes them from disk. **`.gitignore` is irrelevant here**: it
+never protects paths that are in the index. The `--no-checkout` dry run had an empty
+worktree, so it could not surface this.
+
+Recovery: `git fetch ../DDA-prepurge-2026-11-10.bundle refs/heads/main:refs/heads/prepurge-backup`
+→ `git archive prepurge-backup adda_shape_files | tar -x -C .` → verified **1940/1940**
+files hash (`git hash-object`) to exactly the blob SHAs recorded in the pre-purge tree
+(0 mismatches), then the temporary ref was deleted and `gc --prune=now` re-run. Final state:
+`.git` 44 MB, 1.8 GB / 1940 files on disk, `git status` clean.
+
+**Rule for any future history rewrite: untrack the path first (`git rm -r --cached <path>`
++ commit) so the index no longer contains it, or run the filter in a *bare* clone and never
+touch the worktree. Always take the bundle backup and verify byte-level recovery.**
+Logged as Appendix D #29 in the manual.
+
+## 10.5 Consequences
+
+- A **fresh clone has no geometry** — nothing runs until the shape data is placed at
+  `adda_shape_files/` by hand (provisioning note: manual §1.2). Confirm an authoritative
+  copy (HPC checkout / archive) and record it there.
+- All 26 SHAs changed (message/author/date/DAG unchanged). Anything cloned **before**
+  2026-11-10 must be re-cloned, not pulled.
+- `origin` was removed by `filter-repo`; re-adding it and pushing needs credentials
+  (`git remote add origin https://github.com/m-brath/DDA.git`). If the pre-purge history
+  ever reached GitHub, a force-push does **not** delete those objects server-side.
+- Disk hygiene only: no numeric behaviour changed — shape bytes on disk are bit-identical,
+  so baselines/twins/gates are unaffected (verified by the two smoke runs).

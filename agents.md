@@ -25,7 +25,7 @@ Orientation strategies:
 | `adda_1.2/` | ADDA v1.2 source tree, previously compiled on a Linux cluster (`src/seq/adda`, `src/mpi/adda_mpi` are ELF x86-64 — **do not run on this Mac, rebuild with `make seq` / `make mpi`**). |
 | `adda-gui/` | Official Java GUI for ADDA (Gradle project). Reference only; not used in the automation workflow. |
 | `adda_python_scripts/` | The orchestration workflow (see below). Core of the project. |
-| `adda_shape_files/` | Particle geometry per habit: `*.adda` (dipole positions) + `*.meta.mat` (metadata: Dmax, volume-equivalent diameter, mass, min frequency, axis ratios). Naming: `Dmax<µm>_Dveq<µm>_Mass<kg>_Freq<GHz>.adda`. |
+| `adda_shape_files/` | Particle geometry per habit: `*.adda` (dipole positions) + `*.meta.mat` (metadata: Dmax, volume-equivalent diameter, mass, min frequency, axis ratios). Naming: `Dmax<µm>_Dveq<µm>_Mass<kg>_Freq<GHz>.adda`. **NOT tracked by git** (1.8 GB of external input data, purged from history 2026-11-10 — report §10): a fresh clone must be provisioned by hand, see manual §1.2 "Shape-data provisioning". |
 | `adda_aux_input/` | ADDA `avg_params.dat` files (Euler-angle integration control for built-in `-orient avg`) for EvanSnowflake_aggregate and hexPlateAggregates2. |
 | `arts-sspdb-interface/` | Upstream MATLAB/Python interface for browsing/importing the published ARTS SSP database (zenodo 1175572), incl. RTTOV extraction. Read-only reference. |
 | `SSD_scripts_deprecated/` | Old/prototype SSDB interface scripts (`assp.py`, `sph.py`, `rttov.py`, …). **Deprecated — do not modify or extend.** |
@@ -167,6 +167,13 @@ reference patterns only.**
   walkthrough, local/HPC runbooks, validation gates, gotcha catalogue. Read it alongside
   `plans/DDA-modernization-report.md` (the historical findings log) when operating or
   extending the pipeline.
+- **Repo slimmed** (2026-11-10, report §10): `adda_shape_files/` (1940 files, 1.8 GB, 95 % of
+  the object store, largest blob 170 MB = GitHub-push-blocking) purged from **all** history
+  with `git-filter-repo`; `.git` 369 MB → 44 MB, 26 commits preserved verbatim (all SHAs new:
+  HEAD `f8223d5`→`1fb8635`, root `9e9e53d`→`8bd7d4e`), all 415 surviving tree entries
+  bit-identical, gitlinks untouched. Working-tree copy was deleted by filter-repo's
+  `reset --hard` and restored byte-verified (1940/1940 blob hashes) from
+  `../DDA-prepurge-2026-11-10.bundle` — read §10.4 before any future rewrite.
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -402,7 +409,17 @@ notes; do not extend — report §1.6-9).
 - Results/intermediate files go to `<prefix_data>/adda_results/` on the cluster — outside
   this repo. This repo only holds inputs, source and scripts.
 - `SSD_scripts_deprecated/` and `old_configs/` are archives; never import from them in new code.
-- No version control here (not a git repo). Consider `git init` before large changes.
+- **Git policy** (umbrella repo, branch `main`): the shape inputs are deliberately kept
+  **outside** git — `adda_shape_files/` was purged from every commit on 2026-11-10
+  (`.git` 369 MB → 44 MB; report §10) and stays gitignored. Archive of the pre-purge state,
+  including all 1940 shape files: `../DDA-prepurge-2026-11-10.bundle`
+  (`git fetch <bundle> refs/heads/main:refs/heads/prepurge-backup` then
+  `git archive prepurge-backup adda_shape_files | tar -x -C .`).
+  **Never rewrite history on this checkout while the path being purged is still tracked**:
+  `git filter-repo` ends with `git reset --hard` on non-bare repos and physically deletes the
+  worktree copy (gitignore does not protect index entries) — untrack first
+  (`git rm -r --cached <path>`) or rewrite in a bare clone, and always take a bundle backup
+  first (report §10.4, manual Appendix D #29).
 
 ## Key References
 

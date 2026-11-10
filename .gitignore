@@ -21,4 +21,9 @@ adda_1.4/
 # local run outputs (results never live in this repo; Phase 3 local mode)
 adda_results/
 analysis/_tmp*/
+
+# External INPUT data, not source: particle geometry (1.8 GB — 970 .adda + 970 .meta.mat).
+# Purged from git history on 2026-11-10 (report §10; largest blob was 170 MB, above GitHub's
+# 100 MB push limit). A fresh clone has NO geometry and cannot run anything until this
+# folder is provisioned by hand — see docs/DDA-manual.md §1.2 "Shape-data provisioning".
 adda_shape_files/

@@ -186,6 +186,7 @@ particle orientations?</em> Two orientation strategies are produced:</p>
 ├── adda_1.4/                   ADDA 1.4.0  ← PRODUCTION BINARY (Phase-3 decision)
 ├── adda_1.2/                   ADDA 1.2    (golden baselines were made with this)
 ├── adda_shape_files/           particle geometries: &lt;habit&gt;/Dmax…_Dveq…_Mass…_Freq…GHz.adda(+.meta.mat)
+│                               ← NOT in git: external 1.8 GB input, provision a clone by hand (§1.2)
 ├── adda_aux_input/             avg_params.dat files (TRO '-orient avg' integration control)
 ├── arts-sspdb-interface/       upstream read-only tooling for the *published* ARTS database
 ├── plans/                      modernization plan + running findings report (READ before touching code)
@@ -198,6 +199,8 @@ particle orientations?</em> Two orientation strategies are produced:</p>
 <code>&lt;prefix_data&gt;/adda_results/…</code> (cluster) or <code>&lt;repo&gt;/adda_results/…</code> (local mode).
 The old HPC results are <em>not accessible</em> — regression validation therefore relies on
 <code>baselines/</code> (golden ADDA outputs) and the equivalence suites in <code>analysis/</code>.</p>
+<p><strong>The geometry inputs are outside git as well.</strong> <code>adda_shape_files/</code> (1.8 GB) is untracked;
+a fresh clone must be provisioned by hand before anything habit-related can run (§1.2).</p>
 </blockquote>
 <h3 id="02-glossary">0.2 Glossary</h3>
 <table>
@@ -393,6 +396,34 @@ never do, so a voxelized hexagon is <em>never</em> an exactly C6-symmetric model
 C6 exists sub-voxel only, and exploiting it would cost a boundary-layer discretization
 error. This is why rotation symmetries (<code>sym_Zobj</code>) are parked while mirror symmetries
 are exploited.</p>
+<h3 id="shape-data-provisioning-this-folder-is-not-in-git">Shape-data provisioning (this folder is NOT in git)</h3>
+<p><code>adda_shape_files/</code> is untracked and gitignored: 1.8 GB of input geometry (970 <code>.adda</code> +
+970 <code>.meta.mat</code>, six habit folders). It was committed in the initial snapshot and <strong>purged
+from the entire repository history on 2026-11-10</strong> — it was 95 % of the object store and its
+largest blob (170 MB) exceeded GitHub's 100 MB push limit (findings + gate table: report §10).</p>
+<ul>
+<li><strong>A fresh clone has no geometry.</strong> Every habit config, <code>analysis/inventory.py</code>,
+  <code>baselines/make_baseline.py</code> and the gate suites glob this folder, so nothing that touches
+  a habit runs until it is populated — <code>git clone</code> alone is not enough.</li>
+<li><strong>Copy the tree</strong> into <code>&lt;repo&gt;/adda_shape_files/</code> keeping the layout
+  <code>&lt;habit&gt;/Dmax…_Dveq…_Mass…_Freq…GHz.adda</code> + sibling <code>.meta.mat</code> (any missing sibling makes
+  that size invisible to the pipeline, see above). Authoritative sources, in order of trust:
+  1. the pre-purge git bundle <code>../DDA-prepurge-2026-11-10.bundle</code> — byte-verified archive of
+     all 1940 files: <code>git fetch &lt;bundle&gt; refs/heads/main:refs/heads/prepurge-backup</code> then
+     <code>git archive prepurge-backup adda_shape_files | tar -x -C .</code> (then drop the temp ref);
+  2. the HPC working copy under the cluster prefix (Mistral/Thunder — confirm the exact path
+     before relying on it);
+  3. this checkout's own working tree.</li>
+<li><strong>Verify after provisioning:</strong></li>
+</ul>
+<p><code>sh
+  find adda_shape_files -type f | wc -l   # expect 1940 = 970 .adda + 970 .meta.mat
+  python analysis/inventory.py            # habit×size×frequency table must be non-empty</code></p>
+<ul>
+<li><strong>Do not put it back into git</strong> (<code>git add -f</code> defeats the ignore rule and reintroduces the
+  unpushable 170 MB blob). If the geometry ever needs versioning, use a separate data repo or
+  a citable archive (zenodo), not this history.</li>
+</ul>
 <h3 id="the-5-resolution-scheme">The 5-resolution scheme</h3>
 <p>Each physical size ships as several shape files tagged with <code>frequency_min</code>:</p>
 <ul>
@@ -1926,6 +1957,8 @@ Missing config keys degrade to <code>'n/a'</code> (<code>getattr(ac, …, 'n/a')
 <li><strong>ADDA far-field phase origin = scatterer center</strong> (fitted lattice offset 0.000, Phase 9A G1) — analytic-model ports must center on the scatterer, not the voxel-box corner (the <code>mueller_scatgrid</code>-vs-ampl port check at ≤7e-11 confirms the rest of the frame port).</li>
 <li><strong>Size-grid shape globs are 4-digit zero-padded</strong> (<code>Dveq01078um</code>, not <code>Dveq1078um</code>) — a bare-number glob silently matches nothing (or worse, the wrong class).</li>
 <li><strong>At <span class="arithmatex">\(x\gtrsim10\)</span> the full-field SH content saturates the static grid's Nyquist cap</strong> (ntrunc 179 ≈ 180 on the 361-<span class="arithmatex">\(\varphi\)</span> ring): large-<span class="arithmatex">\(x\)</span> full-field twins are grid-limited, not expansion-limited (report §9.3).</li>
+<li><strong>History rewriting physically DELETES the purged paths from the working tree.</strong> <code>git filter-repo</code> ends with <code>git reset --hard</code> on a non-bare repo (its <code>cleanup()</code> sets <code>reset = not GitUtils.is_repository_bare(...)</code>), so a path it removes from history is erased from disk — <strong>gitignore does not protect it</strong>, because gitignore never applies to entries in the index. Hit on 2026-11-10: purging <code>adda_shape_files/</code> wiped the 1.8 GB live copy (recovered from the pre-purge bundle, 1940/1940 files hash-verified — report §10.4). Rule: untrack first (<code>git rm -r --cached &lt;path&gt;</code> + commit) or rewrite in a <strong>bare</strong> clone, and always <code>git bundle create ../backup.bundle --all</code> first.</li>
+<li><strong><code>adda_shape_files/</code> is not in git</strong> (1.8 GB of external input, purged 2026-11-10, report §10): a fresh clone cannot run any habit config, gate suite or baseline until the folder is provisioned by hand (§1.2 "Shape-data provisioning"; restore recipe also in <code>agents.md</code>). Never <code>git add -f</code> it back — that reintroduces the 170 MB blob and the unpushable history.</li>
 </ol>
 <h1 id="appendix-e-baseline-simulation-results">Appendix E — Baseline simulation results</h1>
 <p>The frozen regression set behind §4.1: six ADDA runs mirroring the exact CLI of
