@@ -1,0 +1,74 @@
+\usepackage{amsmath,amssymb}
+\usepackage{fontspec}%
+\usepackage{unicode-math}
+\setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular,
+  BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+\setsansfont{texgyreheros}[Extension=.otf, UprightFont=*-regular,
+  BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+\setmathfont{texgyretermes-math.otf}
+% classic book convention: typewriter text set slightly smaller than body
+\setmonofont{lmmono10-regular}[Extension=.otf, UprightFont=*,
+  ItalicFont=lmmono10-italic, BoldFont=lmmonolt10-bold,
+  BoldItalicFont=lmmonolt10-boldoblique, Scale=0.9]
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{url}
+\usepackage{fvextra}
+\fvset{breaklines=true,breakanywhere=false}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{newunicodechar}
+
+% ---- unicode chars that occur in PROSE (math-mode-safe mappings) ----
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{←}{\ensuremath{\leftarrow}}
+\newunicodechar{⇒}{\ensuremath{\Rightarrow}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{≤}{\ensuremath{\le}}
+\newunicodechar{≥}{\ensuremath{\ge}}
+\newunicodechar{≲}{\ensuremath{\lesssim}}
+\newunicodechar{≡}{\ensuremath{\equiv}}
+\newunicodechar{∝}{\ensuremath{\propto}}
+\newunicodechar{∞}{\ensuremath{\infty}}
+\newunicodechar{−}{\ensuremath{-}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{⚠}{\textbf{(!)}\,}
+\newunicodechar{✓}{\ensuremath{\checkmark}}
+
+% ---- classic book layout ----
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{0}          % section numbers are written INTO the
+                                     % headings in the manual source
+\raggedbottom
+\linespread{1.03}
+% H1 = "Part" level: own page, centered, large
+\newcommand{\sectionbreak}{\clearpage}
+\titleformat{\section}[block]{\normalfont\LARGE\bfseries\filcenter}{}{0em}{}
+\titlespacing{\section}{0pt}{6ex plus 1fill}{3.5ex}
+\titleformat{\subsection}[hang]{\normalfont\Large\bfseries}{}{0em}{}
+\titlespacing{\subsection}{0pt}{3.5ex plus .5ex}{1.2ex}
+\titleformat{\subsubsection}[hang]{\normalfont\large\bfseries}{}{0em}{}
+\titlespacing{\subsubsection}{0pt}{2.8ex plus .3ex}{0.8ex}
+% running heads (classic: short title left, current subsection right, page centered)
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small DDA Scattering Pipeline --- Project Manual}
+\fancyhead[R]{\small\nouppercase{\leftmark}}
+\fancyfoot[C]{\small\thepage}
+\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}%
+  \fancyfoot[C]{\small\thepage}}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+\renewcommand{\subsectionmark}[1]{\markright{\thesection#1}}
+% tables: airy but compact; pandoc uses booktabs
+\renewcommand{\arraystretch}{1.25}
+\usepackage{etoolbox}
+\AtBeginEnvironment{longtable}{\small\sloppy\emergencystretch=4.5em}
+\AtBeginEnvironment{tabular}{\small\sloppy\emergencystretch=4.5em}
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{2.5em}
+\hypersetup{hidelinks}

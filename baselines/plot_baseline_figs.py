@@ -31,27 +31,32 @@ BASE = os.path.join(HERE, "adda_1.2")
 OUT = os.path.join(HERE, "report")
 
 # ---------------------------------------------------------------- style ----
+# Classical textbook look — serif (Times/STIX) type, black/grey curves with
+# linestyle + hatching as encodings (greyscale-safe, matches the manual's
+# LaTeX PDF built by docs/build_latex.py). Only the 3-D radiation surfaces use
+# a colour map (cividis: they are colour plates by nature).
 C = {
-    "polx": "#2b6cb0",   # X incidence polarization (solid blue)
-    "poly": "#c05621",   # Y incidence polarization (hatched orange)
-    "x01": "#2c7a7b",
-    "x1":  "#c05621",
-    "x5":  "#804000",
-    "mie": "#c53030",
-    "gray": "#4a5568",
+    "polx": "#000000",   # X incidence polarization (solid black)
+    "poly": "#000000",   # Y incidence polarization (hatched)
+    "x01": "#000000",
+    "x1":  "#000000",
+    "x5":  "#000000",
+    "mie": "#000000",
+    "gray": "#333333",
 }
 plt.rcParams.update({
-    "font.family": "DejaVu Sans",
+    "font.family": "serif",
+    "font.serif": ["Times New Roman", "DejaVu Serif"],
+    "mathtext.fontset": "stix",
     "font.size": 9,
     "axes.titlesize": 10,
-    "axes.titleweight": "bold",
+    "axes.titleweight": "normal",
     "axes.labelsize": 9,
-    "axes.edgecolor": "#4a5568",
+    "axes.edgecolor": "#000000",
     "axes.linewidth": 0.8,
-    "axes.grid": True,
-    "grid.color": "#cbd5e0",
-    "grid.linewidth": 0.6,
-    "grid.alpha": 0.7,
+    "axes.grid": False,
+    "axes.spines.top": True, "axes.spines.right": True,
+    "xtick.direction": "in", "ytick.direction": "in",
     "legend.frameon": False,
     "legend.fontsize": 8.5,
     "xtick.labelsize": 8.5,
@@ -120,20 +125,20 @@ def fig_crosssections():
               ("Cabs", r"Absorption $C_{\mathrm{abs}}$ [" + MU + "m$^2$]", 2e-3),
               (r"omega", r"Single-scattering albedo $\omega\,=\,C_{\mathrm{sca}}/C_{\mathrm{ext}}$", 3e-4)]
     for ax, (key, ylab, ymin) in zip(axes, panels):
-        for pol, off, col, yoff in (("X", -w / 2, C["polx"], 2),
-                                    ("Y", +w / 2, C["poly"], 12)):
+        for pol, off, fc, yoff in (("X", -w / 2, "0.45", 2),
+                                   ("Y", +w / 2, "1.0", 12)):
             if key == "omega":
                 vals = [CS[c][pol]["Csca"] / CS[c][pol]["Cext"] for c, *_ in CASES]
             else:
                 vals = [CS[c][pol][key] for c, *_ in CASES]
-            bars = ax.bar(idx + off, vals, w, color=col,
+            bars = ax.bar(idx + off, vals, w, facecolor=fc,
                           hatch="//" if pol == "Y" else None,
-                          edgecolor=col, linewidth=0.5)
+                          edgecolor="k", linewidth=0.7)
             if key == "omega":
                 for b, v in zip(bars, vals):
                     ax.annotate(f"{v:.1e}", (b.get_x() + b.get_width() / 2, v),
                                 xytext=(0, yoff), textcoords="offset points",
-                                ha="center", fontsize=6, color=col)
+                                ha="center", fontsize=6, color="k")
         ax.set_yscale("log")
         ax.set_ylim(bottom=ymin)
         ax.set_xticks(idx, ["x=0.31", "x=0.1", "x=1", "x=5", "192", "337"], fontsize=7.5)
@@ -150,8 +155,8 @@ def fig_crosssections():
                          ha="center", fontsize=7.8, color=C["gray"])
         axes[0].plot([x0 + .07, x1 - .07], [1.02, 1.02],
                      transform=axes[0].get_xaxis_transform(), lw=1.6, color="#a0aec0")
-    h = [plt.Rectangle((0, 0), 1, 1, fc=C["polx"], ec=C["polx"]),
-         plt.Rectangle((0, 0), 1, 1, fc=C["poly"], ec=C["poly"], hatch="//")]
+    h = [plt.Rectangle((0, 0), 1, 1, fc="0.45", ec="k"),
+         plt.Rectangle((0, 0), 1, 1, fc="1.0", ec="k", hatch="//")]
     fig.legend(h, ["incidence polarization X (perpendicular)",
                    "incidence polarization Y (parallel, hatched)"],
                loc="lower center", ncol=2, handlelength=1.4,
@@ -159,11 +164,11 @@ def fig_crosssections():
     axes[2].annotate(
         "x=5: " + OMG + ">1 (unphysical)\n" + ARR + " coarse-grid artifact, see report",
         xy=(3.2, 1.57 * 1.12), xycoords="data", xytext=(2.15, 9),
-        fontsize=7, color=C["mie"],
-        arrowprops=dict(arrowstyle="->", color=C["mie"], lw=0.9))
+        fontsize=7, color="k",
+        arrowprops=dict(arrowstyle="->", color="k", lw=0.9))
     fig.suptitle("Frozen regression baselines " + EMD + " ADDA v1.2 (macOS arm64), "
                  "Matzler-2006 ice, orient 0 0 0, incidence 90" + DEG,
-                 fontsize=11.5, fontweight="bold", y=1.16)
+                 fontsize=11.5, y=1.16)
     save(fig, "fig1_crosssections")
 
 
@@ -203,14 +208,14 @@ def fig_sphere_mie():
     mievals = [6.792946e-3, 4.653942e-3, 2.139004e-3]
     dev = [abs(a / m - 1) * 100 for a, m in zip(adda, mievals)]
     bars = a2.bar(np.arange(3), dev, 0.55,
-                  color=[C["polx"], C["x01"], C["poly"]])
+                  facecolor=["0.75", "0.45", "0.15"], edgecolor="k", lw=0.7)
     for b, v in zip(bars, dev):
         a2.annotate(f"{v:.2f}%", (b.get_x() + b.get_width() / 2, v),
                     xytext=(0, 3), textcoords="offset points", ha="center",
                     fontsize=8.5)
-    a2.axhline(3.0, color=C["mie"], ls="--", lw=1.3)
+    a2.axhline(3.0, color="k", ls="--", lw=1.3)
     a2.annotate("check_baselines tolerance 3 %", (2.45, 3.0), xytext=(0, 4),
-                textcoords="offset points", ha="right", fontsize=7.5, color=C["mie"])
+                textcoords="offset points", ha="right", fontsize=7.5, color="k")
     a2.set_xticks(np.arange(3), keys)
     a2.set_xlim(-0.6, 2.6)
     a2.set_ylim(0, 3.6)
@@ -218,7 +223,7 @@ def fig_sphere_mie():
     a2.set_title("Deviation vs independent Mie theory\n(Riccati-Bessel, miepython-verified)")
     a2.spines[["top", "right"]].set_visible(False)
     fig.suptitle("Analytic validation of the sphere baseline",
-                 fontsize=11.5, fontweight="bold", y=1.07)
+                 fontsize=11.5, y=1.07)
     save(fig, "fig2_sphere_mie")
 
 
@@ -282,7 +287,7 @@ def fig_scatter_maps():
                  " radial extent $\\propto S_{11}^{0.4}$ (radiation-diagram scaling), "
                  "color = " + r"$S_{11}/S_{11}^{\max}$ " + EMD + " interpolated from the 10" + DEG +
                  " output grid",
-                 fontsize=11, fontweight="bold", y=0.98)
+                 fontsize=11, y=0.98)
     save(fig, "fig3_scattering_maps")
 
 
@@ -292,6 +297,7 @@ def fig_ellipsoid_phase():
     cmap = matplotlib.colormaps["cividis"]
     ell = [c for c, *_ in CASES if "ellipsoid" in c]
     cols = [C["x01"], C["x1"], C["x5"]]
+    dashes = ["-", "--", ":"]
     fig = plt.figure(figsize=(10.8, 8.4))
     fig.subplots_adjust(left=0.01, right=0.90, bottom=0.02, top=0.92)
     gs = fig.add_gridspec(2, 2, wspace=0.10, hspace=0.24)
@@ -302,10 +308,10 @@ def fig_ellipsoid_phase():
         xlab = re.search(r"x([\d.]+)_", case).group(1)
         ax.set_title("oblate spheroid,  x = " + xlab, fontsize=9.5, pad=12)
     a2 = fig.add_subplot(gs[1, 1])
-    for case, col in zip(ell, cols):
+    for case, ls in zip(ell, dashes):
         theta, phi, S = read_mueller(case)
         dop = np.abs(S["s12"])[:, 0] / S["s11"][:, 0] * 100
-        a2.plot(theta, dop, lw=1.7, color=col)
+        a2.plot(theta, dop, lw=1.7, ls=ls, color="k")
     a2.legend(["x = 0.1", "x = 1", "x = 5"], loc="upper left")
     a2.set_xlabel("scattering angle [" + DEG + "]")
     a2.set_ylabel("$|S_{12}|/S_{11}$  [%]")
@@ -319,7 +325,7 @@ def fig_ellipsoid_phase():
     fig.suptitle("Rayleigh " + EMD + " resonance " + EMD + " forward peak: 3D radiation surfaces\n"
                  "analytic oblate spheroid c/a=0.5, 183 GHz, 253 K, X incidence "
                  + EMD + " each surface normalized to its own max, identical view",
-                 fontsize=11, fontweight="bold", y=1.00)
+                 fontsize=11, y=1.00)
     save(fig, "fig4_ellipsoid_phase")
 
 

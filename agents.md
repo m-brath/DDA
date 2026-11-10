@@ -32,7 +32,7 @@ Orientation strategies:
 | `plans/` | Working plans (`DDA-modernization-plan.md`) and the running phase-findings report (`DDA-modernization-report.md` — updated after every phase). |
 | `baselines/` | Frozen regression baselines (golden ADDA outputs) + `make_baseline.py` / `check_baselines.py`. See `baselines/README.md`. **Do not regenerate casually; they are the reference for all migrations.** |
 | `analysis/` | Phase-1 analysis tools (e.g. `inventory.py` — habit×size×freq×T status sheet). |
-| `docs/` | **Project manual** (`DDA-manual.md` — theory, architecture, runbooks, gotcha catalogue; generated `.html`/`.pdf`; data + Mermaid figures). Regenerate figures with `docs/make_figures.py`, HTML/PDF with `docs/build_html.py`; commit regenerated figures. |
+| `docs/` | **Project manual** (`DDA-manual.md` — theory, architecture, runbooks, gotcha catalogue; generated `.html`/`.pdf`; data + Mermaid figures). Regenerate figures with `docs/make_figures.py`, **PDF via LaTeX** with `docs/build_latex.py` (pandoc+xelatex; md stays the single source — never edit the `.tex`), HTML with `docs/build_html.py`; commit regenerated figures + caches (`docs/figures/mermaid*/`). |
 
 ### Habits (shape folders / active configs)
 

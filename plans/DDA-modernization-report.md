@@ -2108,3 +2108,69 @@ configs + baselines + analysis + plans + docs tracked; third-party code (`adda*`
 `arts-sspdb-interface`), geometry (`adda_shape_files/`) and run output (`adda_results/`) outside
 git as independent checkouts. Docs synced: `agents.md` (layout row, status bullet, repo-structure
 policy), README (provisioning + layout + rules), manual map + Appendix D #33 amended / **#34** new.
+
+## 15. Manual typography: textbook figures + LaTeX PDF build (2026-11-10)
+
+**Goal** (user request): all manual plots in classical textbook style, the confusing
+fig15 right column redesigned, and the PDF built by LaTeX instead of Markdown→PDF.
+
+**15.1 Figure restyle (`docs/make_figures.py`, `baselines/plot_baseline_figs.py`).**
+Global matplotlib rcParams: Times/STIX serif math, greyscale-only palettes
+(GRAYS/DASHES ramps), closed frames, inward ticks, no grid clutter, frameless legends;
+color semantics replaced by linestyle/marker **encodings** so every figure survives
+greyscale printing. Fig 15 right column rebuilt: exactly two bars per cell (solid =
+"stored today", cross-hatched 'xxxx' = "would store") + "REJECTED" verdict in the panel
+title for gate-failed cells (the HP_x5_edge trap: ntrunc 113<129 looks like a saving but
+|g|/|f|=1.73 — kept visible via texture + verdict). Fig 16: colorbar dropped,
+open/filled markers = gain/harmful. Appendix-E renderer `plot_baseline_figs.py` restyled
+at the source (figs 09–12) — the delegation contract keeps manual and baseline report
+bit-identical. Captions updated for the new encodings (figs 3,5,6,7,8,13,14,15,16).
+Arithmetic fix: coefficient-count convention (n+1)(n+2)/2 gives 25→6 = 4.2× at full-eps,
+and 351→28 = **12.5×** in the ntrunc-179→81 class — the previously written "∼40×" was
+fabricated and is corrected in manual §1.9.6 (numbers now match report §9 exactly).
+
+**15.2 LaTeX pipeline (`docs/build_latex.py`, new).** pandoc (`pypandoc_binary` 3.9) →
+xelatex via `latexmk`; preamble `docs/latex/manual-preamble.tex` (auto-written from
+`PREAMBLE_DEFAULT` — **rm it after editing PREAMBLE_DEFAULT**); `docs/latex/imgcenter.lua`
+centers standalone images. Markdown stays the single source (never hand-edit the .tex).
+Gotchas solved, all encoded in the script:
+- fontspec font-*name* lookup is broken on this TeX Live ("not loadable: Metric (TFM)")
+  → always file-spec (`Extension=.otf, UprightFont=*`): body **TeX Gyre Termes** +
+  termes-math, mono **lmmono10-regular** (OTF name is NOT `latinmodern-mono`), Scale=0.9.
+- pandoc `tex_math_dollars`: closing `$` must be preceded by a NON-SPACE char and must NOT
+  be followed by a digit. Hence `°`→`^\circ` **without** trailing space (degree pass runs
+  only `_outside_code()`: fences + inline code protected), and md now writes
+  `19 $\times$ 19` (10 sites) — `19$\times$19` de-mathifies and leaks literal `\$`.
+- Greek letters inside `\texttt` are untypsettable in lmmono → ASCII transliteration in md
+  (`-orient <alpha0> <beta0> <gamma0>`) + fabricated `beta{β:03.0f}` fixed to the real
+  `beta{BETA:03.0f}` (matches `adda2SSDBnetcdf_functions.py:479`).
+- breakability: `url` package (defaults already break at `/ _ -`; do NOT set the
+  `\UrlBreaks` token register — broke the build), `fvextra` + promoting kernel
+  `\begin{verbatim}` to fancyvrb `Verbatim[breaklines=true]` (fvextra's `\fvset` does NOT
+  reach the kernel env), `\allowbreak` insertion inside >12-char `\texttt` bodies
+  (regex handles pandoc's balanced `\textless{}` groups), `\emergencystretch`
+  2.5 em global / 4.5 em in tables. Result: overfull hboxes down from 624 pt worst to
+  6.7/2.2/0.6 pt; Missing-character=0; stray `\$`=0.
+- running heads: H2 never calls `\sectionmark`, so "Part" headers were promoted to H1
+  (`# Part 0 — Orientation` etc.) — right header fixed.
+- `+markdown-implicit_figures` + the lua filter: images stay inline where the prose put
+  them (no float reordering, no pandoc "Figure 1..28" numbering clashing with the bold
+  **Fig. N** caption paragraphs).
+- mermaid: the PNG route CLIPPED wide diagrams (puppeteer viewport ~784 CSS px) and
+  printed blurry. New route (cache `docs/figures/mermaid_pdf/`, key `pdf-v1`):
+  mermaid-cli **SVG** → Chrome `--print-to-pdf` with `@page` sized exactly to the SVG
+  viewBox → **vector PDF** included via `\includegraphics` (cannot clip, always sharp).
+  `dvisvgm 3.6` cannot do SVG→PDF (it is DVI→SVG / PDF→SVG); Chrome lives in
+  `~/.cache/puppeteer` (`find_chrome()` handles it).
+- figure placement: `adjustbox` applies `max size` AFTER `angle` (measured — slots are
+  always the upright text block 445×561 pt). Each mermaid diagram becomes a
+  `figure[p]` **dedicated figure page** (classic convention, body text flows around it),
+  auto-**rotated sideways** when that prints larger (wide graphs); serif mermaid font.
+  Lead-in sentences end with "— see figure page below." since floats move.
+
+**15.3 Gates.** Rebuild log: 58 pages, `Missing character` 0, TeX errors 0, float warnings 0,
+overfull hboxes {6.69, 2.24, 0.62} pt; printed mermaid text 5.3–13 pt per figure
+(computed from each cached PDF's MediaBox vs the text block — the two densest graphs
+got label trims + a diamond→hexagon flattening to earn back ~1 pt each); visual
+gs-rendered checks of title/TOC/figure/appendix pages all pass. HTML rebuilt in sync
+(`build_html.py`, SVG cache pruned to the 11 referenced diagrams).
