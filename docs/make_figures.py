@@ -54,9 +54,10 @@ plt.rcParams.update({'figure.dpi': 150, 'font.size': 9,
                      'axes.spines.top': False, 'axes.spines.right': False})
 
 
-def savefig(fig, name):
+def savefig(fig, name, tight=True):
     path = os.path.join(FIGDIR, name)
-    fig.tight_layout()
+    if tight:
+        fig.tight_layout()
     fig.savefig(path, dpi=300)
     plt.close(fig)
     print('wrote', os.path.relpath(path, REPO))
@@ -78,8 +79,10 @@ def fig_dielectric():
     for ax in (ax1, ax2):
         ax.set_xscale('log')
         ax.set_xlabel('frequency [GHz]')
-        ax.axvspan(0.1, 1.5, color='0.85', zorder=0)    # window region
+        ax.axvspan(1, 887, color='0.85', zorder=0)      # production channel range
         ax.legend(framealpha=0.6)
+    ax1.text(1.15, 3.113, 'production channel set\n(35 channels, 1–886 GHz)',
+             fontsize=7.5, ha='left')
     ax1.set_title("Mätzler (2006) ice permittivity — acf.eps_ice_matzler06")
     ax2.set_title(r"loss: $\varepsilon''=\alpha(T)/f + \beta(T)\,f$")
     savefig(fig, 'fig01_dielectric.png')
@@ -139,17 +142,21 @@ def fig_resolution_scheme():
     for k, fm in enumerate(classes):
         ax1.barh([0], edges[k + 1] - edges[k], left=edges[k], height=0.5,
                  color=cols[k], edgecolor='w')
-        ax1.text((edges[k] + edges[k + 1]) / 2, 0, f'class\nfmin={fm/1e9:g}',
-                 ha='center', va='center', fontsize=8,
-                 color='w' if 0.3 < k/len(classes) < 0.95 else 'k')
+        # label ABOVE the block — narrow blocks (120–214 GHz) cannot hold text
+        ax1.text((edges[k] + edges[k + 1]) / 2, 0.28, f'fmin=\n{fm/1e9:g}',
+                 ha='center', va='bottom', fontsize=7, color=cols[k])
     ax1.barh([1], 1200 - 887, left=887, height=0.5, color='0.75', hatch='//')
     ax1.text((887 + 1200) / 2, 1, 'no class has fmin ≥ f\n(phase-5 replica skips;\nx-cap usually cuts)',
              ha='center', va='center', fontsize=7.5)
     ax1.text(95, 1, 'f < 192 GHz: smallest available class is\npicked -> runs, but grossly over-resolved',
              ha='left', va='center', fontsize=7.5)
-    ax1.set_yticks([0, 1]); ax1.set_yticklabels(['pick per (size,f)', 'edge cases'])
+    ax1.set_yticks([0, 1])
+    ax1.set_yticklabels(['class used for f\nin this interval', 'edge cases'], fontsize=8)
+    ax1.set_xticks(classes / 1e9)
+    ax1.set_xticklabels([f'{fm/1e9:g}' for fm in classes], fontsize=8)
     ax1.set_ylim(-0.5, 1.7); ax1.set_xlim(0, 1200)
-    ax1.set_xlabel('frequency of the *requested* calculation [GHz]')
+    ax1.set_xlabel('frequency of the *requested* calculation [GHz]'
+                   '  (block ends at its fmin)')
     ax1.set_title('Resolution rule: coarsest class with fmin ≥ f\n(then ADDA rescales geometry via -eq_rad)')
     ax1.grid(axis='y', alpha=0)
 
@@ -210,37 +217,50 @@ def fig_adda_cost():
     ax2.set_ylabel(r'$|C_\mathrm{ext}-C_\mathrm{ext}(\mathrm{dpl}=7)|'
                    r'\;/C_\mathrm{ext}(\mathrm{dpl}=7)$')
     ax2.set_title('discretization error dominates solver error ($x$=5)')
-    ax2.legend(framealpha=0.7)
+    ax2.legend(framealpha=0.7, loc='lower right')
     savefig(fig, 'fig04_adda_cost.png')
 
 
 # ---------------------------------------------------------------- Fig 05 ---
 def fig_solve_reduction():
-    fig, ax = plt.subplots(figsize=(7.0, 3.6))
+    fig, ax = plt.subplots(figsize=(7.6, 3.9))
     levels = ['L0: 12', 'L1: 42', 'L2: 162', 'L3: 642', 'L4: 2562']
     allv = [12, 42, 162, 642, 2562]
     xs = np.arange(len(levels))
-    ax.bar(xs, allv, color='0.75', label='all icosphere vertices (no mirror)')
-    # measured runs at the production refinement level (report §4.8)
-    ax.bar(2 + 0, 27, color='tab:purple', width=0.5,
-           label='ellipsoid gate: solves 162→27 (wall 3.0×)')
-    ax.bar(3 + 0, 177, color='tab:blue', width=0.5,
-           label='HongPlate XY+XZ: solves 642→177 (wall 1.73×)')
-    ax.bar(3 + 0.5, 337, color='tab:orange', width=0.5,
-           label='HongColumn YZ: solves 642→337 (wall 1.39×)')
+    # grey background bars = every icosphere vertex would be solved (no mirrors)
+    ax.bar(xs, allv, color='0.82', width=0.88, zorder=1,
+           label='ALL icosphere vertices solved (no mirror flags)')
     for x, v in zip(xs, allv):
-        ax.text(x, v * 1.06, str(v), ha='center', fontsize=8)
+        ax.text(x, v * 1.08, str(v), ha='center', fontsize=8, color='0.35')
+    # measured production runs (report §4.8): colored bars = actual ADDA solves,
+    # drawn ON the grey bar of the same refinement level, each directly labeled
+    measured = [
+        (2, 0.00, 27, 'tab:purple',
+         'ellipsoid gate (XY+XZ+YZ): solves 162→27, wall 3.0×'),
+        (3, -0.22, 177, 'tab:blue',
+         'HongPlate_Id9 (XY+XZ): solves 642→177, wall 1.73×'),
+        (3, 0.22, 337, 'tab:orange',
+         'HongColumn_Id7 (YZ): solves 642→337, wall 1.39×'),
+    ]
+    for lvl, off, v, col, name in measured:
+        ax.bar(xs[lvl] + off, v, width=0.4, color=col, zorder=3, label=name)
+        ax.text(xs[lvl] + off, v * 1.15, str(v), ha='center', fontsize=8,
+                color=col, fontweight='bold', zorder=4)
     ax.set_xticks(xs); ax.set_xticklabels(levels)
-    ax.set_yscale('log'); ax.set_ylim(1, 6000)
+    ax.set_yscale('log'); ax.set_ylim(1, 8000)
     ax.set_xlabel('icosphere refinement level $L$ (vertices $V=10\\cdot4^{L}+2$)')
     ax.set_ylabel('ADDA solves per job')
-    ax.set_title('Mirror fill-in reduces solves (measured, report §4.8)')
-    ax.legend(framealpha=0.7, fontsize=8)
+    ax.set_title('Mirror fill-in reduces solves: grey = all vertices, '
+                 'colored = actually solved\n(rest are exact mirror fill-ins; '
+                 'measured at the production refinement level, report §4.8)')
+    ax.legend(framealpha=0.9, fontsize=7.5, loc='upper left')
     savefig(fig, 'fig05_solve_reduction.png')
 
 
 # ---------------------------------------------------------------- Fig 06 ---
 def fig_sym_closure():
+    from matplotlib.patches import Rectangle
+    from matplotlib.lines import Line2D
     habits = ['HongPlate_Id9\n(fine)', 'HongPlate_Id9\n(coarse)',
               'HongColumn_Id7\n(fine)', 'HongColumn_Id7\n(coarse)',
               'LiuSector_Id3\n(fine)', 'LiuSector_Id3\n(coarse)',
@@ -256,21 +276,47 @@ def fig_sym_closure():
         [0.990, 0.993, 0.997, 0.990],
         [0.069, 0.051, 0.045, np.nan],
         [0.068, 0.049, 0.027, np.nan]])
-    fig, ax = plt.subplots(figsize=(7.4, 4.2))
-    im = ax.imshow(M, cmap='RdYlGn', vmin=0, vmax=1.02, aspect='auto')
-    ax.set_xticks(range(len(mirrors))); ax.set_xticklabels(mirrors)
-    ax.set_yticks(range(len(habits))); ax.set_yticklabels(habits, fontsize=8)
+    fig, ax = plt.subplots(figsize=(9.8, 4.6))
+    fig.subplots_adjust(left=0.15, right=0.52, top=0.82, bottom=0.09)
+    # traffic-light coloring = THE DECISION RULE, so the eye lands on the
+    # difference that matters (a continuous colormap made 1.000 vs 0.986
+    # visually indistinguishable although one is safe and the corrupting):
+    #   green  closure == 1.000  → mirror flag may be enabled
+    #   amber  1.000 > closure  → fill-in injects a real SHAPE error — forbidden
+    #   red    habit intrinsically asymmetric → flag never applicable
+    def cell(v):
+        if not np.isfinite(v):
+            return '0.9'
+        if v >= 0.9995:
+            return 'tab:green'
+        if v >= 0.95:
+            return 'gold'
+        return 'tab:red'
     for i in range(M.shape[0]):
         for j in range(M.shape[1]):
-            if np.isfinite(M[i, j]):
-                ax.text(j, i, f'{M[i,j]:.3f}', ha='center', va='center', fontsize=8)
-            else:
-                ax.text(j, i, 'n/a', ha='center', va='center', fontsize=8)
-    ax.grid(alpha=0.2)
-    ax.set_title('Voxel-set mirror closure (analysis/phase4_symmetry.py):\n'
-                 '1.000 = flag usable; <1 = fill-in would corrupt the shape')
-    fig.colorbar(im, ax=ax, shrink=0.8, label='closure fraction')
-    savefig(fig, 'fig06_sym_closure.png')
+            v = M[i, j]
+            ax.add_patch(Rectangle((j - 0.5, i - 0.5), 1, 1,
+                                   fc=cell(v), ec='w', lw=1.5))
+            txt = 'n/a' if not np.isfinite(v) else f'{v:.3f}'
+            ax.text(j, i, txt, ha='center', va='center', fontsize=8,
+                    color='w' if cell(v) in ('tab:green', 'tab:red') else 'k')
+    ax.set_xlim(-0.5, len(mirrors) - 0.5)
+    ax.set_ylim(len(habits) - 0.5, -0.5)
+    ax.set_xticks(range(len(mirrors))); ax.set_xticklabels(mirrors)
+    ax.set_xticks([], minor=True)
+    ax.set_yticks(range(len(habits))); ax.set_yticklabels(habits, fontsize=8)
+    ax.tick_params(length=0)
+    ax.set_title('Voxel-set mirror closure per habit (analysis/phase4_symmetry.py):\n'
+                 'flags MUST be set from the COARSEST resolution class (row pairs)')
+    ax.legend(handles=[
+        Line2D([], [], marker='s', ls='', ms=11, mfc='tab:green', mec='none',
+               label='1.000 — voxel set exactly closed: flag SAFE'),
+        Line2D([], [], marker='s', ls='', ms=11, mfc='gold', mec='none',
+               label='<1.000 — NOT closed: fill-in = real shape error, never enable'),
+        Line2D([], [], marker='s', ls='', ms=11, mfc='tab:red', mec='none',
+               label='asymmetric habit — no mirror flag ever applies')],
+        loc='upper left', bbox_to_anchor=(1.01, 1.0), fontsize=8, framealpha=0.9)
+    savefig(fig, 'fig06_sym_closure.png', tight=False)
 
 
 # ---------------------------------------------------------------- Fig 07 ---
@@ -287,32 +333,38 @@ def fig_backlog():
             m2 = re.search(r'jobs=(\d+)', ln)
             habits.append('HongPlate_Id9_TRO'); jobs.append(int(m2.group(1)))
             cpu.append(0.0); cpu_asym.append(0.0)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.4, 3.6),
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.6, 3.8),
                                    gridspec_kw={'width_ratios': [1.25, 1]})
     ys = np.arange(len(habits))
-    ax1.barh(ys, jobs, color='tab:blue', alpha=0.35)
-    ax1.barh(ys + 0.35, [j for j in jobs], color='none')
+    ax1.barh(ys, jobs, color='tab:blue', alpha=0.5)
     for y, j in zip(ys, jobs):
         ax1.text(j + 40, y, f'{j}', va='center', fontsize=8)
     ax1.set_yticks(ys); ax1.set_yticklabels(habits, fontsize=8)
     ax1.set_xlabel('production jobs (T × f × size, after x-cap + resolution rule)')
-    ax1.set_title('Phase-5 backlog size (analysis/phase5_backlog_inventory.txt)')
+    ax1.set_title('Phase-5 backlog:\nnumber of production jobs')
     ax1.invert_yaxis()
 
-    ax2.barh(ys, cpu, color='tab:green', label='with mirror flags')
-    ax2.barh(ys, cpu_asym, color='tab:red', alpha=0.28, height=1.5,
-             label='without mirrors')
+    h = 0.36
+    ax2.barh(ys - h / 2, cpu_asym, height=h, color='tab:red', alpha=0.4,
+             zorder=2, label='without mirror flags')
+    ax2.barh(ys + h / 2, cpu, height=h, color='tab:green', alpha=0.9,
+             zorder=2, label='with mirror flags (production)')
     for y, (c, ca) in enumerate(zip(cpu, cpu_asym)):
         if ca > 0:
-            ax2.text(ca * 1.02, y, f'{ca:.0f}→{c:.0f}', va='center', fontsize=8)
+            ax2.text(ca * 1.05, y - h / 2, f'{ca:.0f}', va='center',
+                     fontsize=7.5, color='tab:red')
+            ax2.text(c * 1.05, y + h / 2, f'{c:.0f}', va='center',
+                     fontsize=7.5, color='tab:green')
         else:
-            ax2.text(2, y, 'minutes/job (orient-avg)', va='center', fontsize=8)
+            ax2.text(1.5, y, 'minutes/job (orient-avg, no mirrors)',
+                     va='center', fontsize=7.5)
     ax2.set_yticks(ys); ax2.set_yticklabels([])
     ax2.set_xscale('log'); ax2.set_xlim(1, 4000)
     ax2.set_xlabel('estimated single-core ARO solve time [CPU-h]')
-    ax2.set_title('cost: mirrors vs no mirrors')
+    ax2.set_title('solve cost per habit:\ntop bar = no mirrors, bottom bar = with flags')
     ax2.invert_yaxis()
-    ax2.legend(framealpha=0.7, fontsize=8)
+    ax2.legend(framealpha=0.9, fontsize=7.5, loc='upper center',
+               bbox_to_anchor=(0.5, -0.18), ncol=2)
     savefig(fig, 'fig07_backlog.png')
 
 
@@ -500,8 +552,7 @@ def fig_forward_peak():
     ax1.set_ylabel(r'$|S_1(\theta)|^2$   (Mie, ice at 887 GHz/230 K)')
     ax1.set_yscale('log')
     ax1.legend(framealpha=0.7, ncol=2, fontsize=8)
-    ax1.set_title('(a) whole sphere: the forward peak is a\nlarge-x phenomenon '
-                  '(Rayleigh x=1 has NO spike)')
+    ax1.set_title('(a) whole sphere: the forward peak is\na large-x phenomenon')
     ax2.set_xlim(0, 50)
     ax2.set_yscale('log')
     ax2.set_xlabel(r'$\theta$ [deg]')
@@ -511,7 +562,7 @@ def fig_forward_peak():
         ax2.axvline(w, color=cols[xv], ls=ls, lw=1.0)
         ax2.text(w + 1, 1.5, r'$\approx 220°/x$', color=cols[xv], fontsize=8,
                  rotation=90, va='bottom')
-    ax2.set_title('(b) zoom: peak narrows as $\\lambda/a$ — resolving\nit costs '
+    ax2.set_title('(b) zoom: peak width $\\approx 220°/x$ — resolving\nit costs '
                   r'$\propto x$ spectral order')
     # measured SH demand (production expansion rule, HongPlate scan cells)
     xx = np.linspace(0.3, 11, 200)
@@ -540,9 +591,9 @@ def fig_forward_peak():
     ax3.set_ylabel('achieved SH ntrunc')
     ax3.set_yscale('log')
     ax3.set_ylim(2, 400)
-    ax3.set_title('(c) measured cost: ntrunc grows like x — and the\nanalytic-'
-                  'model RESIDUAL breaks the growth (9A)')
-    ax3.legend(framealpha=0.7, fontsize=6.8, loc='lower right')
+    ax3.set_title('(c) measured SH cost vs $x$:\n'
+                  'filled = full field, open = model residual')
+    ax3.legend(framealpha=0.7, fontsize=6.6, loc='lower right')
     savefig(fig, 'fig13_forward_peak.png')
 
 
@@ -717,7 +768,13 @@ def fig_delta_scaling():
         subprocess.run([sys.executable,
                         os.path.join(REPO, 'analysis', 'phase9_dump_grids.py')],
                        check=True)
-    fig, axes = plt.subplots(3, 3, figsize=(11.8, 9.2))
+    fig, axes = plt.subplots(3, 3, figsize=(12.4, 7.6))
+    fig.suptitle('Phase-9A delta-scaling probe on three REAL production cells — '
+                 'rows = cell, columns: (left) forward peak θ≤40°, '
+                 '(middle) whole sphere, (right) SH order needed\n'
+                 'READ: green verdict = model+residual would SHRINK storage; '
+                 'red = residual bigger than the field itself (model harmful)',
+                 fontsize=10, y=0.995)
     for r, ((tag, rtitle), npz) in enumerate(zip(tags, npzs)):
         dd = np.load(npz)
         th = dd['thetas']
@@ -726,6 +783,7 @@ def fig_delta_scaling():
         m0 = np.abs(dd['s_mod'][:, :, 0][sl])
         g0 = np.abs(dd['g'][:, :, 0][sl])
         axf, axg, axb = axes[r]
+        harmful = float(dd['ratio_total']) > 1.02
         c = th <= 40
         axf.semilogy(th[c], f0[c], lw=1.3, color='tab:blue', label='ADDA full field')
         axf.semilogy(th[c], m0[c], lw=1.3, ls='--', color='tab:orange',
@@ -734,44 +792,45 @@ def fig_delta_scaling():
         axf.set_xlabel(r'$\theta$ [deg]')
         if r == 0:
             axf.set_ylabel(r'$|s_{11}(\theta)|$  (fwd, log)')
+            axf.set_title('model vs ADDA at the peak\n%s' % rtitle, fontsize=9)
+        else:
+            axf.set_title(rtitle, fontsize=9)
         axf.legend(fontsize=6.5, framealpha=0.7)
-        axf.set_title('%s: peak shape captured?' % rtitle, fontsize=9)
         axg.semilogy(th, f0, lw=1.1, color='tab:blue', label='full |f|')
         axg.semilogy(th, g0, lw=1.1, color='tab:red', label='residual |g|=|f−F|')
         axg.set_xlim(0, 180)
         axg.set_xlabel(r'$\theta$ [deg]')
         if r == 0:
             axg.set_ylabel(r'$|s_{11}(\theta)|$  (sphere, log)')
-        axg.set_title(r'whole sphere: $\,$ $|g|/|f|$ (L2) = %.3f'
-                      % float(dd['ratio_total']), fontsize=9)
+            axg.set_title('whole sphere: residual vs full field', fontsize=9.5)
         axg.legend(fontsize=6.5, framealpha=0.7)
         vals = [int(dd['ntrunc_full']), int(dd['ntrunc_res']),
                 int(dd['ntrunc_res_fulleps'])]
-        lab = ['full\nfield', 'residual\nown-eps', 'residual\nfull-eps']
+        lab = ['full\nfield', 'residual\n(own-eps rule:\nNOT used)',
+               'residual\n(full-eps rule)']
         colr = ['tab:blue', '0.6', 'tab:green']
         axb.barh(range(3), vals, color=colr)
-        axb.set_yticks(range(3), lab)
+        axb.set_yticks(range(3), lab, fontsize=7.5)
         axb.invert_yaxis()
         axb.set_xlim(0, max(vals) * 1.35)
-        axb.set_xlabel('SH ntrunc (production rule)')
+        axb.set_xlabel('SH ntrunc (coefficient truncation order)')
         for i, v in enumerate(vals):
             axb.text(v + max(vals) * 0.02, i, str(v), va='center', fontsize=8)
-        axb.set_title('spectral order: %s'
-                      % ('model HARMFUL — not usable'
-                         if float(dd['ratio_total']) > 1.02
-                         else ('REDUCED %.1fx' % (vals[0] / vals[2])
-                               if vals[2] < vals[0] else 'NOT reduced')),
-                      fontsize=9,
-                      color='tab:red' if float(dd['ratio_total']) > 1.02
-                      else 'k')
+        verdict = ('HARMFUL: residual > field' if harmful
+                   else 'REDUCED %.1fx' % (vals[0] / vals[2]))
+        axb.set_title('spectral order: %s' % verdict, fontsize=9,
+                      color='tab:red' if harmful else 'k')
+        if r == 0:
+            axb.set_ylabel('(bars: green = usable saving)')
     savefig(fig, 'fig15_delta_scaling.png')
 
 
 def fig_validity_map():
     """When is the model safe? Cext sanity vs residual fraction, per scan cell."""
+    from matplotlib.lines import Line2D
     d = _p9_results()
     cells = d['cells']
-    fig, ax = plt.subplots(figsize=(7.2, 4.8))
+    fig, ax = plt.subplots(figsize=(7.2, 5.0))
     mk = {'face': 'o', 't60': 's', 'edge': '^', 'along': 'D'}
     sc = None
     for c in cells:
@@ -782,7 +841,7 @@ def fig_validity_map():
         for k_, v in mk.items():
             if c['tag'].endswith(k_):
                 mkr = v
-        sc = ax.scatter([xr], [yv], s=24 + c['ntrunc_full'] * 1.3, marker=mkr,
+        sc = ax.scatter([xr], [yv], s=130, marker=mkr,
                         c=[gain], cmap='RdYlGn_r', vmin=0.2, vmax=1.6,
                         edgecolors='k', linewidths=0.6, zorder=3)
     ax.axhline(1.0, color='k', lw=1.0, ls='--')
@@ -803,14 +862,25 @@ def fig_validity_map():
                             c['ratio_total'] + dy), fontsize=7.5,
                     arrowprops=dict(arrowstyle='->', lw=0.7, color='0.35'))
     ax.set_xlabel(r'$C_{ext,\,model}/C_{ext,\,ADDA}$   (model sanity check)')
-    ax.set_ylabel(r'residual fraction $|g|/|f|$')
+    ax.set_ylabel(r'residual fraction $|g|/|f|$   (lower = model wins)')
     ax.set_ylim(-0.65, 2.05)
     ax.set_xlim(-0.7, 2.0)
     cbar = fig.colorbar(sc, ax=ax, pad=0.02)
-    cbar.set_label('ntrunc gain  res(full-eps)/full\n(green = reduction)')
-    ax.set_title('Phase-9A scan, all 15 cells: marker = orientation '
-                 '(circle face,\nsquare 60°, triangle edge, diamond along-column)'
-                 '\nsize = full-field ntrunc', fontsize=9.5)
+    cbar.set_label('ntrunc gain  res(full-eps)/full\n(green = storage saved,\n'
+                   'red = model needs MORE coefficients)')
+    ax.legend(handles=[
+        Line2D([], [], marker='o', ls='', ms=9, mfc='0.75', mec='k',
+               label='face-on incidence'),
+        Line2D([], [], marker='s', ls='', ms=9, mfc='0.75', mec='k',
+               label='60° tilt'),
+        Line2D([], [], marker='^', ls='', ms=9, mfc='0.75', mec='k',
+               label='edge-on'),
+        Line2D([], [], marker='D', ls='', ms=9, mfc='0.75', mec='k',
+               label='along column axis')],
+        loc='lower left', fontsize=7.5, framealpha=0.9)
+    ax.set_title('Phase-9A validity map — all 15 scan cells\n'
+                 'green band + below dashed line = the gated activation domain',
+                 fontsize=10)
     savefig(fig, 'fig16_validity_map.png')
 
 

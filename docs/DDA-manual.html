@@ -35,7 +35,9 @@
 <body>
 <h1 id="dda-scattering-pipeline-project-manual">DDA Scattering Pipeline — Project Manual</h1>
 <p><strong>Single scattering properties of randomly oriented hydrometeors (ADDA → ARTS SSDB)</strong></p>
-<p><em>Version: 2026-11-07 · repo state: Phases 0–7 complete (modernization plan done) — backscatter Mueller export (<code>beta_0.9.1</code>) and NetCDF4 Mueller artifacts live; ARO/TRO backlog ready for HPC production runs</em></p>
+<p><em>Version: 2026-11-09 · repo state: Phases 0–8 complete (modernization plan done), Phase 9A
+scanned (analytic diffraction-peak model, not yet wired in) — backscatter Mueller export
+(<code>beta_0.9.1</code>) and NetCDF4 Mueller artifacts live; ARO/TRO backlog ready for HPC production runs</em></p>
 <hr />
 <h2 id="how-to-use-this-manual">How to use this manual</h2>
 <p>This is the single reference document for maintaining and operating the DDA automation
@@ -53,10 +55,43 @@ and debug the pipeline safely.</p>
   commit the figures. (The Appendix-E baseline plots are re-rendered by that script
   <em>delegating</em> to <code>baselines/plot_baseline_figs.py</code>, so the manual can never drift from
   the reference baseline report.)</li>
+<li>Every figure has a <strong>bold <em>Fig. N</em> caption line directly below it</strong> stating the one
+  thing it proves and how to read it. If you only skim, read the figure captions.</li>
 <li>The browsable HTML version is built with <code>python docs/build_html.py</code>
   (add <code>--pdf</code> if a headless Chrome/Chromium is installed). Mermaid diagrams in the
   HTML render via mermaid.js from a CDN — same requirement as GitHub.</li>
 </ul>
+<h3 id="pick-your-entry-point">Pick your entry point</h3>
+<table>
+<thead>
+<tr>
+<th>You want to…</th>
+<th>Read</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>run a job today (local smoke test)</td>
+<td>§0.3 status → §3.5 local runbook → §3.2 flowcharts</td>
+</tr>
+<tr>
+<td>submit the production backlog on an HPC</td>
+<td>§3.6 runbook → §4.4 job/cost table → Appendix A CLI tokens</td>
+</tr>
+<tr>
+<td>understand <em>what</em> is computed and why a knob matters</td>
+<td>Part 1 (theory), in order §§1.1→1.6</td>
+</tr>
+<tr>
+<td>debug a run / extend the pipeline</td>
+<td>§2 call graphs → Appendix D gotchas → <code>plans/DDA-modernization-report.md</code></td>
+</tr>
+<tr>
+<td>validate a change before merging</td>
+<td>Part 4 gates + <code>baselines/</code> (§4.1)</td>
+</tr>
+</tbody>
+</table>
 <h3 id="table-of-contents">Table of contents</h3>
 <table>
 <thead>
@@ -87,10 +122,6 @@ and debug the pipeline safely.</p>
 <td>Golden baselines, noise-based gates, equivalence suites, backlog status</td>
 </tr>
 <tr>
-<td><strong><a href="#part-4--validation--quality-gates">4</a></strong></td>
-<td>Golden baselines, noise-based gates, equivalence suites, backlog status</td>
-</tr>
-<tr>
 <td><strong><a href="#appendix-a--adda-command-line-tokens-used">A</a></strong> … <strong><a href="#appendix-c--ssdb-netcdf-layout">C</a></strong></td>
 <td>ADDA CLI tables, input .dat files, NetCDF layout</td>
 </tr>
@@ -105,7 +136,7 @@ and debug the pipeline safely.</p>
 </tbody>
 </table>
 <h3 id="the-one-minute-picture">The one-minute picture</h3>
-<div class="mermaidfig"><img src="figures/mermaid/mmd-956ef2a5d259.svg" alt="flow diagram 1"></div>
+<div class="mermaidfig"><img src="figures/mermaid/mmd-f3e117f92556.svg" alt="flow diagram 1"></div>
 <p>The pipeline answers one question: <em>for a given particle habit, size, frequency and
 temperature, what are its single-scattering properties averaged over all relevant
 particle orientations?</em> Two orientation strategies are produced:</p>
@@ -250,7 +281,7 @@ The old HPC results are <em>not accessible</em> — regression validation theref
 <td>particle shape definitions from the ARTS habit catalogue: ID9 = Hong/MoCOLAG plate, ID7 = Hong column, ID20 = hexagonal plate aggregate, ID28 = Icon snowflake, ID3 = Liu sector snowflake.</td>
 </tr>
 <tr>
-<td><strong>gloden / baseline</strong></td>
+<td><strong>golden / baseline</strong></td>
 <td>frozen ADDA outputs in <code>baselines/</code> used for regression (§4.1).</td>
 </tr>
 </tbody>
@@ -262,7 +293,7 @@ The old HPC results are <em>not accessible</em> — regression validation theref
 <li><strong>Backlog ready</strong> (configs verified, jobs counted, not yet run): ARO <code>HongPlate_Id9</code>
   full 35-channel grid (5235 jobs), <code>HongColumn_Id7</code> (1524), <code>IconSnow_Id28</code> (1276),
   <code>LiuSectorSnowflake_Id3</code> (1252); TRO <code>HongPlate_Id9_TOR</code> (4608 jobs). Estimated
-  $ <span class="arithmatex">\(\approx\)</span> 2700 single-core CPU-h total (see §4.4).</li>
+  <span class="arithmatex">\(\approx 2700\)</span> single-core CPU-h total (see §4.4).</li>
 <li><strong>Phase 6 done (2026-11-06):</strong> the exact 4×4 <strong>backscatter Mueller matrix</strong> (ADDA
   <code>mueller_scatgrid</code> Θ=180°/Φ=0° slice) is extracted per vertex, cached, mirror-filled,
   orientation-averaged and exported as <code>backMat_data</code>/<code>backMat_index</code> — SSDB writer
@@ -336,9 +367,12 @@ figure below):</p>
 </tbody>
 </table>
 <p><img alt="ADDA cost and error budget" src="figures/fig04_adda_cost.png" /></p>
-<p><em>Left: wall time vs dipole count per solve (single core, oblate spheroid 1.0/0.5, Matzler
-ice at 230 K, 183 GHz). Right: discretization error at x=5 — <span class="arithmatex">\(dpl_{\mathrm{eff}}\)</span> dominates; the auto
-heuristic ( $\approx $18) sits far to the right of the eps-noise band.</em></p>
+<p><strong>Fig. 4 — one ADDA solve: cost and error budget.</strong> *Left panel: wall time grows like
+<span class="arithmatex">\(N^{2.3}\)</span> with dipole count — the cost-planning input. Right panel: at <span class="arithmatex">\(x=5\)</span>, the Cext error
+from dipole resolution (<span class="arithmatex">\(dpl_{\mathrm{eff}}\)</span>, x-axis) stays 2–3 orders of magnitude ABOVE the
+solver-noise band (red dotted line, <code>-eps 3</code>): the shape-file resolution class — not <code>-eps</code> —
+is what sets accuracy. (Data: oblate spheroid 1.0/0.5, Matzler ice 230 K, 183 GHz,
+<code>analysis/phase4b_bench_results.json</code>.) *</p>
 <p><strong>Key references:</strong> Yurkin &amp; Hoekstra 2011, JQSRT 112, 2234–2247; ADDA manual
 <code>adda/doc/manual.pdf</code> and <code>adda_1.2/doc/manual.pdf</code>.</p>
 <h2 id="12-particle-shape-files-and-the-resolution-scheme">1.2 Particle shape files and the resolution scheme</h2>
@@ -399,6 +433,11 @@ are exploited.</p>
 <p>Also note: <strong>class availability can be per-size incomplete</strong> (e.g. HexPlaAgg 197 <span class="arithmatex">\(\mu\)</span>m has
 only the 671 and 887 classes), so never assume five files per size.</p>
 <p><img alt="Resolution scheme" src="figures/fig03_resolution_scheme.png" /></p>
+<p><strong>Fig. 3 — Which shape file computes a given (size, f).</strong> <em>Left: a requested frequency falls
+in one colored block; that block's <code>fmin</code> class file does the run (block label sits at its
+right edge). The two edge cases are annotated. Right: measured N_dipoles per class for three
+real HongPlate sizes — small particles are degenerate (one lattice already suffices), large
+ones grow <span class="arithmatex">\(\\propto f_{\\min}^3\)</span>.</em></p>
 <h3 id="the-selection-rule-as-implemented-in-adda_main_controlpy">The selection rule (as implemented in <code>adda_main_control.py</code>)</h3>
 <p>For each (size, f): among the files of that physical size, the code picks the <strong>coarsest
 class with fmin <span class="arithmatex">\(\ge\)</span> f</strong> (<code>df = fmin−f; df[df&lt;0]=inf; argmin</code>); every <em>other</em> file of that
@@ -417,7 +456,10 @@ size prints “wrong particle realisation” and skips. Consequences, precisely:
   bookkeeping, not by x — 7701 by the fmin rule; report §1.7).</li>
 </ul>
 <p><img alt="Size parameter of the HongPlate size grid" src="figures/fig02_size_parameter.png" /></p>
-<p><em>HongPlate_Id9 size grid (51 sizes, 10–2596 <span class="arithmatex">\(\mu\)</span>m): the x-cap cuts the top-right corner.</em></p>
+<p><strong>Fig. 2 — What the x-cap actually removes.</strong> <em>Each line is one particle size
+(<span class="arithmatex">\(x=\\pi D_{veq}f/c_0\\propto Df\)</span>, straight in log-log). Everything above the dashed
+<span class="arithmatex">\(x=10\)</span> line is skipped: for HongPlate that is 146 of 8925 (size, f) combinations —
+far fewer than the 7701 killed by the resolution rule of Fig. 3.</em></p>
 <h2 id="13-dielectric-function-of-ice-matzler-2006">1.3 Dielectric function of ice (Matzler 2006)</h2>
 <p>All ice habits use the Mätzler (2006) parametrization, implemented in
 <code>acf.eps_ice_matzler06(f, TK)</code> (<code>adda_control_functions.py:1068–1103</code>):</p>
@@ -434,8 +476,12 @@ the imaginary part at
 190 K vs 270 K differs by orders of magnitude — hence the three production temperatures
 {190, 230, 270} K are <em>not</em> a formality; each (T, f, size) is a separate ADDA job.</p>
 <p><img alt="Matzler 2006 ice permittivity" src="figures/fig01_dielectric.png" /></p>
-<p><em>Grey band: the sub-mm window region. The loss tangent at mm/sub-mm wavelengths is what
-makes scattering by cloud ice a microwave-radiometry issue at all.</em></p>
+<p><img alt="Matzler 2006 ice permittivity" src="figures/fig01_dielectric.png" /></p>
+<p><strong>Fig. 1 — Mätzler ice permittivity across the whole valid range.</strong> <em>Grey band: the
+production channel set (35 frequencies, 1–886 GHz). Reading: the real part (left) barely
+moves (≈3.11–3.19, only with T); the imaginary part (right) spans ~4 orders of magnitude
+in f and T — the loss tangent at mm/sub-mm wavelengths is what makes cloud ice a
+microwave-radiometry issue at all, and why each (T, f) pair is its own ADDA job.</em></p>
 <h2 id="14-from-adda-output-to-mueller-and-extinction-matrices">1.4 From ADDA output to Mueller and extinction matrices</h2>
 <p>Each ADDA solve produces two parsed artifacts (parsing in <code>acf.adda_call</code>,
 <code>adda_control_functions.py:198–236</code> — <strong>positional, column indices hardcoded</strong>; re-verify
@@ -510,7 +556,8 @@ when switching ADDA versions, report §1.3):</p>
 coordinate systems — the lab-frame incidence/tilt angles and the propagation-attached
 scattering grid — is shown below:</p>
 <p><img alt="Orientation and scattering geometry" src="figures/fig08_orientation_geometry.png" /></p>
-<p><em>(a) lab frame: the incidence direction <span class="arithmatex">\(\hat k\)</span> (<span class="arithmatex">\(\theta_{\mathrm{inc}}\)</span> from lab-<span class="arithmatex">\(z\)</span>, azimuth
+<p><strong>Fig. 8 — the two coordinate systems you must not confuse.</strong> <em>(a) lab frame: the incidence
+direction <span class="arithmatex">\(\hat k\)</span> (<span class="arithmatex">\(\theta_{\mathrm{inc}}\)</span> from lab-<span class="arithmatex">\(z\)</span>, azimuth
 fixed) and the particle symmetry axis (tilt <span class="arithmatex">\(\beta\)</span>); ARO averages the azimuth/spin Euler
 angles <span class="arithmatex">\(\alpha,\gamma\)</span> at fixed <span class="arithmatex">\(\beta\)</span>. (b) every solve's <span class="arithmatex">\(181\times361\)</span> amplitude/Mueller grid
 lives on a sphere <strong>attached to <span class="arithmatex">\(\hat k\)</span></strong> — <span class="arithmatex">\(\theta=0°\)</span> is the forward pole, and the red pole
@@ -761,7 +808,7 @@ averaged phase matrix on the fly to <code>eps_phase=0.001</code> on the 19$\time
 <ul>
 <li><strong>phi:</strong> even periodic ring, <code>nphi = 2·ntrunc_cap + 2</code>, endpoint <strong>excluded</strong>
   (<span class="arithmatex">\(\varphi_{max}=360-360/n\varphi\)</span>); <code>ntrunc_cap = ceil(6·(x+4x^{1/3}+2))</code> — the
-  scattering grid must accommodate <span class="arithmatex">\(2\,n_{\text{trunc}}\)</span> longitudes (§1.9 for why
+  scattering grid must accommodate <span class="arithmatex">\(2\,n_{\text{trunc}}\)</span> longitudes (§1.9.3 for why
   <span class="arithmatex">\(n_{\text{trunc}}\propto x\)</span>). A duplicate <span class="arithmatex">\(\varphi=0/360\)</span> row injects FFT aliasing
   error <span class="arithmatex">\(\propto\Delta\varphi^2\)</span> (measured <span class="arithmatex">\(3.2\cdot10^{-2}\)</span> twin failure), and odd
   rings break the Phase-4 mirror <span class="arithmatex">\(\varphi\)</span>-index map (180° must be a ring node);</li>
@@ -831,10 +878,15 @@ for XY (whose φ map sends 0°→180°).</p>
 <p><strong>Precondition — voxel closure.</strong> A flag is legal only if the <em>voxel set itself</em> is
 mirror-closed, and closure is <strong>resolution-dependent</strong> — measured by
 <code>analysis/phase4_symmetry.py</code> (figure): a fill across a non-closed mirror is a real
-<strong>shape error</strong> (HongPlate coarse-class YZ: 0.986 closure →<span class="arithmatex">\(1.5\cdot 10^{-4}\)</span> Mueller field error
+<strong>shape error</strong> (HongPlate coarse-class YZ: 0.986 closure → <span class="arithmatex">\(1.5\cdot 10^{-4}\)</span> Mueller field error
 vs <span class="arithmatex">\(4.5\cdot 10^{-12}\)</span> when closed), not solver noise. Hence flags must be set from the <strong>coarsest
 resolution class</strong> of the size grid.</p>
 <p><img alt="Measured voxel closure" src="figures/fig06_sym_closure.png" /></p>
+<p><strong>Fig. 6 — the mirror-flag decision table (traffic-light = the rule itself).</strong> <em>Green: voxel
+set exactly closed (1.000) at that resolution → flag may be enabled. Amber: &lt;1.000 → the
+fill-in would reconstruct voxels that do not exist = a real SHAPE error, never enable —
+note how a mirror can be closed at fine resolution but broken at the coarsest class, which
+is why flags follow the coarsest row of each pair. Red: habit intrinsically asymmetric.</em></p>
 <p>Production flags (report §4.7): <strong>HongPlate_Id9 + TOR grid: XY+XZ=true, YZ=false</strong>;
 <strong>HongColumn_Id7: YZ=true</strong>; LiuSector/Icon/HexPlaAgg: none (aggregate/snowflake shapes
 break all mirrors). Measured effect (§4.8):</p>
@@ -865,6 +917,10 @@ break all mirrors). Measured effect (§4.8):</p>
 </tbody>
 </table>
 <p><img alt="Solve reduction" src="figures/fig05_solve_reduction.png" /></p>
+<p><strong>Fig. 5 — what mirror fill-in buys (measured).</strong> <em>Grey bars: every icosphere vertex solved
+(no flags). Colored bars: actual ADDA solves with the habit's flags at that level — the rest
+of the vertices are exact mirror fill-ins (still SH-expanded + cached, hence the wall-time
+gain in the legend is smaller than the solve-count ratio).</em></p>
 <p>Wall gain is below the solve-count ratio at probe size because the per-<em>vertex</em> work
 (SH expansion + cache write) still happens for fills; at production <span class="arithmatex">\(x\approx10\)</span> the ADDA solve
 dominates and the ratio closes. <code>sym_Zobj</code> (<span class="arithmatex">\(C_n\)</span> rotation) is parked: exact <span class="arithmatex">\(C_{2z}\)</span> itself is
@@ -906,83 +962,358 @@ all grow in lockstep). One file per
 (<code>arts-sspdb-interface/</code>). Full variable table: Appendix C.</p>
 <h2 id="19-analytic-diffraction-peak-model-residual-storage-phase-9a-scanned-not-yet-in-the-pipeline">1.9 Analytic diffraction-peak model + residual storage (Phase 9A — scanned, not yet in the pipeline)</h2>
 <p><em>Status: scanned and gated end-to-end (2026-11-09, <code>analysis/phase9_fwdmodel_scan.py</code>,
-report §9) — <strong>no pipeline code changed</strong>. This section documents the mechanism and the
-measured activation domain; §1.9.4 lists the go-forward design.</em></p>
-<h3 id="191-the-physics-the-peak-is-where-the-spectral-cost-lives">1.9.1 The physics: the peak is where the spectral cost lives</h3>
-<p>At small <span class="arithmatex">\(x\)</span> the pattern is a smooth dipole-like <span class="arithmatex">\(\cos^2\theta\)</span> — no spike. As <span class="arithmatex">\(x\)</span> grows,
-the <strong>diffraction peak</strong> takes over (extinction paradox: <span class="arithmatex">\(C_{ext}\to 2G\)</span>, the peak alone
-carries it), with width <span class="arithmatex">\(\Delta\theta\sim\lambda/D\)</span> and Airy-like sidelobes set by the
-projected <strong>silhouette</strong> (not <span class="arithmatex">\(D_{veq}\)</span>):</p>
-<p><img alt="Mie peak evolution + measured SH demand" src="figures/fig13_forward_peak.png" /></p>
-<p>This is exactly what drives the per-vertex <strong>SH cost</strong> of the current pipeline: resolving
-an angular structure of width <span class="arithmatex">\(\lambda/D\)</span> needs spectral order
-<span class="arithmatex">\(n_{\text{trunc}}\propto x\)</span> — the Mie partial-wave demand
-<span class="arithmatex">\(n_{\max}=x+4x^{1/3}+2\)</span> (Wiscombe) is the same law that the Phase-8 grid budgets use,
-and the measured production ntrunc (panel (c)) follows it and even <strong>saturates the static
-grid's Nyquist cap</strong> (ntrunc 179 ≈ 180) at <span class="arithmatex">\(x=10\)</span>, tilted orientations. Storage and
-rotation cost scale <span class="arithmatex">\(\propto n_{\text{trunc}}^2\)</span> — the peak is the single biggest
-data/cost item at large <span class="arithmatex">\(x\)</span>.</p>
-<h3 id="192-the-mechanism-subtract-the-peak-store-the-residual-delta-scaling-honestly">1.9.2 The mechanism: subtract the peak, store the residual ("delta-scaling, honestly")</h3>
-<p>Instead of storing the densely-sampled peak numerically, split the <strong>amplitude</strong> field</p>
+plan <code>plans/forward_peak_plan.md</code>, report §9) — <strong>no pipeline code changed</strong>. This section
+develops the idea the way a textbook would: §1.9.1 fixes the amplitude language, §1.9.2
+derives why a large particle must have a narrow forward peak, §1.9.3 turns the peak width
+into a spectral-order budget, §1.9.4 presents the model/residual split, §1.9.5 derives the
+model itself and its validity conditions, §1.9.6 reports the measurements, and §1.9.7 the
+verdict.</em></p>
+<h3 id="191-the-language-scattering-amplitude-mueller-matrix-optical-theorem">1.9.1 The language: scattering amplitude, Mueller matrix, optical theorem</h3>
+<p>Everything below speaks in terms of the <strong>complex far-field amplitude</strong>. With <span class="arithmatex">\(k=2\pi/\lambda_0\)</span>
+the scattered field of one solve is written, in the usual far-field notation,</p>
 <div class="arithmatex">\[
-  s(\theta,\varphi) \;=\; s_{\text{model}}(\theta,\varphi)\;+\;g(\theta,\varphi)
+  \mathbf E_{\text{sc}}(\mathbf r)
+  \;=\; \frac{e^{ikr}}{r}\;f(\hat n)\;\mathbf E_{\text{inc}}^0\,,
+  \qquad \hat n = \mathbf r/r ,
+  \tag{1.9.1}
 \]</div>
-<p>where <span class="arithmatex">\(s_{\text{model}}\)</span> is an <strong>analytic</strong> far field (below) and <span class="arithmatex">\(g\)</span> is the smooth
-DDA residual. Only <span class="arithmatex">\(g\)</span> needs a grid + SH storage; at read/RT time the model is
-re-evaluated <strong>exactly</strong> and re-combined (Mueller is quadratic in the amplitudes, so the
-split must happen at <em>amplitude</em> level — subtracting Mueller grids would destroy the
-interference cross-terms). The peak is fully resolved (it is analytic — no resolution is
-<em>bought back</em>), the identity <span class="arithmatex">\(f=F_{model}+g\)</span> is exact by construction, and <span class="arithmatex">\(C_{ext}\)</span>
-(exact from the forward amplitude column) comes out of the same identity.</p>
-<p>The general-case forward model (any voxel habit): eikonal internal field <strong>ray-marched
-through the exact voxel geometry</strong>, then radiated by a Helmholtz surface integral —</p>
+<p>where <span class="arithmatex">\(f\)</span> is the <span class="arithmatex">\(2\times2\)</span> amplitude (Jones) matrix in the local scattering basis. This is
+exactly the object the pipeline already parses: the columns of ADDA's <code>ampl_scatgrid</code> are the
+Bohren–Huffman (BH) elements <span class="arithmatex">\(s_1..s_4\)</span> under the standard <span class="arithmatex">\(k\,f\)</span> normalization (§1.4). The
+measured quantity is the <strong>Mueller matrix</strong>, a <em>quadratic</em> function of the amplitude,</p>
 <div class="arithmatex">\[
-  \varphi(s)=e^{ik[s+(m-1)\,\ell(\rho)]},\qquad
-  G(\rho)=\int(m^2-1)\,\varphi\,ds,\qquad
-  S_{\text{model}}=\frac{k^3}{4\pi}\iint G(\rho)\,e^{-ik\hat n\cdot\rho}\,d^2\rho
+  M(\hat n) \;=\; f(\hat n)\otimes f^{*}(\hat n)
+  \quad(\text{Stokes bilinear form}),
+  \tag{1.9.2}
 \]</div>
-<p>with <strong>one</strong> global calibration constant <span class="arithmatex">\(c\)</span> per run (complex):</p>
-<p><img alt="Eikonal screen model schematic + validity knob" src="figures/fig14_eikonal_model.png" /></p>
-<p>The convention machinery is fully pinned by the G1 sphere anchor (exact Mie, triple-
-validated scipy/mpmath/miepython): ADDA's <code>ampl_scatgrid</code> columns = BH <span class="arithmatex">\(s_1..s_4\)</span>,
-far-field phase origin = <strong>scatterer center</strong> (fitted offset 0.000 lattice units), and
-<span class="arithmatex">\(c=1.005\!-\!0.006j\)</span> at <span class="arithmatex">\(x=1.9\)</span> / <span class="arithmatex">\(1.008\!-\!0.011j\)</span> at <span class="arithmatex">\(x=3.8\)</span> — conventions agree at
-0.5% across <span class="arithmatex">\(x\)</span>.</p>
-<h3 id="193-measured-big-wins-but-a-real-activation-domain">1.9.3 Measured: big wins, but a real activation domain</h3>
-<p><img alt="Full vs model vs residual on three real cells" src="figures/fig15_delta_scaling.png" /></p>
-<p>The model <strong>captures the peak shape</strong> (even the Airy zeros) for near-normal incidence:
-HongPlate face-on <span class="arithmatex">\(|g|/|f|\)</span> = 0.03–0.31 and the residual needs far fewer SH coefficients
-(ntrunc 25→<strong>6</strong> at <span class="arithmatex">\(x=5\)</span>; 55→41 at <span class="arithmatex">\(x=10\)</span>; 179→81 at <span class="arithmatex">\(x=10\)</span> tilted). It is <strong>actively
-harmful</strong> at grazing incidence (plate edge-on, tilted <span class="arithmatex">\(x=5\)</span>): the single-pass eikonal
-ignores internal TIR, reflection and multiple scattering once the phase thickness
-<span class="arithmatex">\(\psi=|(m-1)k\,\ell|\)</span> grows (panel (b) of fig14 shows <span class="arithmatex">\(\psi\)</span>: ≈0.7 rad face-on →
-≈2 rad at <span class="arithmatex">\(60°\)</span> → ≈21 rad edge-on vs the <span class="arithmatex">\(\pi\)</span> single-pass limit); there <span class="arithmatex">\(|g|&gt;|f|\)</span> and
-even <span class="arithmatex">\(C_{ext,model}&lt;0\)</span>:</p>
-<p><img alt="Validity map, all 15 scan cells" src="figures/fig16_validity_map.png" /></p>
-<p>Two metric rules that decide these numbers (and that any future hybrid must respect):</p>
+<p>which is what gets expanded in spherical harmonics and stored (§1.6). The third player is the
+<strong>optical theorem</strong>, which extracts extinction from the amplitude <em>linearly</em>:</p>
+<div class="arithmatex">\[
+  C_{\mathrm{ext}} \;=\; \frac{4\pi}{k}\;
+  \mathrm{Im}\bigl[\hat s^{\dagger}\, f(\hat s)\, \hat s\bigr],
+  \tag{1.9.3}
+\]</div>
+<p>where <span class="arithmatex">\(\hat s\)</span> is the propagation direction of the incident beam — Eq. (1.9.3) is precisely the
+Mishchenko construction behind <code>acf.extinction_matrix</code> (§1.4). Note the contrast that will
+control everything in §1.9.4: <strong><span class="arithmatex">\(M\)</span> is quadratic in <span class="arithmatex">\(f\)</span>, <span class="arithmatex">\(C_{\mathrm{ext}}\)</span> is linear in <span class="arithmatex">\(f\)</span>.</strong></p>
+<p>Two limiting regimes of <span class="arithmatex">\(f(\hat n)\)</span>:</p>
 <ul>
-<li><strong>full-eps vs own-eps</strong>: the residual's acceptable SH error must be judged against the
-  <strong>full field's</strong> M11 norm (the model is re-added exactly, so its absolute error rides
-  on top for free). The historic <em>own</em>-eps rule (relative to the matrix being expanded)
-  is misleading for hybrids — e.g. it "raised" the <span class="arithmatex">\(x=1\)</span> face residual ntrunc from 5 to
-  23 although the residual is only 3% of the field (full-eps reads 3);</li>
-<li>the <span class="arithmatex">\(x=10\)</span> t60 <strong>full</strong> field already sits at the static grid's Nyquist cap
-  (179≈180) — full-field twins of large-<span class="arithmatex">\(x\)</span> runs are grid-limited (report §9.3).</li>
+<li><strong>Rayleigh regime</strong> (<span class="arithmatex">\(x=\pi D_{veq}/\lambda_0\ll1\)</span>): the particle is a driven dipole;
+  <span class="arithmatex">\(|f|^2\propto\cos^2\theta\)</span> per polarization channel — smooth, <strong>no spike</strong> anywhere.
+  (An early note in this manual claimed the forward peak "dominates at very small <span class="arithmatex">\(x\)</span>" —
+  wrong; the Phase-9A plan corrected the framing.)</li>
+<li><strong>Geometric regime</strong> (<span class="arithmatex">\(x\gg1\)</span>): the pattern is dominated by a narrow <strong>diffraction peak</strong>
+  around <span class="arithmatex">\(\hat n=\hat s\)</span>. Production runs live at <span class="arithmatex">\(x\le10\)</span>, i.e. between the regimes —
+  where the peak is real but only moderately narrow, and <em>exactly</em> what sets the angular
+  sampling cost (Fig. 13a shows the transition for exact-Mie spheres: no spike at <span class="arithmatex">\(x=1\)</span>,
+  a 4-decade spike at <span class="arithmatex">\(x=10\)</span>).</li>
 </ul>
-<p>Backscatter: the model contributes nothing at <span class="arithmatex">\(\theta=180\)</span> (its field is off by
-<span class="arithmatex">\(10^{-2}\dots8\times\)</span> there, no consistent scale) — the Phase-6 exact <code>backMat_data</code>
-route (§1.4, §1.8) stays mandatory and a hybrid would exempt that ring, as Brath et al.
-(2020) already flag the exact-backscatter direction as unreliable in the SH route anyway.</p>
-<h3 id="194-verdict-and-phase-9b-design-consequences">1.9.4 Verdict and Phase-9B design consequences</h3>
-<p><strong>Conditional GO — a per-cell <em>gated</em> hybrid, not a blanket subtraction.</strong> Design sketch
-(report §9.4): per (vertex, β) decision from cheap measurements — <span class="arithmatex">\(c\)</span>-fit consistency,
-<span class="arithmatex">\(C_{ext,model}&gt;0\)</span> sanity band, <span class="arithmatex">\(\psi\)</span> bound — deciding model+residual vs plain full
-field; mixed runs store the per-cell flag in the nc metadata; <code>rawdata2average</code>
-reconstructs. Payoff target is the <strong>internal</strong> solve/expand cost at large <span class="arithmatex">\(x\)</span>; the
-<strong>SSDB-format</strong> hybrid is a NO-GO for now (Phase-8.8 export caps already give 15×; the
-residual route would additionally need a format change + consumer cooperation). Before
-building it, 9B must benchmark against a plain adaptive-eps re-balance (no model) —
-Phase-8's laws already capture part of the same trend.</p>
+<h3 id="192-the-extinction-paradox-and-the-diffraction-peak-babinet">1.9.2 The extinction paradox and the diffraction peak (Babinet)</h3>
+<p>Classical result (van de Hulst; B&amp;H): for <span class="arithmatex">\(x\to\infty\)</span> the extinction cross section of <em>any</em>
+particle tends to <strong>twice its geometric projected area <span class="arithmatex">\(G\)</span></strong>: <span class="arithmatex">\(C_{\mathrm{ext}}\to 2G\)</span>. Pure
+ray tracing through the particle removes only <span class="arithmatex">\(G\)</span> — the geometric shadow — so where does the
+other half come from? Babinet's principle answers: the shadow behind the particle must be
+dark, which requires a field <em>radiated by the particle silhouette</em> that is exactly
+<span class="arithmatex">\(\mathbf E^0_{\text{inc}}\)</span> out of phase there — and any field that cancels the incident wave
+at <span class="arithmatex">\(\hat n=\hat s\)</span> must, by conservation, reappear as coherent scattering <em>into</em> the forward
+direction. For a silhouette (aperture) <span class="arithmatex">\(A\)</span> with eikonal amplitude transmittance
+<span class="arithmatex">\(e^{i\Delta(\rho)}\)</span>, <span class="arithmatex">\(\Delta=k(m-1)\ell(\rho)\)</span>, the diffracted amplitude is, up to a sign
+convention fixed by the §1.9.5 anchor,</p>
+<div class="arithmatex">\[
+  f_{\text{diff}}(\hat n) \;=\; \frac{ik}{2\pi}
+  \iint_{A}\bigl[1-e^{i\Delta(\rho)}\bigr]\,
+  e^{-ik\hat n\cdot\rho}\;d^{2}\rho\,.
+  \tag{1.9.4}
+\]</div>
+<p>Insert the black-screen limit (<span class="arithmatex">\(1-e^{i\Delta}=1\)</span>) into the optical theorem (1.9.3):
+<span class="arithmatex">\(f_{\text{diff}}(\hat s)=ikA/2\pi\)</span> gives <span class="arithmatex">\(C_{\text{ext,diff}}=(4\pi/k)(kA/2\pi)=2A\)</span> —
+a perfectly black screen of area <span class="arithmatex">\(A\)</span> extinguishes <span class="arithmatex">\(2A\)</span>: the paradox, and with it the statement
+that <strong>the forward peak alone carries <span class="arithmatex">\(C_{\mathrm{ext}}\to2G\)</span></strong>.</p>
+<p>Fourier duality fixes the peak's width. An aperture of projected radius <span class="arithmatex">\(a_\perp\)</span> radiates
+into a cone of half-angle</p>
+<div class="arithmatex">\[
+  \sin\theta_1 \;=\; 1.22\,\frac{\lambda_0}{2a_\perp}
+  \;=\;0.61\,\frac{\lambda_0}{a_\perp}
+  \quad(\text{first Airy zero}),
+  \tag{1.9.5}
+\]</div>
+<p>so the peak narrows like <span class="arithmatex">\(\lambda_0/D\)</span>: for a sphere (<span class="arithmatex">\(a_\perp=D_{veq}/2\)</span>,
+<span class="arithmatex">\(x=\pi D_{veq}/\lambda_0\)</span>) the first minimum sits at <span class="arithmatex">\(\theta_1\approx 220°/x\)</span> — verified in
+Fig. 13b (the dashed rings at <span class="arithmatex">\(44°\)</span> for <span class="arithmatex">\(x=5\)</span>, <span class="arithmatex">\(22°\)</span> for <span class="arithmatex">\(x=10\)</span>). The sidelobes beyond the
+peak are set by the <em>projected silhouette</em>, not by <span class="arithmatex">\(D_{veq}\)</span> — for plate habits the silhouette
+changes strongly with orientation, which is why the peak structure is orientation-dependent.</p>
+<p><img alt="Mie peak evolution + measured SH demand" src="figures/fig13_forward_peak.png" /></p>
+<p><strong>Fig. 13 — why the diffraction peak is the cost driver.</strong> <em>(a) exact-Mie <span class="arithmatex">\(|S_1|^2\)</span> over the
+whole sphere for four size parameters — the spike appears only at large <span class="arithmatex">\(x\)</span>; (b) zoom on
+0–50°: the peak width shrinks like <span class="arithmatex">\(220°/x\)</span>; (c) achieved SH truncation order per production
+cell vs <span class="arithmatex">\(x\)</span>: filled blue markers = today's full-field cost (grows like the grey Wiscombe
+curve and saturates at the red Nyquist cap), open green markers = what a model+residual
+split would need instead. Data: <code>analysis/phase9_results.json</code>.</em></p>
+<h3 id="193-what-the-peak-costs-the-band-limit-argument-n_texttruncpropto-x">1.9.3 What the peak costs: the band-limit argument (<span class="arithmatex">\(n_{\text{trunc}}\propto x\)</span>)</h3>
+<p>Spherical harmonics up to degree <span class="arithmatex">\(n\)</span> form a <strong>band-limited function space on the sphere</strong>:
+they cannot represent angular structure finer than</p>
+<div class="arithmatex">\[
+  \Delta\theta_{\min} \;\approx\; \frac{\pi}{n}\ \text{rad}
+  \;=\;\frac{180°}{n}\ \text{deg}
+  \qquad(\text{equivalently a }2n{+}1\text{-point }\varphi\text{-ring, the Phase-8 Nyquist rule §1.6.1}).
+  \tag{1.9.6}
+\]</div>
+<p>Therefore resolving a peak of width <span class="arithmatex">\(\theta_1\propto1/x\)</span> <em>requires</em>, for any numerical method,</p>
+<div class="arithmatex">\[
+  n_{\text{trunc}} \;\gtrsim\; \frac{\pi}{\theta_1} \;\propto\; x\,.
+  \tag{1.9.7}
+\]</div>
+<p>The rigorous version of the same law for spheres is the Mie partial-wave demand —
+<span class="arithmatex">\(n_{\max}=x+4x^{1/3}+2\)</span> (Wiscombe; the <span class="arithmatex">\(x^{1/3}\)</span> term is the edge/"creeping-ray" boundary
+layer) — and it is the same law the Phase-8 grid budgets use (§1.6.1). The measured
+per-vertex ntrunc of the production pipeline follows it (Fig. 13c) and even <strong>saturates the
+static grid's Nyquist cap</strong> (ntrunc 179 ≈ 180 = the cap of the 361-point <span class="arithmatex">\(\varphi\)</span>-ring) at
+<span class="arithmatex">\(x=10\)</span>, tilted orientations.</p>
+<p>Why this is a <em>cost</em> statement: the SH coefficient count per vertex scales <span class="arithmatex">\(\propto n_{\text{trunc}}^2\)</span>
+(storage in <code>mueller_data.nc</code>, per-vertex caches), as do the shtns analysis/synthesis and the
+Wigner rotations of the orientation average (§1.5–1.6). <strong>The diffraction peak is the single
+biggest data/cost item at large <span class="arithmatex">\(x\)</span> — and (1.9.7) says numeric sampling of the peak can never
+be made cheaper. The only remaining lever is to stop storing the peak numerically.</strong></p>
+<h3 id="194-the-book-keeping-model-the-peak-analytically-store-only-the-residual">1.9.4 The book-keeping: model the peak analytically, store only the residual</h3>
+<p>Radiative-transfer has long "renormalized" the forward peak away (the δ-Eddington / δ-M
+trick: replace the peak by a delta function and preserve its lowest moments — at the cost of
+angular resolution <em>inside</em> the peak). The Phase-9 idea does the opposite: keep the peak
+<strong>fully resolved</strong>, but represent it by an analytic formula that is re-evaluated on demand,
+and store numerically only the remainder. Formally, split the <strong>amplitude</strong> field</p>
+<div class="arithmatex">\[
+  f(\hat n) \;=\; F_{\text{model}}(\hat n)\;+\;g(\hat n)
+  \tag{1.9.8}
+\]</div>
+<p>with <span class="arithmatex">\(F_{\text{model}}\)</span> analytic (§1.9.5) and <span class="arithmatex">\(g\equiv f-F_{\text{model}}\)</span> the residual. Only
+<span class="arithmatex">\(g\)</span> needs a grid and SH storage. Three structural facts make this safe — or dangerous, if
+misapplied:</p>
+<ol>
+<li><strong>The identity is exact by construction.</strong> <span class="arithmatex">\(g\)</span> is <em>defined</em> as <span class="arithmatex">\(f-F_{\text{model}}\)</span>, so
+   <span class="arithmatex">\(F_{\text{model}}+g\equiv f\)</span> regardless of the model's quality. The model's own error is
+   never part of the error budget; it only determines <em>how smooth and small</em> <span class="arithmatex">\(g\)</span> is. A bad
+   model degrades gracefully (<span class="arithmatex">\(g\approx f\)</span>, zero savings) — <strong>unless</strong> it makes <span class="arithmatex">\(g\)</span> rougher
+   or larger than <span class="arithmatex">\(f\)</span>, which is exactly the failure mode measured in §1.9.6.</li>
+<li><strong>The split must happen at amplitude level, not Mueller level.</strong> By (1.9.2),</li>
+</ol>
+<p>$$
+   M[f] \;=\; M[F_{\text{model}}] \;+\; M[g] \;+\; 2\,\mathrm{Re}\bigl(F_{\text{model}}\otimes g^{*}\bigr).
+   \tag{1.9.9}
+   $$</p>
+<p>The cross-term is <span class="arithmatex">\(\mathcal O(|F||g|)\)</span> — near the peak, where <span class="arithmatex">\(|F|\)</span> is largest, it is
+   comparable to <span class="arithmatex">\(M[F_{\text{model}}]\)</span> itself. Storing "<span class="arithmatex">\(M - M[F_{\text{model}}]\)</span>" numerically
+   would therefore require the consumer to carry <span class="arithmatex">\(F\)</span> anyway and would destroy the
+   interference structure. Keeping <span class="arithmatex">\((F_{\text{model}},g)\)</span> keeps everything algebraically exact.
+3. <strong>Extinction comes out of the same identity for free.</strong> The optical theorem (1.9.3) is
+   <em>linear</em> in <span class="arithmatex">\(f\)</span>:</p>
+<p>$$
+   C_{\mathrm{ext}}[f] \;=\; C_{\mathrm{ext}}[F_{\text{model}}]
+   \;+\;\frac{4\pi}{k}\,\mathrm{Im}\bigl[\hat s^{\dagger} g(\hat s)\hat s\bigr],
+   \tag{1.9.10}
+   $$</p>
+<p>and <span class="arithmatex">\(F_{\text{model}}(\hat s)\)</span> is analytic — the forward-amplitude column of §1.4 survives
+   the split.</p>
+<p>The error rule follows immediately from fact 1: the reconstruction error is the SH truncation
+error of <span class="arithmatex">\(g\)</span>, an <strong>absolute</strong> quantity, so the residual's truncation target must be measured
+against the <em>full field's</em> intensity scale,</p>
+<div class="arithmatex">\[
+  \delta[g] \;\le\; \texttt{eps\_sphexp}\cdot\operatorname{RMS}(M_{11}^{\text{full field}})
+  \qquad\text{not}\qquad
+  \texttt{eps\_sphexp}\cdot\operatorname{RMS}(M_{11}^{g})\,.
+  \tag{1.9.11}
+\]</div>
+<p>This "<strong>full-eps</strong>" rule is the single most consequential methodological finding of Phase 9A;
+the historic own-eps rule (§1.6) silently misprices residuals — a worked example in §1.9.6.</p>
+<h3 id="195-the-model-itself-eikonal-ray-march-analytic-radiation">1.9.5 The model itself: eikonal ray-march + analytic radiation</h3>
+<p>The model must exist for <em>arbitrary voxel habits at arbitrary orientations</em> (exact Mie exists
+only for spheres), and it must be cheap and orientation-local. The construction has three
+steps.</p>
+<p><strong>Step 0 — an exact starting point.</strong> For a particle of constant refractive index <span class="arithmatex">\(m\)</span>, the
+scattered far field is produced by the polarization current <span class="arithmatex">\(\mathbf P=(m^2-1)\mathbf E\)</span>
+<em>inside</em> the volume. Taking the far-field limit of the radiation integral gives an identity
+with <strong>no approximation at all</strong>, provided the true internal total field is inserted:</p>
+<div class="arithmatex">\[
+  f(\hat n) \;=\; \frac{k^{2}}{4\pi}\,(m^{2}-1)
+  \iiint_{V}\frac{E_{\text{tot}}(\mathbf r)}{E_{\text{inc}}^0}\;
+  e^{-ik\hat n\cdot\mathbf r}\;d^{3}r\,.
+  \tag{1.9.12}
+\]</div>
+<p>(Complex amplitude shorthand; applied per polarization channel like (1.9.1).) This is the
+standard "distorted-wave" representation: everything hard is hidden in <span class="arithmatex">\(E_{\text{tot}}\)</span>.</p>
+<p><strong>Step 1 — the eikonal approximation to <span class="arithmatex">\(E_{\text{tot}}\)</span>.</strong> Approximate the internal field by
+a plane wave that accumulates the optical path along each incident straight ray: with foot
+point <span class="arithmatex">\(\boldsymbol\rho\)</span> in the screen plane through the scatterer center perpendicular to the
+incidence direction <span class="arithmatex">\(\hat s\)</span>, arc length <span class="arithmatex">\(s\)</span> along the ray, and <span class="arithmatex">\(\ell(\boldsymbol\rho)\)</span> the
+chord length through the <em>exact voxel set</em> on that ray,</p>
+<div class="arithmatex">\[
+  \frac{E_{\text{tot}}}{E_{\text{inc}}^0}\;\approx\;
+  \varphi(s) \;=\; e^{\,ik\left[s\,+\,(m-1)\,\ell(\boldsymbol\rho)\right]} .
+  \tag{1.9.13}
+\]</div>
+<p>Single pass, straight rays: no refraction (bending), no internal reflection, no internal
+multiple scattering. Crucially, <span class="arithmatex">\(\ell(\boldsymbol\rho)\)</span> is <strong>ray-marched voxel-exactly from
+the shipped <code>.adda</code> file</strong> — the geometry enters without any fitted ellipsoid or screen-plane
+shortcut, which is what makes the model habit-general.</p>
+<p><strong>Step 2 — carry the ray integral into (1.9.12).</strong> With <span class="arithmatex">\(\mathbf r=\boldsymbol\rho+s\hat s\)</span>
+and <span class="arithmatex">\(\mu=\hat n\cdot\hat s=\cos\theta\)</span> the volume integral factorizes into a screen integral
+of a ray integral:</p>
+<div class="arithmatex">\[
+  F_{\text{model}}(\hat n) \;=\; \frac{k^{2}}{4\pi}
+  \iint e^{-ik\hat n\cdot\boldsymbol\rho}
+  \left[\int\,(m^{2}-1)\,\varphi(s)\,e^{-ik\mu s}\,ds\right]d^{2}\rho\,.
+  \tag{1.9.14}
+\]</div>
+<p>The bracket (the code's <span class="arithmatex">\(G(\mu,\boldsymbol\rho)\)</span>, evaluated chunked over screen pixels so the
+huge <span class="arithmatex">\((n_\mu\times n_\rho)\)</span> matrix never materializes) is the <em>full-angle</em> form: replacing
+<span class="arithmatex">\(\mu\to0\)</span> inside the bracket recovers textbook Fraunhofer diffraction at a phase-modulated
+screen (the eikonal transmittance <span class="arithmatex">\(e^{i\Delta}\)</span> of (1.9.4) reappears; for small phase delay
+<span class="arithmatex">\(\psi\)</span> (below) the two agree up to constants absorbed into the calibration). Keeping <span class="arithmatex">\(\mu\)</span>
+is what makes <span class="arithmatex">\(F_{\text{model}}\)</span> defined over the whole <span class="arithmatex">\(4\pi\)</span> grid rather than only a small
+cone, degrading gracefully away from the forward direction. In the project's
+<span class="arithmatex">\(k\,f\)</span>-normalized ADDA convention the implementation evaluates the prefactor as
+<span class="arithmatex">\(k^{3}/4\pi\)</span> — i.e. <span class="arithmatex">\(S_{\text{model}}=k\,F_{\text{model}}\)</span> — so it can be compared and
+calibrated directly against the parsed <code>ampl_scatgrid</code> columns.</p>
+<p><strong>One global calibration constant <span class="arithmatex">\(c\)</span>.</strong> Per run (<span class="arithmatex">\(T\)</span>, <span class="arithmatex">\(f\)</span>, size), a single complex number is
+least-squares-fitted in <em>amplitude space</em> (never log space — the model's zeros poison log
+fits) between <span class="arithmatex">\(c\,F_{\text{model}}\)</span> and the full ADDA grid. Physically <span class="arithmatex">\(c\)</span> absorbs the
+local-field/depolarization correction that any distorted-wave ansatz misses: on a voxel
+sphere at <span class="arithmatex">\(x=0.3\)</span> the fit returns <span class="arithmatex">\(|c|=0.614\)</span>, close to the exact uniform internal-field
+(Clausius–Mossotti) factor <span class="arithmatex">\(3/(m^2+2)=0.582\)</span>; at production <span class="arithmatex">\(x\)</span> the eikonal limit is
+asymptotically right and the anchors give <span class="arithmatex">\(c=1.005-0.006j\)</span> (<span class="arithmatex">\(x=1.9\)</span>) / <span class="arithmatex">\(1.008-0.011j\)</span>
+(<span class="arithmatex">\(x=3.8\)</span>) — a <span class="arithmatex">\(|c-1|&lt;1\%\)</span> agreement, cross-<span class="arithmatex">\(x\)</span> drift <span class="arithmatex">\(0.55\%\)</span>.</p>
+<p><strong>Why the conventions must be pinned first.</strong> The cross-term in (1.9.9) has amplitude
+<span class="arithmatex">\(2|F||g|\cos(\text{phase slip})\)</span>: a phase slip of even a few mrad between the analytic model
+and ADDA's grid rotates part of "<span class="arithmatex">\(-F\)</span>" into "<span class="arithmatex">\(+F\)</span>" and turns the subtraction into an
+addition <em>precisely where the field is strongest</em>. The scan therefore anchors every
+convention on the one shape where truth is analytic (sphere, exact Mie — triple-validated
+scipy == mpmath == miepython == published Wiscombe MIEV0 case-14, <span class="arithmatex">\(\le5\cdot10^{-16}\)</span>; the
+B&amp;H 5.12 log-derivative <span class="arithmatex">\(D_n\)</span> recurrence in <code>analysis/phase6_backscatter.py</code> is confirmed
+correct, gotcha §D-24). Anchor results (G1, all PASS): ADDA's <code>ampl_scatgrid</code> columns = BH
+<span class="arithmatex">\(s_1..s_4\)</span>; ADDA's far-field phase origin = <strong>scatterer center</strong> (fitted offset <span class="arithmatex">\(u_0=0.000\)</span>
+lattice units — the earlier "bbox corner" hypothesis is dead); ADDA <span class="arithmatex">\(C_{ext}\)</span> vs analytic at
+dpl 70 agrees to 0.23 % (<span class="arithmatex">\(x=1.9\)</span>) / 1.33 % (<span class="arithmatex">\(x=3.8\)</span>) — DDA discretization level; and a
+Mueller grid rebuilt from the parsed amplitudes matches ADDA's own <code>mueller_scatgrid</code> to
+<span class="arithmatex">\(\le7.4\cdot10^{-11}\)</span> (port check).</p>
+<p><img alt="Eikonal screen model schematic + validity knob" src="figures/fig14_eikonal_model.png" /></p>
+<p><strong>Fig. 14 — the model: what it is, and the one knob that says when it works.</strong> <em>(a) schematic
+on the real x=5 HongPlate slab: march every ray through the exact voxels to get the chord
+<span class="arithmatex">\(\ell(\rho)\)</span>, radiate analytically from the exit screen; (b) the phase thickness
+<span class="arithmatex">\(\psi_{max}\)</span> marched through the real voxels vs incidence tilt: below the green
+<span class="arithmatex">\(\psi=\pi\)</span> line the single-pass eikonal picture is plausible, far above it (edge-on) the
+model is guaranteed to fail. Ice refractive index at 887 GHz makes even a 541 µm plate
+"optically thick" edge-on.</em></p>
+<p><strong>Validity conditions (textbook: van de Hulst / B&amp;H, "diffraction approximation").</strong> The
+single-pass eikonal (1.9.13) is justified only if</p>
+<ul>
+<li>(a) <strong>refraction is weak</strong>, <span class="arithmatex">\(|m-1|\ll1\)</span> — <em>never</em> true for ice in the sub-mm (<span class="arithmatex">\(n=1.77\)</span> at
+  887 GHz); for face-on plates refraction mainly perturbs chord geometry, and the scan shows
+  empirically that the surviving error is tolerable there — but (a) failing is why the
+  validity domain must be <em>measured</em>, not assumed;</li>
+<li>(b) <strong>internal phase delay is modest</strong>,</li>
+</ul>
+<p>$$
+  \psi(\boldsymbol\rho) \;=\; \bigl|(m-1)\,k\,\ell(\boldsymbol\rho)\bigr| \;\lesssim\; \pi ,
+  \tag{1.9.15}
+  $$</p>
+<p>because once <span class="arithmatex">\(\psi&gt;\pi\)</span>, internally reflected / totally internally reflected multi-pass
+  fields reorganize the exit field with interference structure that (1.9.13) cannot
+  represent <em>at any calibration</em>;
+- (c) the silhouette is well resolved — satisfied automatically (voxel-exact marching).</p>
+<p><span class="arithmatex">\(\psi_{max}\)</span> is computed for free by the same ray-march. Measured on the real <span class="arithmatex">\(x=5\)</span> HongPlate
+voxels at 887 GHz (Fig. 14b): <span class="arithmatex">\(\psi_{max}\approx0.7\)</span> rad face-on, <span class="arithmatex">\(\approx2\)</span> rad at <span class="arithmatex">\(60°\)</span>,
+<span class="arithmatex">\(\approx21\)</span> rad edge-on — versus the <span class="arithmatex">\(\pi\)</span> single-pass limit: valid face-on, hopeless edge-on.</p>
+<h3 id="196-measured-the-winning-domain-and-the-failure-domain-15-cell-scan">1.9.6 Measured: the winning domain and the failure domain (15-cell scan)</h3>
+<p>Scan design (plan §9A): <code>analysis/phase9_fwdmodel_scan.py</code>, ADDA 1.4.0 on the production
+static <span class="arithmatex">\(181\times361\)</span> grid and the production command mirror (<code>-shape read</code>, <code>-eps 3</code>,
+<span class="arithmatex">\(\texttt{eq\_rad}=D/2\)</span>), Matzler ice at 230 K. Cells: HongPlate_Id9 at 887 GHz (the size
+grid hits <span class="arithmatex">\(x=1,2,5,10\)</span> exactly: <span class="arithmatex">\(D_{veq}=108/215/541/1078\;\mu\)</span>m) <span class="arithmatex">\(\times\)</span> orientations
+{face-on, <span class="arithmatex">\(60°\)</span> tilt, edge-on} — the <span class="arithmatex">\(x=1\)</span> edge-on cell is skipped (sub-wavelength slab,
+degenerate) — plus HongColumn_Id7 at <span class="arithmatex">\(x=2\)</span> and <span class="arithmatex">\(x\approx4.9\)</span> <span class="arithmatex">\(\times\)</span> {along-axis, <span class="arithmatex">\(60°\)</span>}:
+<strong>15 cells</strong>. Per cell: calibrate <span class="arithmatex">\(c\)</span>; split (1.9.8); measure the residual fraction
+<span class="arithmatex">\(\lVert g\rVert/\lVert f\rVert\)</span> (amplitude L2); re-expand the residual with the <em>production</em>
+expansion rule (<code>expand_mueller_2_spharmonics</code>, <code>eps_sphexp=0.005</code>) under both the own-eps
+and the full-eps criterion (1.9.11); sanity-check <span class="arithmatex">\(C_{ext,\text{model}}/C_{ext,\text{ADDA}}\)</span>.
+Full table: report §9.2 / <code>analysis/phase9_fwdmodel_table.txt</code>.</p>
+<p><img alt="Full vs model vs residual on three real cells" src="figures/fig15_delta_scaling.png" /></p>
+<p><strong>Fig. 15 — the three verdicts, per real production cell (row = cell).</strong> <em>Column 1: does the
+calibrated model reproduce the forward peak? Column 2: whole sphere — blue = full field,
+red = what would have to be stored after subtracting the model; if red exceeds blue
+(edge-on row), the split makes storage WORSE. Column 3: SH order actually needed: green bar
+(full-eps rule, Eq. 1.9.11) vs blue full-field bar — the grey own-eps bar is shown only to
+expose how misleading that rule is (see the metric rules below).</em></p>
+<p>Three archetypes emerge (Fig. 15):</p>
+<ul>
+<li><strong>WIN — HongPlate face-on at every <span class="arithmatex">\(x\)</span>.</strong> The model captures the peak shape <em>including the
+  Airy zeros</em>: residual fraction <span class="arithmatex">\(|g|/|f|=0.03\)</span>–<span class="arithmatex">\(0.31\)</span>, <span class="arithmatex">\(C_{ext,\text{model}}/C_{ext}=1.05\)</span>–<span class="arithmatex">\(1.15\)</span>.
+  The full-eps residual ntrunc collapses: <span class="arithmatex">\(5\to3\)</span> (<span class="arithmatex">\(x=1\)</span>), <span class="arithmatex">\(10\to3\)</span> (<span class="arithmatex">\(x=2\)</span>), <span class="arithmatex">\(25\to\mathbf{6}\)</span>
+  (<span class="arithmatex">\(x=5\)</span> — coefficient count <span class="arithmatex">\(\propto n^2\)</span>, i.e. a <span class="arithmatex">\(\sim\)</span>40× smaller store), <span class="arithmatex">\(55\to41\)</span>
+  (<span class="arithmatex">\(x=10\)</span>). Even the <span class="arithmatex">\(60°\)</span>-tilted <span class="arithmatex">\(x=10\)</span> cell wins big: <span class="arithmatex">\(179\to81\)</span> — and the 179 there is the
+  <em>grid-Nyquist-saturated</em> value (see the second rule below).</li>
+<li><strong>MARGINAL — small-angle deviations, tilted columns.</strong> Intermediate cells (e.g. HongPlate
+  <span class="arithmatex">\(x=2\)</span>–<span class="arithmatex">\(10\)</span> at <span class="arithmatex">\(60°\)</span>) shrink but less; the physics: <span class="arithmatex">\(\psi\)</span> grows with tilt (Fig. 14b) and
+  the single-pass picture frays.</li>
+<li><strong>HARMFUL — grazing incidence.</strong> Plate edge-on at <span class="arithmatex">\(x=5\)</span>: <span class="arithmatex">\(|g|/|f|=1.73\)</span> — the residual is
+  LARGER than the field (possible because <span class="arithmatex">\(c\)</span> is fitted over the full sphere; the model
+  <em>adds</em> field the DDA does not have), and <span class="arithmatex">\(C_{ext,\text{model}}=-0.44\,C_{ext}\)</span> — negative,
+  the unambiguous signature of a broken model (§1.9.5 condition (b): <span class="arithmatex">\(\psi\approx21\gg\pi\)</span>,
+  internal TIR + multi-pass interference ignored). The <span class="arithmatex">\(60°\)</span>-tilted <span class="arithmatex">\(x=5\)</span> cell fails the same
+  way (<span class="arithmatex">\(|g|/|f|=1.21\)</span>, <span class="arithmatex">\(C_{ext,\text{model}}=-0.29\times\)</span>), and so does the column along-beam
+  cell at <span class="arithmatex">\(x\approx4.9\)</span> (<span class="arithmatex">\(\psi\approx8.6\)</span> rad, <span class="arithmatex">\(C_{ext,\text{model}}=0.16\times\)</span>, fitted <span class="arithmatex">\(|c|\)</span>
+  collapses to <span class="arithmatex">\(\approx0.14\)</span> of the global value).</li>
+</ul>
+<p><img alt="Validity map, all 15 scan cells" src="figures/fig16_validity_map.png" /></p>
+<p><strong>Fig. 16 — the gated activation domain for all 15 scan cells at a glance.</strong> <em>A cell is
+usable only if it sits in the green band (<span class="arithmatex">\(C_{ext,\text{model}}\)</span> sane, 0.6–1.5×) AND below
+the dashed line (residual smaller than the field). Colors: green = fewer SH coefficients
+than today, red = the model would need MORE (harmful). Marker shape = incidence orientation
+(legend bottom-left): every face-on cell is green, every tilted/edge-on cell drifts up and
+right — hence "gated", not blanket.</em></p>
+<p>Crucially, <strong>validity is measurable without the full field</strong>, i.e. cheaply per solve: the
+fitted calibration magnitude <span class="arithmatex">\(\lvert c_{\text{fit}}/c_{\text{global}}\rvert\)</span> deviates strongly
+exactly in the broken cells (dev <span class="arithmatex">\(&gt;1.4\)</span>: <span class="arithmatex">\(x=2\)</span> edge 5.2, <span class="arithmatex">\(x=5\)</span> edge 6.4, <span class="arithmatex">\(x=10\)</span> edge 4.0,
+HC <span class="arithmatex">\(x=5\)</span> along 0.14), and <span class="arithmatex">\(C_{ext,\text{model}}\le0\)</span> or <span class="arithmatex">\(&lt;0.5\times\)</span> flags them independently.
+Under the full-eps criterion, ntrunc is reduced in <strong>10 of the 13 cells with <span class="arithmatex">\(x\ge2\)</span></strong>
+(ratios 0.24–0.96); all three losses are validity-broken cells.</p>
+<p>Two metric rules decide all of these numbers (and any future hybrid must respect them):</p>
+<ul>
+<li><strong>full-eps vs own-eps</strong> (Eq. 1.9.11): judging the residual against its OWN small <span class="arithmatex">\(M_{11}\)</span>
+  norm misprices it badly — e.g. the <span class="arithmatex">\(x=1\)</span> face cell: the residual's <span class="arithmatex">\(M_{11}\)</span> norm is only
+  <span class="arithmatex">\(3\%\)</span> of the full field's, yet own-eps assigns the residual ntrunc <strong>23</strong>, worse than the
+  full field's 5 (a <span class="arithmatex">\(4.6\times\)</span> "penalty"), while full-eps reads <strong>3</strong> (an actual <span class="arithmatex">\(1.7\times\)</span>
+  saving — and 23/3 = a <span class="arithmatex">\(7.7\times\)</span> overestimate of the residual cost). The rule of Eq. (1.9.11) is
+  correct because the model is re-added exactly, so the residual's <em>absolute</em> truncation
+  error rides on top of the full field for free;</li>
+<li>the <span class="arithmatex">\(x=10\)</span> t60 <strong>full</strong> field already sits at the static grid's Nyquist cap
+  (179≈180) — full-field twins of large-<span class="arithmatex">\(x\)</span> runs are <strong>grid-limited</strong>, not
+  expansion-limited (report §9.3), which bounds what any full-field comparison can show.</li>
+</ul>
+<p>Backscatter: the model contributes nothing at <span class="arithmatex">\(\theta=180°\)</span> (its field is off by
+<span class="arithmatex">\(10^{-2}\dots8\times\)</span>, no consistent scale — the eikonal single-pass picture has no account
+of the coherent retro-reflection): the Phase-6 exact <code>backMat_data</code> route (§1.4, §1.8) stays
+mandatory and a hybrid would exempt that ring, as Brath et al. (2020) already flag the
+exact-backscatter direction as unreliable in the SH route anyway.</p>
+<h3 id="197-verdict-and-phase-9b-design-consequences">1.9.7 Verdict and Phase-9B design consequences</h3>
+<p><strong>Conditional GO — a per-cell <em>gated</em> hybrid, not a blanket subtraction.</strong> The validity
+domain of §1.9.5–1.9.6 is real but orientation-dependent, and §1.9.6 showed it is detectable
+from cheap per-solve observables. Design sketch (report §9.4): per (vertex, β) decision from
+<span class="arithmatex">\(c\)</span>-fit consistency, the <span class="arithmatex">\(C_{ext,\text{model}}&gt;0\)</span> sanity band, and the <span class="arithmatex">\(\psi\)</span> bound
+(1.9.15) — deciding model+residual vs plain full field; mixed runs store the per-cell flag
+in the nc metadata; <code>rawdata2average</code> reconstructs <span class="arithmatex">\(f=F_{\text{model}}+g\)</span> on load.</p>
+<p>Where the payoff lands, in the language of §1.9.3:</p>
+<ul>
+<li><strong>Internal cost (the target):</strong> the per-vertex expansion/storage <span class="arithmatex">\(\propto n_{\text{trunc}}^2\)</span>
+  collapses in qualifying cells (e.g. the ntrunc 179→81 class, which dominates the
+  orientation-expansion refinement at large <span class="arithmatex">\(x\)</span>). The ADDA <em>solve</em> itself is untouched
+  (the scat grid is far-field post-processing), and the grid laws of §1.6.1 could relax for
+  qualifying vertices.</li>
+<li><strong>SSDB format: NO-GO for now</strong> — with a clean textbook reason: shipping <span class="arithmatex">\(F_{\text{model}}\)</span>
+  as SH coefficients would require the model's OWN high-<span class="arithmatex">\(n_{\text{trunc}}\)</span> tail, which <em>is</em>
+  the expensive content (1.9.7): the saving exists only if the consumer receives the model
+  <em>descriptor</em> (chord map + <span class="arithmatex">\(c\)</span>) and evaluates (1.9.14) itself — a format change plus
+  ARTS/RTTOV-side implementation; Phase-8.8 export caps already deliver 15× without any of
+  that.</li>
+<li>Before building it, 9B must benchmark against a plain adaptive-eps re-balance (no model) —
+  Phase-8's laws already capture part of the same trend.</li>
+</ul>
 <hr />
 <h1 id="part-2-architecture-data-flow">Part 2 — Architecture &amp; data flow</h1>
 <h2 id="21-aro-call-graph-production-path">2.1 ARO call graph (production path)</h2>
@@ -1375,6 +1706,11 @@ store's measured noise plateau.</p>
 look at the SH truncation terms and the rescale diagnostics (§3.3), not at ADDA.</p>
 <h2 id="44-production-backlog-as-of-phase-5">4.4 Production backlog (as of Phase 5)</h2>
 <p><img alt="Backlog" src="figures/fig07_backlog.png" /></p>
+<p><strong>Fig. 7 — size and cost of the remaining production backlog.</strong> <em>Left: jobs per habit
+(each job = one (T, f, size), already after the x-cap and the resolution rule of Figs. 2–3).
+Right: estimated single-core solve time — the gap between the red and green bars is what the
+mirror flags (§1.7) save; habits without usable mirrors (Icon/Liu) show no gap. TRO is cheap
+by construction (<code>-orient avg</code> inside ADDA).</em></p>
 <table>
 <thead>
 <tr>
@@ -1753,13 +2089,19 @@ python docs/make_figures.py                 # mirrors the PNGs into docs/figures
   temperature set, the Mätzler-2006 refractive-index choice, and the SSDB NetCDF format the
   export targets (zenodo 1175572, tooling: <code>arts-sspdb-interface/</code>).</li>
 <li>Yurkin &amp; Hoekstra 2011, <em>JQSRT</em> 112, 2234–2247 (ADDA); ADDA manual: <code>adda/doc/manual.pdf</code>, <code>adda_1.2/doc/manual.pdf</code>.</li>
+<li><strong>Bohren, C. F., Huffman, D. R. (1983)</strong>: <em>Absorption and Scattering of Light by Small Particles</em>, Wiley. — cited as <strong>BH</strong> in this manual: source of the <span class="arithmatex">\(s_1..s_4\)</span> amplitude convention behind ADDA's <code>ampl_scatgrid</code> (§1.4, §1.9.1), the extinction paradox and diffraction-peak treatment (§1.9.2), and the validity conditions of the diffraction/eikonal approximations (§1.9.5).</li>
+<li><strong>van de Hulst, H. C. (1957)</strong>: <em>Light Scattering by Small Particles</em>, Wiley. — classic derivation of the extinction paradox via Babinet's principle and of the exact internal-current representation underlying the Phase-9 model (§1.9.2, §1.9.5).</li>
+<li><strong>Wiscombe, W. J. (1979)</strong>: Mie scattering as a function of particle size, in <em>Physical and Quantitative Aspects of Radiative Transfer: An Introduction to the Eleventh Symposium</em> (K. S. Shifrin, ed.), NASA SP-234. — partial-wave cutoff <span class="arithmatex">\(n_{\max}=x+4x^{1/3}+2\)</span> (§1.9.3); his MIEV0 reference cases anchor the Phase-9 Mie validation (§1.9.5).</li>
 <li>Mätzler 2006, dielectric function of ice (implemented in <code>acf.eps_ice_matzler06</code>).</li>
 <li>Mishchenko 2002 (<em>Light Scattering by Nonspherical Particles</em>) — extinction-matrix construction used in <code>acf.extinction_matrix</code>.</li>
 <li>ARTS Microwave SSP Database: https://doi.org/10.5281/zenodo.1175572 (browse/import tooling: <code>arts-sspdb-interface/</code>).</li>
 <li>Project working documents: <code>plans/DDA-modernization-plan.md</code> (approved plan), <code>plans/DDA-modernization-report.md</code> (findings per phase — <strong>read before code changes</strong>), <code>baselines/README.md</code>.</li>
 </ul>
 <hr />
-<p><em>Generated with the repo state of 2026-11-07. Figures regenerate via <code>docs/make_figures.py</code> (Appendix-E baseline plots delegate to <code>baselines/plot_baseline_figs.py</code>); this file plus <code>docs/DDA-manual.html</code> are produced from the same source.</em></p>
+<p><em>Generated with the repo state of 2026-11-09 (figures redesigned for readability the same
+day). Figures regenerate via <code>docs/make_figures.py</code> (Appendix-E baseline plots delegate to
+<code>baselines/plot_baseline_figs.py</code>); this file plus <code>docs/DDA-manual.html</code> are produced from
+the same source.</em></p>
 <script>
 window.MathJax = {tex: {inlineMath: [['\\(','\\)'], ['$','$']],
                         displayMath: [['\\[','\\]'], ['$$','$$']]},
