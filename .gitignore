@@ -3,20 +3,19 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# ADDA build artifacts (adda_1.2 lives in the umbrella repo; sources stay tracked)
-adda_1.2/src/*/*.o
-adda_1.2/src/*/*.d
-adda_1.2/src/*/.ldopts
-adda_1.2/src/*/.copts
-adda_1.2/src/*/.fopts
-adda_1.2/src/*/.cppopts
-adda_1.2/src/seq/adda
-adda_1.2/src/mpi/adda_mpi
+# Third-party ADDA trees: never part of this repo. Untracked and purged from the history
+# on 2026-11-10 (report §11). The checkout states the pipeline was validated against are
+# pinned in agents.md; rebuild locally per manual §3.5 (NO_FORTRAN + FFTW rpath).
+#   adda/       https://github.com/m-brath/adda  (fork of adda-team/adda; 1.5.0-alpha3
+#               snapshot — upstream has NO such tag, its tags stop at v1.4.0)
+#   adda_1.2/   https://github.com/adda-team/adda/archive/refs/tags/v1.2.tar.gz
+#   adda_1.4/   https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz  (PRODUCTION)
+#   adda-gui/   https://github.com/m-brath/adda-gui  (official ADDA GUI, Gradle project)
+/adda/
+/adda_1.2/
+/adda_1.4/
+/adda-gui/
 baselines/tmp/
-
-# ADDA 1.4.0 checkout (third-party; fetch via
-# https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz)
-adda_1.4/
 
 # local run outputs (results never live in this repo; Phase 3 local mode)
 adda_results/
