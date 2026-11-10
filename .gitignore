@@ -21,3 +21,4 @@ adda_1.4/
 # local run outputs (results never live in this repo; Phase 3 local mode)
 adda_results/
 analysis/_tmp*/
+adda_shape_files/
