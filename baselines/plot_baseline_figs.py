@@ -31,17 +31,19 @@ BASE = os.path.join(HERE, "adda_1.2")
 OUT = os.path.join(HERE, "report")
 
 # ---------------------------------------------------------------- style ----
-# Classical textbook look — serif (Times/STIX) type, black/grey curves with
-# linestyle + hatching as encodings (greyscale-safe, matches the manual's
-# LaTeX PDF built by docs/build_latex.py). Only the 3-D radiation surfaces use
-# a colour map (cividis: they are colour plates by nature).
+# Classical textbook look — serif (Times/STIX) type with a MUTED textbook
+# palette; where the encoding carries the message (X vs Y incidence
+# polarization) it is additionally carried by fill texture, so the figures
+# still read in greyscale (matches the manual's LaTeX PDF built by
+# docs/build_latex.py). Only the 3-D radiation surfaces use a colour map
+# (cividis: they are colour plates by nature).
 C = {
-    "polx": "#000000",   # X incidence polarization (solid black)
-    "poly": "#000000",   # Y incidence polarization (hatched)
-    "x01": "#000000",
-    "x1":  "#000000",
-    "x5":  "#000000",
-    "mie": "#000000",
+    "polx": "#0b5394",   # X incidence polarization (solid blue bars)
+    "poly": "#b02418",   # Y incidence polarization (red hatch on white)
+    "x01": "#0b5394",
+    "x1":  "#1c7c3c",
+    "x5":  "#b02418",
+    "mie": "#b02418",    # independent theory / incident beam: red accents
     "gray": "#333333",
 }
 plt.rcParams.update({
@@ -125,15 +127,15 @@ def fig_crosssections():
               ("Cabs", r"Absorption $C_{\mathrm{abs}}$ [" + MU + "m$^2$]", 2e-3),
               (r"omega", r"Single-scattering albedo $\omega\,=\,C_{\mathrm{sca}}/C_{\mathrm{ext}}$", 3e-4)]
     for ax, (key, ylab, ymin) in zip(axes, panels):
-        for pol, off, fc, yoff in (("X", -w / 2, "0.45", 2),
-                                   ("Y", +w / 2, "1.0", 12)):
+        for pol, off, fc, ec, yoff in (("X", -w / 2, C["polx"], "k", 2),
+                                       ("Y", +w / 2, "1.0", C["poly"], 12)):
             if key == "omega":
                 vals = [CS[c][pol]["Csca"] / CS[c][pol]["Cext"] for c, *_ in CASES]
             else:
                 vals = [CS[c][pol][key] for c, *_ in CASES]
             bars = ax.bar(idx + off, vals, w, facecolor=fc,
                           hatch="//" if pol == "Y" else None,
-                          edgecolor="k", linewidth=0.7)
+                          edgecolor=ec, linewidth=0.7)
             if key == "omega":
                 for b, v in zip(bars, vals):
                     ax.annotate(f"{v:.1e}", (b.get_x() + b.get_width() / 2, v),
@@ -155,8 +157,8 @@ def fig_crosssections():
                          ha="center", fontsize=7.8, color=C["gray"])
         axes[0].plot([x0 + .07, x1 - .07], [1.02, 1.02],
                      transform=axes[0].get_xaxis_transform(), lw=1.6, color="#a0aec0")
-    h = [plt.Rectangle((0, 0), 1, 1, fc="0.45", ec="k"),
-         plt.Rectangle((0, 0), 1, 1, fc="1.0", ec="k", hatch="//")]
+    h = [plt.Rectangle((0, 0), 1, 1, fc=C["polx"], ec="k"),
+         plt.Rectangle((0, 0), 1, 1, fc="1.0", ec=C["poly"], hatch="//")]
     fig.legend(h, ["incidence polarization X (perpendicular)",
                    "incidence polarization Y (parallel, hatched)"],
                loc="lower center", ncol=2, handlelength=1.4,
@@ -208,7 +210,8 @@ def fig_sphere_mie():
     mievals = [6.792946e-3, 4.653942e-3, 2.139004e-3]
     dev = [abs(a / m - 1) * 100 for a, m in zip(adda, mievals)]
     bars = a2.bar(np.arange(3), dev, 0.55,
-                  facecolor=["0.75", "0.45", "0.15"], edgecolor="k", lw=0.7)
+                  facecolor=["#9ec3dd", "#4a7ba6", "#0b5394"], edgecolor="k",
+                  lw=0.7)
     for b, v in zip(bars, dev):
         a2.annotate(f"{v:.2f}%", (b.get_x() + b.get_width() / 2, v),
                     xytext=(0, 3), textcoords="offset points", ha="center",
@@ -308,10 +311,10 @@ def fig_ellipsoid_phase():
         xlab = re.search(r"x([\d.]+)_", case).group(1)
         ax.set_title("oblate spheroid,  x = " + xlab, fontsize=9.5, pad=12)
     a2 = fig.add_subplot(gs[1, 1])
-    for case, ls in zip(ell, dashes):
+    for case, ls, cc in zip(ell, dashes, cols):
         theta, phi, S = read_mueller(case)
         dop = np.abs(S["s12"])[:, 0] / S["s11"][:, 0] * 100
-        a2.plot(theta, dop, lw=1.7, ls=ls, color="k")
+        a2.plot(theta, dop, lw=1.7, ls=ls, color=cc)
     a2.legend(["x = 0.1", "x = 1", "x = 5"], loc="upper left")
     a2.set_xlabel("scattering angle [" + DEG + "]")
     a2.set_ylabel("$|S_{12}|/S_{11}$  [%]")

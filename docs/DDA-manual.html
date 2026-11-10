@@ -473,7 +473,7 @@ largest blob (170 MB) exceeded GitHub's 100 MB push limit (findings + gate table
 only the 671 and 887 classes), so never assume five files per size.</p>
 <p><img alt="Resolution scheme" src="figures/fig03_resolution_scheme.png" /></p>
 <p><strong>Fig. 3 — Which shape file computes a given (size, f).</strong> <em>Left: a requested frequency falls
-in one grey block (one per <code>fmin</code> class); that block's <code>fmin</code> class file does the run (block
+in one coloured block (one per <code>fmin</code> class); that block's <code>fmin</code> class file does the run (block
 label sits at its right edge). The two edge cases are annotated. Right: measured N_dipoles per class for three
 real HongPlate sizes — small particles are degenerate (one lattice already suffices), large
 ones grow <span class="arithmatex">\(\\propto f_{\\min}^3\)</span>.</em></p>
@@ -515,8 +515,7 @@ the imaginary part at
 190 K vs 270 K differs by orders of magnitude — hence the three production temperatures
 {190, 230, 270} K are <em>not</em> a formality; each (T, f, size) is a separate ADDA job.</p>
 <p><img alt="Matzler 2006 ice permittivity" src="figures/fig01_dielectric.png" /></p>
-<p><img alt="Matzler 2006 ice permittivity" src="figures/fig01_dielectric.png" /></p>
-<p><strong>Fig. 1 — Mätzler ice permittivity across the whole valid range.</strong> <em>Grey band: the
+<p><strong>Fig. 1 — Mätzler ice permittivity across the whole valid range.</strong> <em>Blue shaded band: the
 production channel set (35 frequencies, 1–886 GHz). Reading: the real part (left) barely
 moves (≈3.11–3.19, only with T); the imaginary part (right) spans ~4 orders of magnitude
 in f and T — the loss tangent at mm/sub-mm wavelengths is what makes cloud ice a
@@ -596,11 +595,11 @@ coordinate systems — the lab-frame incidence/tilt angles and the propagation-a
 scattering grid — is shown below:</p>
 <p><img alt="Orientation and scattering geometry" src="figures/fig08_orientation_geometry.png" /></p>
 <p><strong>Fig. 8 — the two coordinate systems you must not confuse.</strong> <em>(a) lab frame: the incidence
-direction <span class="arithmatex">\(\hat k\)</span> (<span class="arithmatex">\(\theta_{\mathrm{inc}}\)</span> from lab-<span class="arithmatex">\(z\)</span>, azimuth
-fixed) and the particle symmetry axis (tilt <span class="arithmatex">\(\beta\)</span>); ARO averages the azimuth/spin Euler
+direction <span class="arithmatex">\(\hat k\)</span> (blue; <span class="arithmatex">\(\theta_{\mathrm{inc}}\)</span> from lab-<span class="arithmatex">\(z\)</span>, azimuth
+fixed) and the particle symmetry axis (red dashed; tilt <span class="arithmatex">\(\beta\)</span>); ARO averages the azimuth/spin Euler
 angles <span class="arithmatex">\(\alpha,\gamma\)</span> at fixed <span class="arithmatex">\(\beta\)</span>. (b) every solve's <span class="arithmatex">\(181\times361\)</span> amplitude/Mueller grid
 lives on a sphere <strong>attached to <span class="arithmatex">\(\hat k\)</span></strong> — <span class="arithmatex">\(\theta=0°\)</span> is the forward pole, and the filled
-black pole
+red pole
 (<span class="arithmatex">\(\Theta=180°\)</span>, <span class="arithmatex">\(\Phi=0°\)</span>) is the Phase-6 backscatter slice. This is also why the §1.7 mirror
 transform remaps only <span class="arithmatex">\(\varphi\)</span>.</em></p>
 <h2 id="15-orientation-averaging-the-two-strategies">1.5 Orientation averaging — the two strategies</h2>
@@ -922,11 +921,12 @@ mirror-closed, and closure is <strong>resolution-dependent</strong> — measured
 vs <span class="arithmatex">\(4.5\cdot 10^{-12}\)</span> when closed), not solver noise. Hence flags must be set from the <strong>coarsest
 resolution class</strong> of the size grid.</p>
 <p><img alt="Measured voxel closure" src="figures/fig06_sym_closure.png" /></p>
-<p><strong>Fig. 6 — the mirror-flag decision table (fill texture = the rule itself).</strong> <em>Solid grey:
-voxel set exactly closed (1.000) at that resolution → flag may be enabled. Diagonal hatch:
+<p><strong>Fig. 6 — the mirror-flag decision table (colour + fill texture = the rule itself).</strong> <em>Solid
+green (no hatch):
+voxel set exactly closed (1.000) at that resolution → flag may be enabled. Red diagonal hatch:
 &lt;1.000 → the fill-in would reconstruct voxels that do not exist = a real SHAPE error, never
 enable — note how a mirror can be closed at fine resolution but broken at the coarsest class,
-which is why flags follow the coarsest row of each pair. Cross-hatch: habit intrinsically
+which is why flags follow the coarsest row of each pair. Grey cross-hatch: habit intrinsically
 asymmetric.</em></p>
 <p>Production flags (report §4.7): <strong>HongPlate_Id9 + TOR grid: XY+XZ=true, YZ=false</strong>;
 <strong>HongColumn_Id7: YZ=true</strong>; LiuSector/Icon/HexPlaAgg: none (aggregate/snowflake shapes
@@ -1085,8 +1085,9 @@ peak are set by the <em>projected silhouette</em>, not by <span class="arithmate
 changes strongly with orientation, which is why the peak structure is orientation-dependent.</p>
 <p><img alt="Mie peak evolution + measured SH demand" src="figures/fig13_forward_peak.png" /></p>
 <p><strong>Fig. 13 — why the diffraction peak is the cost driver.</strong> <em>(a) exact-Mie <span class="arithmatex">\(|S_1|^2\)</span> over the
-whole sphere for four size parameters — the spike appears only at large <span class="arithmatex">\(x\)</span> (greyscale ramp:
-darker = larger <span class="arithmatex">\(x\)</span>); (b) zoom on 0–50°: the peak width shrinks like <span class="arithmatex">\(220°/x\)</span>; (c) achieved
+whole sphere for four size parameters — the spike appears only at large <span class="arithmatex">\(x\)</span> (colour ramp:
+pale blue <span class="arithmatex">\(\to\)</span> blue <span class="arithmatex">\(\to\)</span> red = larger <span class="arithmatex">\(x\)</span>); (b) zoom on 0–50°: the peak width shrinks like
+<span class="arithmatex">\(220°/x\)</span>; (c) achieved
 SH truncation order per production cell vs <span class="arithmatex">\(x\)</span>: filled markers = today's full-field cost
 (grows like the grey Wiscombe curve and saturates at the dash-dotted Nyquist cap), open
 markers = what a model+residual split would need instead. Data: <code>analysis/phase9_results.json</code>.</em></p>
@@ -1237,8 +1238,9 @@ Mueller grid rebuilt from the parsed amplitudes matches ADDA's own <code>mueller
 <p><img alt="Eikonal screen model schematic + validity knob" src="figures/fig14_eikonal_model.png" /></p>
 <p><strong>Fig. 14 — the model: what it is, and the one knob that says when it works.</strong> <em>(a) schematic
 on the real x=5 HongPlate slab: march every ray through the exact voxels to get the chord
-<span class="arithmatex">\(\ell(\rho)\)</span>, radiate analytically from the exit screen; (b) the phase thickness
-<span class="arithmatex">\(\psi_{max}\)</span> marched through the real voxels vs incidence tilt: below the dashed
+<span class="arithmatex">\(\ell(\rho)\)</span> (blue), radiate analytically from the exit screen; (b) the phase thickness
+<span class="arithmatex">\(\psi_{max}\)</span> (blue curve) marched through the real voxels vs incidence tilt — green
+annotation = the scan model WINS, red = it already fails; below the dashed
 <span class="arithmatex">\(\psi=\pi\)</span> line the single-pass eikonal picture is plausible, far above it (edge-on) the
 model is guaranteed to fail. Ice refractive index at 887 GHz makes even a 541 µm plate
 "optically thick" edge-on.</em></p>
@@ -1276,11 +1278,11 @@ and the full-eps criterion (1.9.11); sanity-check <span class="arithmatex">\(C_{
 Full table: report §9.2 / <code>analysis/phase9_fwdmodel_table.txt</code>.</p>
 <p><img alt="Full vs model vs residual on three real cells" src="figures/fig15_delta_scaling.png" /></p>
 <p><strong>Fig. 15 — the three verdicts, per real production cell (row = cell).</strong> <em>Column 1: does the
-calibrated model reproduce the forward peak (black solid = ADDA, dashed = calibrated model)?
-Column 2: whole sphere — solid = full <span class="arithmatex">\(|f|\)</span>, dashed = residual <span class="arithmatex">\(|g|\)</span>; where the dashed curve
-rises above the solid one (edge-on row), the split makes storage WORSE. Column 3: the SH
-storage budget — solid bar = ntrunc stored today, hatched bar = ntrunc the model+residual
-split would store (full-eps rule, Eq. 1.9.11), cross-hatched bar = what-if bar REJECTED by
+calibrated model reproduce the forward peak (blue solid = ADDA, red dashed = calibrated model)?
+Column 2: whole sphere — blue solid = full <span class="arithmatex">\(|f|\)</span>, red dashed = residual <span class="arithmatex">\(|g|\)</span>; where the dashed
+curve rises above the solid one (edge-on row), the split makes storage WORSE. Column 3: the SH
+storage budget — blue solid bar = ntrunc stored today, red hatched bar = ntrunc the model+residual
+split would store (full-eps rule, Eq. 1.9.11), light-red cross-hatched bar = what-if bar REJECTED by
 the <span class="arithmatex">\(|g|/|f|\)</span> gate; the panel title carries the verdict with the coefficient-count ratio
 (<span class="arithmatex">\(n_{\text{trunc}}\to\)</span> SH terms <span class="arithmatex">\(=(n+1)(n+2)/2\)</span>). The historic own-eps rule is <em>not</em> plotted
 — it is not decision-relevant (worked example in the metric rules below).</em></p>
@@ -1307,10 +1309,10 @@ the <span class="arithmatex">\(|g|/|f|\)</span> gate; the panel title carries th
 </ul>
 <p><img alt="Validity map, all 15 scan cells" src="figures/fig16_validity_map.png" /></p>
 <p><strong>Fig. 16 — the gated activation domain for all 15 scan cells at a glance.</strong> <em>A cell is
-usable only if it sits in the shaded <span class="arithmatex">\(C_{ext,\text{model}}\)</span> band (sane, 0.6–1.5×) AND below
+usable only if it sits in the blue shaded <span class="arithmatex">\(C_{ext,\text{model}}\)</span> band (sane, 0.6–1.5×) AND below
 the dashed line (residual smaller than the field). Marker shape = incidence orientation
 (legend bottom-left); marker fill = the storage verdict: open = the model+residual split
-needs FEWER SH coefficients than today, filled = it needs MORE (harmful). Every face-on
+needs FEWER SH coefficients than today, filled red = it needs MORE (harmful). Every face-on
 cell is open and low, every tilted/edge-on cell drifts up and right — hence "gated", not
 blanket.</em></p>
 <p>Crucially, <strong>validity is measurable without the full field</strong>, i.e. cheaply per solve: the
@@ -1796,7 +1798,7 @@ look at the SH truncation terms and the rescale diagnostics (§3.3), not at ADDA
 <p><strong>Fig. 7 — size and cost of the remaining production backlog.</strong> <em>Left: jobs per habit
 (each job = one (T, f, size), already after the x-cap and the resolution rule of Figs. 2–3).
 Right: estimated single-core solve time — the gap between the hatched bar (no mirror flags)
-and the solid bar (production flags) is what the mirror flags (§1.7) save; habits without
+and the blue solid bar (production flags) is what the mirror flags (§1.7) save; habits without
 usable mirrors (Icon/Liu) show no gap. TRO is cheap
 by construction (<code>-orient avg</code> inside ADDA).</em></p>
 <table>

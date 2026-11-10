@@ -53,10 +53,12 @@ C0 = 299792458.0
 # ---------------------------------------------------------------- style ---
 # Classical textbook look (matches the LaTeX PDF built by docs/build_latex.py):
 # serif (Times) + STIX math, closed figure frame with inward ticks, no grid
-# clutter, and BLACK/GREY + linestyles + hatching as the encodings — colour is
-# avoided so every figure still reads in a greyscale printout. Curves of one
-# family are distinguished by style, not hue; "bad/hypothetical" content is
-# hatched or open, "stored/actual" content is solid.
+# clutter, and a MUTED textbook colour palette (deep desaturated primaries).
+# Where an encoding carries the message (safe/unsafe, stored/what-if,
+# harmful/beneficial, X/Y polarization) it is ADDITIONALLY carried by linestyle,
+# marker, fill texture or open-vs-filled, so every figure still reads in a
+# greyscale printout; "bad/hypothetical" content is hatched or open,
+# "stored/actual" content is solid.
 plt.rcParams.update({
     'figure.dpi': 150,
     'font.family': 'serif',
@@ -77,8 +79,14 @@ plt.rcParams.update({
     'savefig.facecolor': 'white',
 })
 
-# greyscale ramp for curve families indexed by size parameter / class
-GRAYS = ['0.15', '0.4', '0.6', '0.8']
+# muted textbook palette (deep desaturated primaries, print-safe)
+BLUE   = '#0b5394'
+RED    = '#b02418'
+GREEN  = '#1c7c3c'
+OCHRE  = '#8a6d1d'
+PURPLE = '#6a3d9a'
+TEAL   = '#2e7d82'
+LIGHT  = '#b8c8d4'      # pale steel blue — neutral/background elements
 # solid/dashed/dotted/dash-dot for up to four series of one family
 DASHES = ['-', '--', ':', '-.']
 
@@ -97,10 +105,10 @@ def fig_dielectric():
     f = np.logspace(7, 12, 1500)                      # 0.01 GHz .. 1 THz (acf valid range)
     Ts = [190.0, 230.0, 270.0]
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8.6, 3.4))
-    for T, ls in zip(Ts, DASHES):
+    for T, ls, tc in zip(Ts, DASHES, (BLUE, OCHRE, RED)):   # cool->warm = cold->warm ice
         eps = np.array([acf.eps_ice_matzler06(ff, T) for ff in f])
-        ax1.plot(f / 1e9, eps.real, color='k', ls=ls, label=f'{T:.0f} K')
-        ax2.plot(f / 1e9, eps.imag, color='k', ls=ls, label=f'{T:.0f} K')
+        ax1.plot(f / 1e9, eps.real, color=tc, ls=ls, label=f'{T:.0f} K')
+        ax2.plot(f / 1e9, eps.imag, color=tc, ls=ls, label=f'{T:.0f} K')
     ax1.set_yscale('linear')
     ax1.set_ylabel(r"$\varepsilon'$ (real part)")
     ax2.set_yscale('log')
@@ -108,7 +116,7 @@ def fig_dielectric():
     for ax in (ax1, ax2):
         ax.set_xscale('log')
         ax.set_xlabel('frequency [GHz]')
-        ax.axvspan(1, 887, color='0.88', zorder=0)     # production channel range
+        ax.axvspan(1, 887, color=BLUE, alpha=0.08, zorder=0)   # production channel range
         ax.legend()
     ax1.text(1.15, 3.113, 'production channel set\n(35 channels, 1–886 GHz)',
              fontsize=7.5, ha='left')
@@ -135,12 +143,13 @@ def fig_size_parameter():
     f = np.logspace(np.log10(1e9), np.log10(1000e9), 400)
     fig, ax = plt.subplots(figsize=(6.4, 4.0))
     for D in sizes:
-        ax.plot(f / 1e9, np.pi * D * 1e-6 * f / C0, color='0.75', lw=0.8,
+        ax.plot(f / 1e9, np.pi * D * 1e-6 * f / C0, color=LIGHT, lw=0.8,
                 zorder=1)
-    for D, ls in zip((10., 100., 1000., 2596.), DASHES):
-        ax.plot(f / 1e9, np.pi * D * 1e-6 * f / C0, color='k', ls=ls, lw=1.6,
+    for D, ls, tc in zip((10., 100., 1000., 2596.), DASHES,
+                         (BLUE, GREEN, OCHRE, PURPLE)):
+        ax.plot(f / 1e9, np.pi * D * 1e-6 * f / C0, color=tc, ls=ls, lw=1.6,
                 label=f'$D_{{veq}}$ = {D:g} µm', zorder=3)
-    ax.axhline(10, color='k', ls='--', zorder=4)
+    ax.axhline(10, color=RED, ls='--', zorder=4)
     ax.text(1.05, 12.2, 'size_parameter_limit = 10 — jobs above this line are skipped',
             fontsize=7.5)
     ax.set_xscale('log'); ax.set_yscale('log')
@@ -165,7 +174,7 @@ def fig_resolution_scheme():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.4, 3.8),
                                    gridspec_kw={'width_ratios': [1.5, 1]})
-    cols = ['0.25', '0.42', '0.58', '0.72', '0.85']       # one grey per fmin class
+    cols = [BLUE, TEAL, GREEN, OCHRE, PURPLE]              # one per fmin class
     edges = np.concatenate([[0.0], classes / 1e9, [1200.]])
     for k, fm in enumerate(classes):
         ax1.barh([0], edges[k + 1] - edges[k], left=edges[k], height=0.5,
@@ -188,12 +197,13 @@ def fig_resolution_scheme():
     ax1.set_title('Resolution rule: coarsest class with fmin ≥ f\n(then ADDA rescales geometry via -eq_rad)')
     ax1.grid(axis='y', alpha=0)
 
-    for (Dk, _lab), ls, mk in zip(picks, ('-', '--', ':'), ('o', 's', '^')):
+    for (Dk, _lab), ls, mk, tc in zip(picks, ('-', '--', ':'),
+                                       ('o', 's', '^'), (BLUE, OCHRE, RED)):
         sub = rows[rows[:, 0] == Dk]
         N_of_class = {fm: int(n) for fm, n in zip(sub[:, 1], sub[:, 2])}
         ax2.plot([f'{fm/1e9:g}' for fm in classes],
                  [N_of_class.get(fm, np.nan) for fm in classes], mk + ls,
-                 color='k', lw=1.4, label=f'$D_{{veq}}$={Dk:g} µm')
+                 color=tc, lw=1.4, label=f'$D_{{veq}}$={Dk:g} µm')
         if Dk == 10.0:
             for fm in classes:
                 ax2.annotate(f'{N_of_class[fm]}', (fm/1e9, N_of_class[fm]),
@@ -217,9 +227,11 @@ def fig_adda_cost():
     for r in bench:
         pts.setdefault(r['x'], []).append(r)
     marks = {1: 'o', 3: 's', 5: 'D', 8: '^'}
+    xcols = {1: BLUE, 3: GREEN, 5: OCHRE, 8: RED}
     for x, rs in sorted(pts.items()):
         ax1.scatter([r['N_dipoles'] for r in rs], [r['wall_s'] for r in rs],
-                    marker=marks[x], color='k', s=34, label=f'$x$ = {x}', zorder=3)
+                    marker=marks[x], color=xcols[x], s=34, label=f'$x$ = {x}',
+                    zorder=3)
     N = np.array([100, 1e5])
     ax1.plot(N, 0.42 / 12312**2.3 * N**2.3, color='0.4', lw=1,
              label=r'guide $\propto N^{2.3}$ (fit)')
@@ -232,13 +244,13 @@ def fig_adda_cost():
     x5 = [r for r in bench if r['x'] == 5 and r['dpl'] is not None]
     ref = [r for r in x5 if r['dpl'] == 7][0]['Cext']
     ax2.semilogy([r['dpl_eff'] for r in x5],
-                 [abs(r['Cext'] - ref) / ref for r in x5], 'o-', color='k', lw=1.4,
-                 label=r'$C_\mathrm{ext}$ rel. err vs dpl = 7')
+                 [abs(r['Cext'] - ref) / ref for r in x5], 'o-', color=BLUE,
+                 lw=1.4, label=r'$C_\mathrm{ext}$ rel. err vs dpl = 7')
     auto = [r for r in bench if r['x'] == 5 and r['dpl'] is None]
     ax2.axvline(auto[0]['dpl_eff'], color='k', ls='--', lw=1)
     ax2.text(auto[0]['dpl_eff'] - 0.6, 2e-1, 'ADDA auto-dpl ($\\approx$18)',
              fontsize=8, ha='right')
-    ax2.axhline(1e-3, color='k', ls=':', lw=1)
+    ax2.axhline(1e-3, color='0.4', ls=':', lw=1)
     ax2.text(4.2, 1.3e-3, 'solver-noise band (eps 3: $10^{-3}..10^{-11}$)',
              fontsize=8)
     ax2.set_xlabel('effective dipoles per wavelength ($dpl_\\mathrm{eff}$)')
@@ -307,18 +319,18 @@ def fig_sym_closure():
         [0.068, 0.049, 0.027, np.nan]])
     fig, ax = plt.subplots(figsize=(9.8, 4.6))
     fig.subplots_adjust(left=0.15, right=0.52, top=0.82, bottom=0.09)
-    # THE DECISION RULE, encoded so it survives greyscale printing (a continuous
-    # colormap made 1.000 vs 0.986 visually indistinguishable although one is
-    # safe and the other corrupting):
-    #   solid grey   closure == 1.000      → mirror flag may be enabled
-    #   white + hatch 1.000 > closure     → fill-in injects a real SHAPE error — forbidden
-    #   cross-hatch  habit intrinsically asymmetric → flag never applicable
+    # THE DECISION RULE, encoded redundantly (colour + texture) so it survives
+    # greyscale printing too (a continuous colormap made 1.000 vs 0.986 visually
+    # indistinguishable although one is safe and the other corrupting):
+    #   solid green     closure == 1.000    → mirror flag may be enabled
+    #   white + red hatch 1.000 > closure   → fill-in injects a real SHAPE error — forbidden
+    #   grey cross-hatch habit intrinsically asymmetric → flag never applicable
     def cell(v):
         if not np.isfinite(v):
-            return dict(fc='0.92', hatch='xxxx', ec='0.5')
+            return dict(fc='#ececec', hatch='xxxx', ec='0.55')
         if v >= 0.9995:
-            return dict(fc='0.7', hatch=None, ec='0.3')
-        return dict(fc='1.0', hatch='///', ec='0.4')
+            return dict(fc='#c9dcc9', hatch=None, ec=GREEN)
+        return dict(fc='1.0', hatch='///', ec=RED)
     for i in range(M.shape[0]):
         for j in range(M.shape[1]):
             v = M[i, j]
@@ -336,11 +348,11 @@ def fig_sym_closure():
     ax.set_title('Voxel-set mirror closure per habit (analysis/phase4_symmetry.py):\n'
                  'flags MUST be set from the COARSEST resolution class (row pairs)')
     ax.legend(handles=[
-        Patch(fc='0.7', ec='0.3',
+        Patch(fc='#c9dcc9', ec=GREEN,
               label='1.000 — voxel set exactly closed: flag SAFE'),
-        Patch(fc='1.0', hatch='///', ec='0.4',
+        Patch(fc='1.0', hatch='///', ec=RED,
               label='<1.000 — NOT closed: fill-in = real shape error, never enable'),
-        Patch(fc='0.92', hatch='xxxx', ec='0.5',
+        Patch(fc='#ececec', hatch='xxxx', ec='0.55',
               label='asymmetric habit — no mirror flag ever applies')],
         loc='upper left', bbox_to_anchor=(1.01, 1.0), fontsize=8)
     savefig(fig, 'fig06_sym_closure.png', tight=False)
@@ -363,7 +375,7 @@ def fig_backlog():
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.6, 3.8),
                                    gridspec_kw={'width_ratios': [1.25, 1]})
     ys = np.arange(len(habits))
-    ax1.barh(ys, jobs, color='0.65')
+    ax1.barh(ys, jobs, color='#4a7ba6')
     for y, j in zip(ys, jobs):
         ax1.text(j + 40, y, f'{j}', va='center', fontsize=8)
     ax1.set_yticks(ys); ax1.set_yticklabels(habits, fontsize=8)
@@ -374,7 +386,7 @@ def fig_backlog():
     h = 0.36
     ax2.barh(ys - h / 2, cpu_asym, height=h, facecolor='1.0', edgecolor='k',
              hatch='///', lw=0.8, zorder=2, label='without mirror flags')
-    ax2.barh(ys + h / 2, cpu, height=h, color='0.35', zorder=2,
+    ax2.barh(ys + h / 2, cpu, height=h, color=BLUE, zorder=2,
              label='with mirror flags (production)')
     for y, (c, ca) in enumerate(zip(cpu, cpu_asym)):
         if ca > 0:
@@ -440,41 +452,41 @@ def fig_orientation_geometry():
     # incidence direction k-hat: theta_inc from z, azimuth fixed to 0 (x-z plane)
     t_inc = np.deg2rad(115)
     kx, kz = np.sin(t_inc), np.cos(t_inc)
-    ax.quiver(0, 0, 0, kx, 0, kz, color='k', lw=2.0,
+    ax.quiver(0, 0, 0, kx, 0, kz, color=BLUE, lw=2.0,
               arrow_length_ratio=0.09)
     ax.text(kx * 1.08 - 0.05, -0.28, kz * 1.08 - 0.10, 'incidence $\\hat{k}$',
-            fontsize=9, color='k', ha='center')
+            fontsize=9, color=BLUE, ha='center')
 
     # theta_inc arc in the x-z plane (from +z down to k-hat)
     tt = np.linspace(0, t_inc, 60)
-    ax.plot(np.sin(tt), np.zeros_like(tt), np.cos(tt), color='k', lw=1.3)
+    ax.plot(np.sin(tt), np.zeros_like(tt), np.cos(tt), color=BLUE, lw=1.3)
     ta = np.deg2rad(78)
     ax.text(0.60 * np.sin(ta), -0.16, 0.60 * np.cos(ta), '$\\theta_{inc}$',
-            color='k', fontsize=12)
+            color=BLUE, fontsize=12)
 
     # particle symmetry axis: tilt beta off z, own azimuth (the averaged Euler angles)
     b = np.deg2rad(55)
     az = np.deg2rad(-35)
     px, py, pz = np.sin(b) * np.cos(az), np.sin(b) * np.sin(az), np.cos(b)
-    ax.quiver(0, 0, 0, px, py, pz, color='0.25', lw=2.0, linestyle='--',
+    ax.quiver(0, 0, 0, px, py, pz, color=RED, lw=2.0, linestyle='--',
               arrow_length_ratio=0.09)
     ax.text(px * 1.20 + 0.15, py * 1.20, pz * 1.20 + 0.12, 'particle axis',
-            fontsize=9, color='0.25', ha='center')
+            fontsize=9, color=RED, ha='center')
 
     # beta arc: great-circle from +z to the particle axis, in its own vertical plane
     tt = np.linspace(0, b, 60)
     ax.plot(np.sin(tt) * np.cos(az), np.sin(tt) * np.sin(az), np.cos(tt),
-            color='0.25', lw=1.3)
+            color=RED, lw=1.3)
     tb = np.deg2rad(44)
     ax.text(0.68 * np.sin(tb) * np.cos(az) + 0.22,
             0.68 * np.sin(tb) * np.sin(az) - 0.04,
-            0.68 * np.cos(tb) - 0.02, '$\\beta$', color='0.25', fontsize=12)
+            0.68 * np.cos(tb) - 0.02, '$\\beta$', color=RED, fontsize=12)
 
     ax.legend(handles=[
-        Line2D([], [], color='k', lw=2,
+        Line2D([], [], color=BLUE, lw=2,
                label='incidence $\\hat{k}$: $\\theta_{inc}$ from lab-$z$,\n'
                      'incidence azimuth fixed (0°)'),
-        Line2D([], [], color='0.25', lw=2, ls='--',
+        Line2D([], [], color=RED, lw=2, ls='--',
                label='particle symmetry axis: tilt $\\beta$ from $z$'),
         Line2D([], [], color='0.4', lw=1.4, ls='--',
                label='ARO azimuth ring: $\\alpha,\\gamma$ averaged at fixed $\\beta$\n'
@@ -496,14 +508,14 @@ def fig_orientation_geometry():
     _wireframe_sphere(ax2, nlat=4, nlon=8)
 
     # propagation axis: theta = 0 at the north pole (straight ahead)
-    ax2.quiver(0, 0, -0.15, 0, 0, 1.55, color='k', lw=1.8,
+    ax2.quiver(0, 0, -0.15, 0, 0, 1.55, color=BLUE, lw=1.8,
                arrow_length_ratio=0.05)
     ax2.text(0.62, -0.38, 1.02, 'propagation $\\hat{k}$  →  $\\theta=0°$\n'
              'is straight ahead at the pole', fontsize=8.5, ha='left', va='center')
-    ax2.scatter(0, 0, 1.0, color='0.3', s=22, zorder=5)
-    ax2.scatter(0, 0, -1.0, color='k', s=30, zorder=5)
+    ax2.scatter(0, 0, 1.0, color=BLUE, s=22, zorder=5)
+    ax2.scatter(0, 0, -1.0, color=RED, s=30, zorder=5)
     ax2.text(0.12, 0, -1.04, '$\\theta=180°$\nexact backscatter', fontsize=8,
-             color='k', va='top')
+             color=RED, va='top')
 
     # theta = cone circle (latitude) around k
     th_c = np.deg2rad(60)
@@ -514,24 +526,24 @@ def fig_orientation_geometry():
     ph_c = np.deg2rad(115)
     r_p = np.sin(ph_c)
     ax2.plot(r_p * np.cos(u), r_p * np.sin(u),
-             np.cos(ph_c) * np.ones_like(u), color='0.4', lw=1.8)
+             np.cos(ph_c) * np.ones_like(u), color=OCHRE, lw=1.8)
 
     # a sample scattering direction n-hat(theta, phi)
     n_th, n_ph = np.deg2rad(115), np.deg2rad(140)
     nx, ny, nz = (np.sin(n_th) * np.cos(n_ph), np.sin(n_th) * np.sin(n_ph),
                   np.cos(n_th))
-    ax2.quiver(0, 0, 0, nx, ny, nz, color='0.15', lw=1.7, linestyle='-.',
+    ax2.quiver(0, 0, 0, nx, ny, nz, color=PURPLE, lw=1.7, linestyle='-.',
                arrow_length_ratio=0.12)
 
     ax2.legend(handles=[
         Line2D([], [], color='k', lw=2,
                label='$\\theta$-rings ($\\theta$=const): 181 pts, 0…180°'),
-        Line2D([], [], color='0.4', lw=2,
+        Line2D([], [], color=OCHRE, lw=2,
                label='$\\varphi$-sweep at one $\\theta$: 361 pts, 0…360°'),
-        Line2D([], [], color='0.15', lw=2, ls='-.',
+        Line2D([], [], color=PURPLE, lw=2, ls='-.',
                label='one grid point $\\hat{n}(\\theta,\\varphi)$ of\n'
                      'ampl/mueller_scatgrid'),
-        Line2D([], [], color='k', marker='o', ls='', ms=6,
+        Line2D([], [], color=RED, marker='o', ls='', ms=6,
                label='Phase-6 backscatter slice:\n$\\Theta$=180°, $\\Phi$=0° row/column')],
         loc='upper left', fontsize=7.5,
         handlelength=1.6, borderpad=0.7)
@@ -565,8 +577,8 @@ def fig_forward_peak():
     p9 = _p9()
     m = np.sqrt(acf.eps_ice_matzler06(887e9, 230.0))
     xs = (1.0, 2.0, 5.0, 10.0)
-    # greyscale ramp: DARKER = larger x (the large-x curves are the subject)
-    cols = dict(zip(xs, ['0.6', '0.42', '0.22', '0.0']))
+    # sequential blue -> red ramp: the red large-x curves are the subject
+    cols = dict(zip(xs, ('#a8c4d8', '#5b8fb9', BLUE, RED)))
     th = np.linspace(0.0, 180.0, 3601)
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12.4, 3.9))
     for xv in xs:
@@ -685,7 +697,7 @@ def fig_eikonal_model():
     # ---------- (a) schematic on the slab defined by the real shape
     ax = fig.add_subplot(gs[0])
     ax.set_aspect('equal')
-    ax.add_patch(Rectangle((-Dmax / 2, -t / 2), Dmax, t, fc='0.82',
+    ax.add_patch(Rectangle((-Dmax / 2, -t / 2), Dmax, t, fc='#dfe7ee',
                            ec='0.3', alpha=1.0, hatch='++', lw=1.2))
     # incident plane wave from below (face-on)
     for xc in np.linspace(-0.42, 0.42, 7) * Dmax:
@@ -695,10 +707,10 @@ def fig_eikonal_model():
             color='k', fontsize=8.5, ha='center')
     # highlighted voxel-marched ray + chord
     xr = 0.16 * Dmax
-    ax.plot([xr, xr], [-t / 2 - 130, t / 2 + 140], color='k', lw=1.0, ls='--')
+    ax.plot([xr, xr], [-t / 2 - 130, t / 2 + 140], color=BLUE, lw=1.0, ls='--')
     ax.annotate('', xy=(xr, t / 2 + 140), xytext=(xr, t / 2 + 20),
-                arrowprops=dict(arrowstyle='-|>', color='k', lw=1.0))
-    ax.plot([xr, xr], [-t / 2, t / 2], color='k', lw=4,
+                arrowprops=dict(arrowstyle='-|>', color=BLUE, lw=1.0))
+    ax.plot([xr, xr], [-t / 2, t / 2], color=BLUE, lw=4,
             solid_capstyle='round')
     ax.annotate('chord $\\ell(\\rho)$ — marched through\nthe exact voxels',
                 xy=(xr, 0), xytext=(xr + 0.10 * Dmax, 0.16 * Dmax),
@@ -753,24 +765,26 @@ def fig_eikonal_model():
                     * _chord_max(grid, d, np.array(
                         [np.sin(np.deg2rad(b)), 0, np.cos(np.deg2rad(b))]))
                     for b in betas])
-    ax2.plot(betas, psi, lw=1.6, color='k',
+    ax2.plot(betas, psi, lw=1.6, color=BLUE,
              label=r'$\psi_{max}(\beta)$ marched through the real x=5 HongPlate voxels')
     ax2.axhline(np.pi, color='0.3', lw=1.1, ls='--')
     ax2.text(2, np.pi + 0.5, r'$\psi=\pi$: single-pass eikonal limit',
              color='0.3', fontsize=8)
-    for b, lab, mk, off, ls in ((0, 'face-on: scan model WINS\n'
-                                 '(ntrunc 25→6, 55→41)', 'o', (7, 5.5), '-'),
-                                (60, 'tilted: already failing\n'
-                                 '(Cext_model/Cext = −0.29)', 'x', (5, 2.2), '--'),
-                                (90, 'edge-on: worst failure\n'
-                                 '(TIR at exit faces, $\\psi\\approx$ %.0f rad)'
-                                 % psi[-1], 'x', (-52, -1.5), '--')):
+    for b, lab, mk, off, ls, tc in ((0, 'face-on: scan model WINS\n'
+                                     '(ntrunc 25→6, 55→41)', 'o', (7, 5.5), '-',
+                                     GREEN),
+                                    (60, 'tilted: already failing\n'
+                                     '(Cext_model/Cext = −0.29)', 'x', (5, 2.2),
+                                     '--', RED),
+                                    (90, 'edge-on: worst failure\n'
+                                     '(TIR at exit faces, $\\psi\\approx$ %.0f rad)'
+                                     % psi[-1], 'x', (-52, -1.5), '--', RED)):
         i = int(np.argmin(np.abs(betas - b)))
-        ax2.scatter([betas[i]], [psi[i]], s=55, color='k', marker=mk, zorder=4)
+        ax2.scatter([betas[i]], [psi[i]], s=55, color=tc, marker=mk, zorder=4)
         ax2.annotate(lab, xy=(betas[i], psi[i]),
                      xytext=(betas[i] + off[0], max(psi[i] + off[1], 1.0)),
-                     fontsize=7.5, color='k',
-                     arrowprops=dict(arrowstyle='->', color='k', lw=0.8,
+                     fontsize=7.5, color=tc,
+                     arrowprops=dict(arrowstyle='->', color=tc, lw=0.8,
                                      linestyle=ls))
     ax2.set_xlabel('incidence tilt $\\beta$ vs plate axis [deg]')
     ax2.set_ylabel(r'$\psi_{max}=|(m-1)k|\;\ell_{max}$  [rad]')
@@ -806,7 +820,8 @@ def fig_delta_scaling():
     fig.suptitle('Phase-9A delta-scaling probe on three REAL production cells — '
                  'rows = cell, columns: (left) forward peak θ≤40°, '
                  '(middle) whole sphere, (right) SH storage budget\n'
-                 'READ: solid = stored today, hatched = what the model+residual '
+                 'READ: blue = ADDA full field, red = eikonal model / residual; '
+                 'solid bar = stored today, hatched bar = what the model+residual '
                  'split would store; a split is admissible only if the residual '
                  'stays smaller than the field',
                  fontsize=10, y=0.995)
@@ -820,8 +835,8 @@ def fig_delta_scaling():
         axf, axg, axb = axes[r]
         harmful = float(dd['ratio_total']) > 1.02
         c = th <= 40
-        axf.semilogy(th[c], f0[c], lw=1.4, color='k', label='ADDA full field')
-        axf.semilogy(th[c], m0[c], lw=1.4, ls='--', color='0.4',
+        axf.semilogy(th[c], f0[c], lw=1.4, color=BLUE, label='ADDA full field')
+        axf.semilogy(th[c], m0[c], lw=1.4, ls='--', color=RED,
                      label='eikonal model (calibrated)')
         axf.set_xlim(0, 40)
         axf.set_xlabel(r'$\theta$ [deg]')
@@ -831,8 +846,8 @@ def fig_delta_scaling():
         else:
             axf.set_title(rtitle, fontsize=9)
         axf.legend(fontsize=6.5)
-        axg.semilogy(th, f0, lw=1.3, color='k', label='full |f|')
-        axg.semilogy(th, g0, lw=1.3, color='0.4', ls='--',
+        axg.semilogy(th, f0, lw=1.3, color=BLUE, label='full $|f|$')
+        axg.semilogy(th, g0, lw=1.3, color=RED, ls='--',
                      label='residual $|g|=|f-F_{model}|$')
         axg.set_xlim(0, 180)
         axg.set_xlabel(r'$\theta$ [deg]')
@@ -850,19 +865,20 @@ def fig_delta_scaling():
         # stored SH count per Mueller element is triangular (m>=0): (n+1)(n+2)/2
         cnt_full = (n_full + 1) * (n_full + 2) // 2
         cnt_res = (n_res + 1) * (n_res + 2) // 2
-        axb.barh([1], [n_full], height=0.58, color='0.45', edgecolor='k',
+        axb.barh([1], [n_full], height=0.58, color=BLUE, edgecolor='#073763',
                  lw=0.8, zorder=2)
         if harmful:
             # gate FAILED: the "smaller" full-eps bar is an artefact of the
-            # absolute tolerance — mark the what-if bar as rejected by texture
-            axb.barh([0], [n_res], height=0.58, facecolor='0.85', edgecolor='k',
-                     hatch='xxxx', lw=1.0, zorder=2)
+            # absolute tolerance — mark the what-if bar as rejected by colour
+            # + texture (light red fill + cross-hatch)
+            axb.barh([0], [n_res], height=0.58, facecolor='#f3d9d3',
+                     edgecolor=RED, hatch='xxxx', lw=1.0, zorder=2)
             reslab = 'residual —\nREJECTED'
             verdict = ('REJECTED: $|g|/|f|$ = %.2f > 1\n'
                        '(broken model, see text)' % float(dd['ratio_total']))
         else:
-            axb.barh([0], [n_res], height=0.58, facecolor='1.0', edgecolor='k',
-                     hatch='///', lw=1.0, zorder=2)
+            axb.barh([0], [n_res], height=0.58, facecolor='1.0',
+                     edgecolor=RED, hatch='///', lw=1.0, zorder=2)
             reslab = 'residual\n(would store)'
             verdict = 'ADMISSIBLE: %.1f$\\times$ fewer coefficients\n' \
                       '(%d $\\to$ %d SH terms/element)' % (
@@ -879,8 +895,9 @@ def fig_delta_scaling():
 def fig_validity_map():
     """When is the model safe? Cext sanity vs residual fraction, per scan cell.
     Redesign (2026-11-10): no colormap/colorbar — the *decision* is binary
-    (fewer vs more SH coefficients), so it is encoded as open vs filled markers;
-    marker shape still gives the incidence orientation."""
+    (fewer vs more SH coefficients), so it is encoded as open vs filled
+    markers (filled = harmful RED); marker shape still gives the incidence
+    orientation."""
     from matplotlib.lines import Line2D
     d = _p9_results()
     cells = d['cells']
@@ -895,14 +912,14 @@ def fig_validity_map():
             if c['tag'].endswith(k_):
                 mkr = v
         ax.scatter([xr], [yv], s=110, marker=mkr, zorder=3,
-                   facecolors='none' if gain < 1 else '0.2',
+                   facecolors='none' if gain < 1 else RED,
                    edgecolors='k', linewidths=1.2)
     ax.axhline(1.0, color='k', lw=1.0, ls='--')
     ax.text(1.97, 1.02, r'above: $|g|>|f|$ — model actively HARMFUL',
             fontsize=8, ha='right', va='bottom')
-    ax.axvspan(0.6, 1.5, color='0.75', alpha=0.35, zorder=0)
+    ax.axvspan(0.6, 1.5, color=BLUE, alpha=0.07, zorder=0)
     ax.text(1.05, 1.78, 'model Cext plausible\n(0.6–1.5 ×)', ha='center',
-            fontsize=8, color='0.25')
+            fontsize=8, color=BLUE)
     for tag, dx, dy in (('HongPlate_Id9_x5_edge', -0.13, 0.16),
                         ('HongPlate_Id9_x5_t60', -0.36, -0.34),
                         ('HongColumn_Id7_x5_along', 0.10, -0.32),
@@ -929,7 +946,7 @@ def fig_validity_map():
                label='along column axis'),
         Line2D([], [], marker='o', ls='', ms=9, mfc='none', mec='k', mew=1.2,
                label='open: fewer SH coefficients\nthan today (net gain)'),
-        Line2D([], [], marker='o', ls='', ms=9, mfc='0.2', mec='k',
+        Line2D([], [], marker='o', ls='', ms=9, mfc=RED, mec='k',
                label='filled: model needs MORE\n(full-eps) — harmful')],
         loc='lower left', fontsize=7.5)
     ax.set_title('Phase-9A validity map — all 15 scan cells\n'

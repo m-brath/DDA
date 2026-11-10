@@ -2157,7 +2157,7 @@ Gotchas solved, all encoded in the script:
   them (no float reordering, no pandoc "Figure 1..28" numbering clashing with the bold
   **Fig. N** caption paragraphs).
 - mermaid: the PNG route CLIPPED wide diagrams (puppeteer viewport ~784 CSS px) and
-  printed blurry. New route (cache `docs/figures/mermaid_pdf/`, key `pdf-v1`):
+  printed blurry. New route (cache `docs/figures/mermaid_pdf/`, key `pdf-v2`):
   mermaid-cli **SVG** → Chrome `--print-to-pdf` with `@page` sized exactly to the SVG
   viewBox → **vector PDF** included via `\includegraphics` (cannot clip, always sharp).
   `dvisvgm 3.6` cannot do SVG→PDF (it is DVI→SVG / PDF→SVG); Chrome lives in
@@ -2174,3 +2174,25 @@ overfull hboxes {6.69, 2.24, 0.62} pt; printed mermaid text 5.3–13 pt per figu
 got label trims + a diamond→hexagon flattening to earn back ~1 pt each); visual
 gs-rendered checks of title/TOC/figure/appendix pages all pass. HTML rebuilt in sync
 (`build_html.py`, SVG cache pruned to the 11 referenced diagrams).
+
+**15.4 Colour pass + Fig. 1 dedup (same day, user follow-up).** "Textbook style" does not
+mean black-and-white: the greyscale-only rule was relaxed to a **muted textbook palette**
+(BLUE `#0b5394`, RED `#b02418`, GREEN `#1c7c3c`, OCHRE `#8a6d1d`, PURPLE, TEAL + pale
+steel-blue `#b8c8d4` for neutral/background elements) in `make_figures.py` (GRAYS constant
+dropped) and in `plot_baseline_figs.py` (`C` dict). All *semantic* encodings stay doubly
+coded (linestyle/marker/hatch/open-vs-filled): fig6 green = closed vs red-hatch = shape
+error vs grey cross-hatch = asymmetric; fig15 blue ADDA vs red model/residual, REJECTED bar
+light-red + crosshatch; fig16 open vs filled-**red**; fig1/13 T-family cool→warm and the
+x-ramp pale blue→blue→red (captions updated: "grey band"→"blue shaded band", "greyscale
+ramp"→"colour ramp" etc.). Baseline figs: X pol = solid blue bars, Y pol = white + red
+hatch, Mie/beam = red accents, spheroid curves blue/green/red (this also fixed an
+already-defined-but-unused `cols` list in the fig4 pol-discrimination panel — the curves
+were hardcoded black). fig5 (grey+hatch bars) deliberately untouched — its caption matches.
+**Fig. 1 "double plot" was a real md bug, not a build artifact**: the earlier caption edit
+had left a *second* identical `![Matzler 2006 ice permittivity](figures/fig01_dielectric.png)`
+line in `DDA-manual.md` → LaTeX legitimately included it twice (the log's per-figure double
+`File:/<...>` lines are normal, one per \includegraphics argument — do not read those as
+duplicates). Removed; rebuild is **57 pages** (one float page fewer), every `figures/*.png`
+included exactly once (log scan of `File:` lines + gs page renders p.11–14/24/53). Gates
+unchanged: Missing-character 0, TeX errors 0, overfull {6.69, 2.24, 0.62} pt; HTML rebuilt
+in sync; 16/16 figures colour-verified via direct PNG reads and gs renders.
