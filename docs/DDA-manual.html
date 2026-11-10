@@ -168,7 +168,7 @@ particle orientations?</em> Two orientation strategies are produced:</p>
 <h2 id="part-0-orientation">Part 0 — Orientation</h2>
 <h3 id="01-repository-map">0.1 Repository map</h3>
 <pre><code>DDA/
-├── adda_python_scripts/        ← THE PIPELINE (orchestration, post-processing, export)
+├── adda_python_scripts/        ← THE PIPELINE (orchestration, post-processing, export) = SUBMODULE
 │   ├── adda_config_*.py        one config per habit (ALL knobs live here)
 │   ├── adda_main_control.py    ARO entry point (T×f×size loop, job submission)
 │   ├── adda_sub_control_spharmonics.py   one ARO job: icosphere orientation loop + ADDA
@@ -188,7 +188,8 @@ particle orientations?</em> Two orientation strategies are produced:</p>
 ├── adda_shape_files/           particle geometries: &lt;habit&gt;/Dmax…_Dveq…_Mass…_Freq…GHz.adda(+.meta.mat)
 │                               ← NOT in git: external 1.8 GB input, provision a clone by hand (§1.2)
 ├── adda_aux_input/             avg_params.dat files (TRO '-orient avg' integration control)
-├── arts-sspdb-interface/       upstream read-only tooling for the *published* ARTS database
+├── arts-sspdb-interface/       upstream read-only tooling for the *published* ARTS database = SUBMODULE
+├── SSD_scripts_deprecated/     deprecated SSDB-interface prototypes ← ARCHIVE (plain files since 2026-11-10)
 ├── plans/                      modernization plan + running findings report (READ before touching code)
 ├── baselines/                  frozen golden ADDA outputs + regression check tooling
 ├── analysis/                   phase analysis/gate scripts + benchmark results (JSON/TXT/LOG)
@@ -2001,6 +2002,7 @@ Missing config keys degrade to <code>'n/a'</code> (<code>getattr(ac, …, 'n/a')
 <li><strong>History rewriting physically DELETES the purged paths from the working tree.</strong> <code>git filter-repo</code> ends with <code>git reset --hard</code> on a non-bare repo (its <code>cleanup()</code> sets <code>reset = not GitUtils.is_repository_bare(...)</code>), so a path it removes from history is erased from disk — <strong>gitignore does not protect it</strong>, because gitignore never applies to entries in the index. Hit on 2026-11-10: purging <code>adda_shape_files/</code> wiped the 1.8 GB live copy (recovered from the pre-purge bundle, 1940/1940 files hash-verified — report §10.4). Rule: untrack first (<code>git rm -r --cached &lt;path&gt;</code> + commit) or rewrite in a <strong>bare</strong> clone, and always <code>git bundle create ../backup.bundle --all</code> first.</li>
 <li><strong><code>adda_shape_files/</code> is not in git</strong> (1.8 GB of external input, purged 2026-11-10, report §10): a fresh clone cannot run any habit config, gate suite or baseline until the folder is provisioned by hand (§1.2 "Shape-data provisioning"; restore recipe also in <code>agents.md</code>). Never <code>git add -f</code> it back — that reintroduces the 170 MB blob and the unpushable history.</li>
 <li><strong>The ADDA trees are not in git either</strong> (untracked + purged 2026-11-10, report §11): <code>adda_1.4/</code> (1.4.0 = <strong>production</strong> binary, upstream tarball), <code>adda_1.2/</code> (upstream v1.2 tarball, golden-baseline lineage), <code>adda/</code> (1.5.0-alpha3 = clone of <code>m-brath/adda</code>, upstream has no such tag; validated state <code>8f550a7</code>), <code>adda-gui/</code> (<code>m-brath/adda-gui</code>). A fresh clone therefore has <strong>no solver</strong> — fetch + build per §3.5 before any solve, gate or baseline. Configs locate the binary via <code>adda_prefix + adda_binary</code> (env override <code>ADDA_BINARY</code>), so the folder names above are contractual. The once-documented hardcoded <code>…/adda/adda_1.2/src/mpi/adda_mpi</code> in the sub-control script is obsolete (Phase 3 made the binary config-driven) — the hazard is the missing tree, not a wrong path.</li>
+<li><strong>A gitlink without a <code>.gitmodules</code> entry is broken on GitHub and fatal to tooling.</strong> A nested repo tracked as mode 160000 with no mapping shows up on GitHub as a folder that 404s (the link falls back to this repo's own path), and <code>git submodule</code> / <code>git clone --recursive</code> abort with "No url found for submodule path …". Fixed 2026-11-10: <code>.gitmodules</code> maps <code>adda_python_scripts</code> (the pipeline really lives there — this repo holds no pipeline code) and <code>arts-sspdb-interface</code>; <code>SSD_scripts_deprecated</code> had no remote at all, so its pinned commit was unresolvable and it was absorbed into the umbrella as plain files. Rules: push a submodule's commits to its own remote <strong>before</strong> pinning it here; never introduce a gitlink without its <code>.gitmodules</code> entry; to convert a gitlink into files, <code>git rm --cached &lt;path&gt;</code> first (plain <code>git add &lt;path&gt;</code> silently does nothing).</li>
 </ol>
 <h1 id="appendix-e-baseline-simulation-results">Appendix E — Baseline simulation results</h1>
 <p>The frozen regression set behind §4.1: six ADDA runs mirroring the exact CLI of

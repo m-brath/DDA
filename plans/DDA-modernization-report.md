@@ -1953,3 +1953,42 @@ manual §3.5.
 - All 29 SHAs changed again; re-clone rather than pull. Backups:
   `../DDA-prepurge-2026-11-10.bundle` (pre-shape-purge) and
   `../DDA-prepurge-addda-2026-11-10.bundle` (pre-ADDA-purge, contains `adda_1.2` source).
+
+---
+
+# 12. GitHub visibility fix — submodules registered, archive absorbed, README added ✅ (2026-11-10)
+
+## 12.1 Symptom and cause
+
+After the repo was published (`origin/main` == `8dd7c09`), browsing `adda_python_scripts/` on
+GitHub gave **404 – file not found**. Cause: the repo has **no `.gitmodules`**, so its three
+nested repos are tracked as bare gitlinks (mode 160000). GitHub therefore has no URL to map the
+pointer to and links it to `m-brath/DDA/tree/adda_python_scripts` — a path that does not exist in
+this repo. Side effect of the same gap: **every** `git submodule` command and
+`git clone --recursive` abort with *"No url found for submodule path 'SSD_scripts_deprecated'"*.
+
+## 12.2 Resolution
+
+| path | state before | state now |
+|---|---|---|
+| `adda_python_scripts` | gitlink, unmapped → 404 | submodule → `github.com/m-brath/adda_python_scripts` (`master`, pinned `1152d0c2` = that repo's public HEAD → link resolves) |
+| `arts-sspdb-interface` | gitlink, unmapped → 404 | submodule → `github.com/m-brath/arts-sspdb-interface` (`main`, pinned `e7b71023` = public HEAD) |
+| `SSD_scripts_deprecated` | gitlink, **no remote anywhere** — pinned commit `7b24d3c` existed only on this disk, so it could never resolve | **absorbed** into the umbrella as 10 ordinary tracked files (908 KB); its 2 local commits archived in `../SSD_scripts_deprecated-history-2026-11-10.bundle` (verified complete) |
+
+Mechanics worth remembering: converting a gitlink into files needs
+`git rm --cached <path>` **first** — a plain `git add <path>` on a path whose index entry is a
+gitlink silently does nothing. Two absorbed files (`demo_ssp4arts.py`, `sph.py`) carry CRLF, which
+git normalizes to LF on commit (originals live in the bundle).
+
+Verified: `git submodule init` + `git submodule status` now resolve both submodules with their
+branches; `git ls-files -s | awk '$1=="160000"'` lists exactly the two mapped gitlinks; the remote
+URLs of both pinned commits answer HTTP 200 (`api.github.com/repos/m-brath/...`).
+
+## 12.3 New repo front page
+
+Added `README.md` (the GitHub landing page was a bare file list): project purpose + key
+references, the ⚠️ "a fresh clone runs nothing" provisioning table (pipeline submodule,
+`adda_shape_files/` geometry, ADDA solver trees + build), layout table, and the three git rules
+(external data out of git; submodule push-before-pin + mandatory `.gitmodules`; the §10.4
+history-rewrite hazard). Docs synced: manual repo map marks both submodules and the absorbed
+archive, Appendix D entry **32**, `agents.md` layout row + new **Submodule policy** bullet.

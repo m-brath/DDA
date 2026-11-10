@@ -82,7 +82,7 @@ particle orientations?* Two orientation strategies are produced:
 
 ```
 DDA/
-├── adda_python_scripts/        ← THE PIPELINE (orchestration, post-processing, export)
+├── adda_python_scripts/        ← THE PIPELINE (orchestration, post-processing, export) = SUBMODULE
 │   ├── adda_config_*.py        one config per habit (ALL knobs live here)
 │   ├── adda_main_control.py    ARO entry point (T×f×size loop, job submission)
 │   ├── adda_sub_control_spharmonics.py   one ARO job: icosphere orientation loop + ADDA
@@ -102,7 +102,8 @@ DDA/
 ├── adda_shape_files/           particle geometries: <habit>/Dmax…_Dveq…_Mass…_Freq…GHz.adda(+.meta.mat)
 │                               ← NOT in git: external 1.8 GB input, provision a clone by hand (§1.2)
 ├── adda_aux_input/             avg_params.dat files (TRO '-orient avg' integration control)
-├── arts-sspdb-interface/       upstream read-only tooling for the *published* ARTS database
+├── arts-sspdb-interface/       upstream read-only tooling for the *published* ARTS database = SUBMODULE
+├── SSD_scripts_deprecated/     deprecated SSDB-interface prototypes ← ARCHIVE (plain files since 2026-11-10)
 ├── plans/                      modernization plan + running findings report (READ before touching code)
 ├── baselines/                  frozen golden ADDA outputs + regression check tooling
 ├── analysis/                   phase analysis/gate scripts + benchmark results (JSON/TXT/LOG)
@@ -1693,6 +1694,7 @@ Numbered for reference; several carry the bug-fix that neutralized them.
 29. **History rewriting physically DELETES the purged paths from the working tree.** `git filter-repo` ends with `git reset --hard` on a non-bare repo (its `cleanup()` sets `reset = not GitUtils.is_repository_bare(...)`), so a path it removes from history is erased from disk — **gitignore does not protect it**, because gitignore never applies to entries in the index. Hit on 2026-11-10: purging `adda_shape_files/` wiped the 1.8 GB live copy (recovered from the pre-purge bundle, 1940/1940 files hash-verified — report §10.4). Rule: untrack first (`git rm -r --cached <path>` + commit) or rewrite in a **bare** clone, and always `git bundle create ../backup.bundle --all` first.
 30. **`adda_shape_files/` is not in git** (1.8 GB of external input, purged 2026-11-10, report §10): a fresh clone cannot run any habit config, gate suite or baseline until the folder is provisioned by hand (§1.2 "Shape-data provisioning"; restore recipe also in `agents.md`). Never `git add -f` it back — that reintroduces the 170 MB blob and the unpushable history.
 31. **The ADDA trees are not in git either** (untracked + purged 2026-11-10, report §11): `adda_1.4/` (1.4.0 = **production** binary, upstream tarball), `adda_1.2/` (upstream v1.2 tarball, golden-baseline lineage), `adda/` (1.5.0-alpha3 = clone of `m-brath/adda`, upstream has no such tag; validated state `8f550a7`), `adda-gui/` (`m-brath/adda-gui`). A fresh clone therefore has **no solver** — fetch + build per §3.5 before any solve, gate or baseline. Configs locate the binary via `adda_prefix + adda_binary` (env override `ADDA_BINARY`), so the folder names above are contractual. The once-documented hardcoded `…/adda/adda_1.2/src/mpi/adda_mpi` in the sub-control script is obsolete (Phase 3 made the binary config-driven) — the hazard is the missing tree, not a wrong path.
+32. **A gitlink without a `.gitmodules` entry is broken on GitHub and fatal to tooling.** A nested repo tracked as mode 160000 with no mapping shows up on GitHub as a folder that 404s (the link falls back to this repo's own path), and `git submodule` / `git clone --recursive` abort with "No url found for submodule path …". Fixed 2026-11-10: `.gitmodules` maps `adda_python_scripts` (the pipeline really lives there — this repo holds no pipeline code) and `arts-sspdb-interface`; `SSD_scripts_deprecated` had no remote at all, so its pinned commit was unresolvable and it was absorbed into the umbrella as plain files. Rules: push a submodule's commits to its own remote **before** pinning it here; never introduce a gitlink without its `.gitmodules` entry; to convert a gitlink into files, `git rm --cached <path>` first (plain `git add <path>` silently does nothing).
 
 # Appendix E — Baseline simulation results
 

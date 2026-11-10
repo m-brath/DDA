@@ -1,0 +1,14 @@
+# Submodules of the DDA umbrella repo.
+# The pipeline itself lives in adda_python_scripts — the umbrella only pins a commit.
+# Push submodule commits BEFORE committing a new pointer here, otherwise GitHub shows a
+# broken link (the pinned commit would exist in no public repo).
+# Fetch/build instructions for the third-party ADDA trees (deliberately NOT submodules,
+# they live outside this repo entirely): docs/DDA-manual.md §3.5, report §11.
+[submodule "adda_python_scripts"]
+	path = adda_python_scripts
+	url = https://github.com/m-brath/adda_python_scripts.git
+	branch = master
+[submodule "arts-sspdb-interface"]
+	path = arts-sspdb-interface
+	url = https://github.com/m-brath/arts-sspdb-interface.git
+	branch = main

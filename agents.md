@@ -28,7 +28,7 @@ Orientation strategies:
 | `adda_shape_files/` | Particle geometry per habit: `*.adda` (dipole positions) + `*.meta.mat` (metadata: Dmax, volume-equivalent diameter, mass, min frequency, axis ratios). Naming: `Dmax<µm>_Dveq<µm>_Mass<kg>_Freq<GHz>.adda`. **NOT tracked by git** (1.8 GB of external input data, purged from history 2026-11-10 — report §10): a fresh clone must be provisioned by hand, see manual §1.2 "Shape-data provisioning". |
 | `adda_aux_input/` | ADDA `avg_params.dat` files (Euler-angle integration control for built-in `-orient avg`) for EvanSnowflake_aggregate and hexPlateAggregates2. |
 | `arts-sspdb-interface/` | Upstream MATLAB/Python interface for browsing/importing the published ARTS SSP database (zenodo 1175572), incl. RTTOV extraction. Read-only reference. |
-| `SSD_scripts_deprecated/` | Old/prototype SSDB interface scripts (`assp.py`, `sph.py`, `rttov.py`, …). **Deprecated — do not modify or extend.** |
+| `SSD_scripts_deprecated/` | Old/prototype SSDB interface scripts (`assp.py`, `sph.py`, `rttov.py`, …). **Deprecated — do not modify or extend.** Ordinary tracked files since 2026-11-10 (was a nested repo with no remote; its 2 local commits are archived in `../SSD_scripts_deprecated-history-2026-11-10.bundle`). |
 | `plans/` | Working plans (`DDA-modernization-plan.md`) and the running phase-findings report (`DDA-modernization-report.md` — updated after every phase). |
 | `baselines/` | Frozen regression baselines (golden ADDA outputs) + `make_baseline.py` / `check_baselines.py`. See `baselines/README.md`. **Do not regenerate casually; they are the reference for all migrations.** |
 | `analysis/` | Phase-1 analysis tools (e.g. `inventory.py` — habit×size×freq×T status sheet). |
@@ -447,6 +447,13 @@ notes; do not extend — report §1.6-9).
   worktree copy (gitignore does not protect index entries) — untrack first
   (`git rm -r --cached <path>`) or rewrite in a bare clone, and always take a bundle backup
   first (report §10.4, manual Appendix D #29).
+- **Submodule policy** (repo published at `github.com/m-brath/DDA`): the pipeline is the submodule
+  `adda_python_scripts` (→ `github.com/m-brath/adda_python_scripts`); `arts-sspdb-interface` is the
+  other one. Both are mapped in `.gitmodules`, and **every** gitlink must be mapped — otherwise
+  `git submodule` / `git clone --recursive` abort with "No url found for submodule path …". Push a
+  submodule's commits to its own remote **before** committing a new pointer here, or GitHub 404s the
+  folder (a gitlink whose commit is not public is unresolvable). `SSD_scripts_deprecated/` was
+  absorbed into the umbrella as plain files on 2026-11-10 precisely because it had no remote.
 
 ## Key References
 
