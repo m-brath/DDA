@@ -15,6 +15,12 @@ __pycache__/
 /adda_1.2/
 /adda_1.4/
 /adda-gui/
+
+# Upstream ARTS SSPDB tooling (own fork of atmtools/arts-sspdb-interface). Stays an
+# INDEPENDENT repo — not tracked here, not a submodule (report §14). Clone it beside the
+# repo if you need to browse/import the published database; validated state at untracking:
+# e7b710239bdaa1fb589a378e33d61625264ee4a7  (https://github.com/m-brath/arts-sspdb-interface)
+/arts-sspdb-interface/
 baselines/tmp/
 
 # local run outputs (results never live in this repo; Phase 3 local mode)
