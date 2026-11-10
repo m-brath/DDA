@@ -2060,3 +2060,51 @@ bundles (§10, §11) and `../SSD_scripts_deprecated-history-2026-11-10.bundle` (
   before it accumulates more local commits.
 - Republishing: `git remote add origin … && git push -u origin main`. Today's history was rewritten
   several times, so any stale clone/fork must be discarded rather than pulled into.
+
+---
+
+# 14. Last submodule removed — `arts-sspdb-interface` stays independent ✅ (2026-11-10)
+
+## 14.1 Decision
+
+§13 left exactly one submodule (`arts-sspdb-interface`). It is third-party tooling — an own fork of
+`atmtools/arts-sspdb-interface` used only to browse/import the *published* ARTS database (zenodo
+1175572), never invoked by the pipeline — so it does not belong inside the DDA repo even as a
+pointer. De-registered; it remains a fully **independent** repository. Invariant now: **the DDA
+repo has zero gitlinks and no `.gitmodules` at all.**
+
+## 14.2 Procedure (order from the §13 lesson)
+
+```sh
+# 1. gitignore rule FIRST (with provenance: pinned state e7b71023, URLs)
+printf '/arts-sspdb-interface/\n' >> .gitignore
+# 2. stage the .gitmodules removal BEFORE touching the gitlink — otherwise git aborts:
+#    "please stage your changes to .gitmodules or stash them to proceed"
+git rm .gitmodules
+git rm --cached arts-sspdb-interface
+git config --remove-section submodule.arts-sspdb-interface
+git add .gitignore && git commit    # → 69f2104
+```
+
+Nothing about the folder itself was touched: it keeps its own `.git`, its remotes
+(`origin` = `m-brath/arts-sspdb-interface`, `upstream` = `atmtools/arts-sspdb-interface`), its
+branch state (`main`, in sync with `origin/main`) and HEAD `e7b71023`; working tree clean before
+and after.
+
+## 14.3 Gates (all PASS)
+
+| check | result |
+|---|---|
+| `git ls-files -s \| grep -c 160000` | **0** (was 1) |
+| `git submodule status` | empty, no error (previously it aborted on unmapped paths) |
+| `.gitmodules` | deleted |
+| tracked files | 309 → **307** (−1 gitlink, −1 `.gitmodules`) |
+| `git status` / `git fsck --full --strict` | clean / clean |
+| independent repo intact | `arts-sspdb-interface` HEAD `e7b7102`, 0 dirty, remotes unchanged |
+| functional | `analysis/inventory.py` → 19648-job table unchanged; `baselines/check_baselines.py` → all `[OK]` |
+
+Final shape of the repo: **45 commits, 307 tracked files, `.git` 48 MB** — pipeline + archive +
+configs + baselines + analysis + plans + docs tracked; third-party code (`adda*`, `adda-gui`,
+`arts-sspdb-interface`), geometry (`adda_shape_files/`) and run output (`adda_results/`) outside
+git as independent checkouts. Docs synced: `agents.md` (layout row, status bullet, repo-structure
+policy), README (provisioning + layout + rules), manual map + Appendix D #33 amended / **#34** new.

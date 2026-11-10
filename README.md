@@ -26,12 +26,12 @@ in by hand:
 |---|---|---|
 | **Particle geometry** | not in git (1.8 GB, 970 `.adda` + 970 `.meta.mat`) | manual §1.2 "Shape-data provisioning"; purged from history, report §10 |
 | **ADDA solver trees** | not in git: `adda_1.4` (production) + `adda_1.2` upstream tarballs, `adda/` = `m-brath/adda` | manual §3.5: fetch, then build (`NO_FORTRAN` + FFTW rpath on macOS) |
-| *(optional)* ARTS SSPDB reference tooling | submodule `arts-sspdb-interface/` → [`m-brath/arts-sspdb-interface`](https://github.com/m-brath/arts-sspdb-interface) | browsing/import tooling for the *published* database; not needed by the pipeline |
+| *(optional)* ARTS SSPDB reference tooling | independent repo [`m-brath/arts-sspdb-interface`](https://github.com/m-brath/arts-sspdb-interface) (upstream `atmtools/…`) | browsing/import tooling for the *published* database; not needed by the pipeline — clone it beside the repo (§14) |
 
 ```sh
 git clone https://github.com/m-brath/DDA.git        # the pipeline itself is already inside
-git submodule update --init                          # optional reference tooling only
 # then: provision adda_shape_files/  and  adda_1.4/ + adda_1.2/ + adda/  (manual §1.2 / §3.5)
+git clone https://github.com/m-brath/arts-sspdb-interface.git    # optional, only for the published DB
 ```
 
 ## Layout
@@ -39,7 +39,7 @@ git submodule update --init                          # optional reference toolin
 | path | contents |
 |---|---|
 | `adda_python_scripts/` | **the pipeline** (tracked in this repo, with its full history since 2026-11-10 — report §13): configs, main/sub control drivers, ADDA CLI wrapper, spherical-harmonic expansion, SSDB export |
-| `arts-sspdb-interface/` | the repo's only **submodule** — upstream ARTS SSPDB browsing/import tooling (own fork, read-only reference) |
+| `arts-sspdb-interface/` | upstream ARTS SSPDB browsing/import tooling (own fork, read-only reference) — **not tracked**: independent repo, no submodule (report §14) |
 | `adda_aux_input/` | ADDA `avg_params.dat` files (TRO `-orient avg` Euler-angle integration control) |
 | `baselines/` | frozen golden ADDA outputs + regression tooling (the reference for all migrations) |
 | `analysis/` | phase analyses, gate/twin suites, benchmark results |
@@ -51,11 +51,11 @@ git submodule update --init                          # optional reference toolin
 
 - **External data stays out of git** (`adda_shape_files/`, `adda_results/`) and **third-party ADDA
   trees stay out of git** (report §10, §11). Never `git add -f` them.
-- **Submodules:** there is exactly one (`arts-sspdb-interface`). **Every** gitlink must be mapped
-  in `.gitmodules`, or `git submodule`/`git clone --recursive` aborts — and GitHub renders the
-  folder as a 404. Push submodule commits to their own remote *before* committing a new pointer
-  here. Project code is never nested: `adda_python_scripts/` (pipeline) and
-  `SSD_scripts_deprecated/` (archive) are tracked directly in this repo.
+- **No submodules, no gitlinks** (report §13/§14): project code is tracked directly
+  (`adda_python_scripts/` pipeline, `SSD_scripts_deprecated/` archive), everything third-party is an
+  independent gitignored checkout. If a gitlink is ever introduced anyway, it **must** be mapped in
+  `.gitmodules` — an unmapped one breaks `git submodule`/`git clone --recursive` and 404s on GitHub —
+  and its commits must be pushed to their own remote before pinning them here.
 - **Never rewrite history on a non-bare checkout while the path being purged is still tracked** —
   `git filter-repo` ends with `git reset --hard` and deletes the working-tree copy (gitignore does
   not protect index entries). Untrack first, or rewrite in a bare clone; always `git bundle create
