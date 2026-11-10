@@ -1879,3 +1879,77 @@ Logged as Appendix D #29 in the manual.
   ever reached GitHub, a force-push does **not** delete those objects server-side.
 - Disk hygiene only: no numeric behaviour changed — shape bytes on disk are bit-identical,
   so baselines/twins/gates are unaffected (verified by the two smoke runs).
+
+---
+
+# 11. Third-party ADDA removed from the repo ✅ (2026-11-10)
+
+## 11.1 What was actually in git
+
+| path | footprint in the umbrella repo | provenance of the code itself |
+|---|---|---|
+| `adda/` | **1 gitlink entry** (SHA `8f550a7`) — no source objects | `github.com/m-brath/adda` (fork of `adda-team/adda`); upstream has **no** 1.5 tag, its tags stop at `v1.4.0` |
+| `adda-gui/` | **1 gitlink entry** (`d472420`, later `af66662`) | `github.com/m-brath/adda-gui` |
+| `adda_1.2/` | **201 tracked files** = pristine upstream v1.2 *source* (all `.o`/`.d`/`.copts`/binaries had already been untracked in Phase 0), 6.8 MB on disk, **3.45 MiB packed** | upstream tarball `…/archive/refs/tags/v1.2.tar.gz` (HTTP 200 verified) |
+| `adda_1.4/` | nothing (already gitignored) | upstream `…/refs/tags/v1.4.0.tar.gz` (HTTP 200 verified) — **production** binary |
+
+So ADDA contributed only 3.45 MiB of objects plus two pointer entries; every line of it is
+available from the upstream/fork repositories. Decision: get it out of the repo entirely.
+
+## 11.2 Procedure (order matters — this is the §10.4 lesson applied)
+
+1. `git bundle create ../DDA-prepurge-addda-2026-11-10.bundle --all` (44 MB, `verify`: complete history).
+2. **Untrack first**: `git rm -r --cached adda_1.2` + `git rm --cached adda adda-gui`, with new
+   anchored ignore rules `/adda/ /adda_1.2/ /adda_1.4/ /adda-gui/` → commit `3e67d0a`.
+   *Deliberate:* `filter-repo` ends with `git reset --hard` on non-bare repos (§10.4), and that
+   only deletes paths that are still **in the index**. Untracking first makes the wipe impossible.
+3. Dry run in a `--no-hardlinks --no-checkout` clone:
+   `git filter-repo --path adda --path adda_1.2 --path adda-gui --invert-paths --force`;
+   gate = full `git ls-tree -r HEAD` before/after → **NO DIFF** (all 212 surviving entries keep
+   identical mode/type/blob SHA), 29 commits, `fsck --full --strict` clean.
+4. Same command in the real repo, then `reflog expire --expire=now --all` + `gc --prune=now --aggressive`.
+   The trial and the real repo produced the **identical** log fingerprint
+   `80e7159f66fe2a6e1a84e94d941f730ae5fb4753` (messages/authors/dates/DAG preserved).
+
+## 11.3 Gate table
+
+| item | before | after |
+|---|---|---|
+| HEAD | `82f5adf` (+ untrack commit `3e67d0a`) | `400bc21` (untrack commit, re-hashed) |
+| root commit | `8bd7d4e` | `85bd46b` |
+| commits | 29 | 29 |
+| tracked files | 415 | **212** |
+| tracked/gitlink ADDA entries | 203 | **0** |
+| ADDA objects reachable from history | 287 blobs / 3.45 MiB packed | **0** |
+| gitlinks remaining | 5 | 3 (`adda_python_scripts`, `SSD_scripts_deprecated`, `arts-sspdb-interface`) |
+| `.git` | 50 MB | **41 MB** |
+| `fsck --full --strict` | clean | clean |
+| working tree | clean | clean (all four trees ignored) |
+
+**Worktree survival (the point of step 2):** `adda/` 52 MB, `adda-gui/` 22 MB, `adda_1.2/` 11 MB,
+`adda_1.4/` 8.7 MB all still present, nested `.git` dirs intact (`adda` HEAD `8f550a7`,
+`adda-gui` HEAD `af66662`), and all three local solvers still execute
+(`adda{,_1.2,_1.4}/src/seq/adda` print ADDA usage; the arm64 builds are untouched).
+`baselines/check_baselines.py` → sphere/Mie regression all `[OK]`; `analysis/inventory.py` →
+unchanged habit×size×frequency table (19648 pending ADDA jobs).
+
+## 11.4 Provenance that the gitlinks used to carry (now documented instead)
+
+Pinned in `.gitignore` + `agents.md`: `adda` = `8f550a7786bd4cff5abf3cb2f2180690a08e1157`
+(1.5.0-alpha3 tree, 2026-03-30), `adda-gui` = `af66662` (previously `d472420805a28213c9179000a9eb4155c91a6fd8`);
+production binary **1.4.0** (Phase-3 decision) from the v1.4.0 tarball; `adda_1.2` from the
+v1.2 tarball. Fetch/clone commands are in the `agents.md` Compute Environment table and
+manual §3.5.
+
+## 11.5 Consequences
+
+- **A fresh clone has no solver.** Besides the geometry (§10.5), the ADDA trees must now be
+  fetched and built (§3.5 recipe) before any solve, gate or baseline can run. `adda_prefix`
+  in configs points at wherever those trees were provisioned.
+- Stale gotcha corrected in `agents.md`: `adda_sub_control_spharmonics.py` no longer hardcodes
+  `…/adda/adda_1.2/src/mpi/adda_mpi` — configs supply `adda_binary`/`adda_launcher`/`adda_version`
+  (env-overridable). The new risk is the missing tree, not a wrong path.
+- Manual: repo map annotated, §3.5 gained a provisioning step, Appendix D entry **31**.
+- All 29 SHAs changed again; re-clone rather than pull. Backups:
+  `../DDA-prepurge-2026-11-10.bundle` (pre-shape-purge) and
+  `../DDA-prepurge-addda-2026-11-10.bundle` (pre-ADDA-purge, contains `adda_1.2` source).

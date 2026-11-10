@@ -21,9 +21,9 @@ Orientation strategies:
 
 | Directory | Contents |
 |---|---|
-| `adda/` | ADDA v1.5.0-alpha3 source (latest, unmodified upstream checkout). **No compiled binaries present.** |
-| `adda_1.2/` | ADDA v1.2 source tree, previously compiled on a Linux cluster (`src/seq/adda`, `src/mpi/adda_mpi` are ELF x86-64 — **do not run on this Mac, rebuild with `make seq` / `make mpi`**). |
-| `adda-gui/` | Official Java GUI for ADDA (Gradle project). Reference only; not used in the automation workflow. |
+| `adda/` | ADDA 1.5.0-alpha3 tree — clone of `github.com/m-brath/adda` (fork of `adda-team/adda`), pinned state `8f550a7` (2026-03-30). **Not in git** (third-party; purged 2026-11-10, report §11). Has a local arm64 build `src/seq/adda`. |
+| `adda_1.2/` | ADDA v1.2 source tree, pristine upstream (`https://github.com/adda-team/adda/archive/refs/tags/v1.2.tar.gz`). **Not in git.** `src/seq/adda` is a local arm64 build; `src/mpi/adda_mpi` is a stale Linux ELF x86-64 — **do not run on this Mac, rebuild with `make seq` / `make mpi`**. |
+| `adda-gui/` | Official Java GUI for ADDA (Gradle project) — clone of `github.com/m-brath/adda-gui`, pinned state `af66662` (was `d472420`). Reference only; not used in the automation workflow. **Not in git.** |
 | `adda_python_scripts/` | The orchestration workflow (see below). Core of the project. |
 | `adda_shape_files/` | Particle geometry per habit: `*.adda` (dipole positions) + `*.meta.mat` (metadata: Dmax, volume-equivalent diameter, mass, min frequency, axis ratios). Naming: `Dmax<µm>_Dveq<µm>_Mass<kg>_Freq<GHz>.adda`. **NOT tracked by git** (1.8 GB of external input data, purged from history 2026-11-10 — report §10): a fresh clone must be provisioned by hand, see manual §1.2 "Shape-data provisioning". |
 | `adda_aux_input/` | ADDA `avg_params.dat` files (Euler-angle integration control for built-in `-orient avg`) for EvanSnowflake_aggregate and hexPlateAggregates2. |
@@ -174,6 +174,14 @@ reference patterns only.**
   bit-identical, gitlinks untouched. Working-tree copy was deleted by filter-repo's
   `reset --hard` and restored byte-verified (1940/1940 blob hashes) from
   `../DDA-prepurge-2026-11-10.bundle` — read §10.4 before any future rewrite.
+- **Third-party ADDA removed from the repo** (2026-11-10, report §11): `adda_1.2/` (201 files
+  of pristine upstream v1.2 source) untracked and `adda/` + `adda-gui/` **gitlinks** dropped —
+  from the index *and* from all history (second `git-filter-repo` pass; all SHAs new again:
+  HEAD was `82f5adf`→`400bc21`, root `8bd7d4e`→`85bd46b`; tracked files 415 → 212, `.git`
+  50 MB → 41 MB). All four trees stay on disk with their local arm64 builds working
+  (untrack-before-purge avoided the §10.4 wipe). Provenance now pinned in docs, not gitlinks:
+  `adda` = `8f550a7`, `adda-gui` = `af66662`. Pre-rewrite backup:
+  `../DDA-prepurge-addda-2026-11-10.bundle`.
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -239,6 +247,21 @@ notes; do not extend — report §1.6-9).
 
 ## Compute Environment
 
+- **ADDA trees are third-party and live OUTSIDE this repo** (untracked + purged from
+  history 2026-11-10 — report §11; the ignore rules carry the same info). On a fresh
+  machine, provision them yourself before anything can solve:
+
+  | folder | ADDA version | where it comes from | role |
+  |---|---|---|---|
+  | `adda_1.4/` | **1.4.0** | `https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz` | **PRODUCTION binary** (Phase-3 decision) |
+  | `adda_1.2/` | 1.2 | `…/archive/refs/tags/v1.2.tar.gz` | golden baselines were made with it |
+  | `adda/` | 1.5.0-alpha3 | `git clone https://github.com/m-brath/adda.git adda` (upstream has **no** 1.5 tag — its tags stop at v1.4.0) | cross-version checks |
+  | `adda-gui/` | — | `git clone https://github.com/m-brath/adda-gui.git` | reference only |
+
+  Validated checkout states (the provenance the removed gitlinks used to record):
+  `adda` → `8f550a7786bd4cff5abf3cb2f2180690a08e1157`, `adda-gui` → `af66662`
+  (`d472420805a28213c9179000a9eb4155c91a6fd8` before the local `.DS_Store` ignore commit).
+  Build each tree locally (recipe below); never reuse the Linux ELF binaries.
 - **HPC (primary in the past):** Mistral (hostnames `mlogin*`, `mistral*`, `m2*`) and
   Thunder (`thunder`). Configs auto-detect via `socket.gethostname()` and set cluster
   prefixes (`/work/um0878/users/mbrath/`, `/scratch/uni/u237/users/mbrath/`), core counts
@@ -347,8 +370,12 @@ notes; do not extend — report §1.6-9).
 - ADDA output parsing (`ampl_scatgrid`, `mueller_scatgrid` in `acf.adda_call`) is
   **positional** (column indices hardcoded) → re-verify column layouts when switching
   ADDA binary versions.
-- ADDA binary path is hardcoded in `adda_sub_control_spharmonics.py` (line ~107:
-  `…/adda/adda_1.2/src/mpi/adda_mpi`) — to be replaced by a config-driven `adda_binary`.
+- **ADDA binaries are config-driven** (Phase 3): `adda_binary` / `adda_launcher` /
+  `adda_version`, overridable at run time via env `ADDA_BINARY` / `ADDA_VERSION`. The
+  historic hardcoded `…/adda/adda_1.2/src/mpi/adda_mpi` in `adda_sub_control_spharmonics.py`
+  no longer exists. Caveat replacing it: the ADDA **trees** are outside the repo now
+  (§Compute Environment), so a fresh checkout has no solver at all until the trees are
+  fetched and built — `adda_prefix` must point at a provisioned ADDA root.
 - In `avg_params.dat` (TRO `-orient avg`): zyz Euler convention; exploit habit symmetries to
   shrink ranges (e.g. `beta max=90` for an xy-symmetry plane; axysymmetrical → `gamma max=0`).
 - `force_new=True` in a config re-runs everything; default `False` skips completed cases —
@@ -431,7 +458,9 @@ notes; do not extend — report §1.6-9).
   ARTS Microwave SSPDB (TRO) paper: source of the habit-ID numbering (`*_Id<n>` folder names),
   shape-file lineage, the production frequency-channel selection, T = 190/230/270 K, and the
   SSDB NetCDF format our export targets.
-- Yurkin & Hoekstra 2011, *JQSRT* 112, 2234–2247 (ADDA paper). ADDA manual: `adda/doc/manual.pdf`, `adda_1.2/doc/manual.pdf`.
+- Yurkin & Hoekstra 2011, *JQSRT* 112, 2234–2247 (ADDA paper). ADDA manual: `adda/doc/manual.pdf`,
+  `adda_1.2/doc/manual.pdf` (both inside the **untracked** third-party trees; upstream copy in
+  `adda-team/adda`).
 - Matzler 2006 dielectric function of ice (implemented in `acf.eps_ice_matzler06`).
 - ARTS Microwave SSP Database: https://doi.org/10.5281/zenodo.1175572
 - Liu / Hong-MoCOLAG / Icon habit definitions: particle IDs referenced in shape folder names

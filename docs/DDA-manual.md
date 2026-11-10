@@ -96,9 +96,9 @@ DDA/
 │   ├── spherical_harmonics_for_adda.py   (spha) shtns SH expansion machinery
 │   ├── icosphere_grid.py       (ico) orientation-sampling grids
 │   └── old_configs/, *_for_testing.py, adda_sub_control_gridref.py  ← ARCHIVE, do not extend
-├── adda/                       ADDA 1.5.0-alpha3 source (built locally: adda/src/seq/adda)
-├── adda_1.4/                   ADDA 1.4.0  ← PRODUCTION BINARY (Phase-3 decision)
-├── adda_1.2/                   ADDA 1.2    (golden baselines were made with this)
+├── adda/                       ADDA 1.5.0-alpha3 (clone of m-brath/adda) ← NOT in git, §3.5
+├── adda_1.4/                   ADDA 1.4.0 ← PRODUCTION BINARY (Phase-3) ← NOT in git, §3.5
+├── adda_1.2/                   ADDA 1.2 (golden baselines made with it) ← NOT in git, §3.5
 ├── adda_shape_files/           particle geometries: <habit>/Dmax…_Dveq…_Mass…_Freq…GHz.adda(+.meta.mat)
 │                               ← NOT in git: external 1.8 GB input, provision a clone by hand (§1.2)
 ├── adda_aux_input/             avg_params.dat files (TRO '-orient avg' integration control)
@@ -1412,8 +1412,22 @@ build; native wheel — rebuild with `pip install --no-build-isolation --no-deps
 while fftw+pkg-config are present). Never downgrade typhon (0.8.0 is broken on 3.12;
 `ty.arts.xml` is gone — Mueller artifacts are NetCDF4 `*_mueller_data.nc`, Phase 7).
 
-**ADDA build** (works identically for `adda_1.2`, `adda_1.4`, `adda/`; never run the
-checked-in Linux ELF binaries under `adda_1.2/src/`):
+**Solver trees first — they are NOT in this repo.** The ADDA trees are gitignored and were
+purged from the repository history on 2026-11-10 (report §11): a fresh clone contains no
+solver at all. Provision them as siblings of the repo root, keeping these folder names
+(configs resolve the binary as `adda_prefix + adda_binary`):
+
+| folder | ADDA version | how to obtain | role |
+|---|---|---|---|
+| `adda_1.4/` | **1.4.0** | `curl -L -o v1.4.0.tgz https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz && tar xzf v1.4.0.tgz && mv adda-1.4.0 adda_1.4` | **production** binary |
+| `adda_1.2/` | 1.2 | same with `v1.2` | golden-baseline lineage |
+| `adda/` | 1.5.0-alpha3 | `git clone https://github.com/m-brath/adda.git adda` (upstream has no 1.5 tag — its tags stop at v1.4.0) | cross-version checks |
+| `adda-gui/` | — | `git clone https://github.com/m-brath/adda-gui.git` | reference only |
+
+Validated checkout states (pinned in `agents.md`): `adda` = `8f550a7`, `adda-gui` = `af66662`.
+
+**ADDA build** (works identically for `adda_1.2`, `adda_1.4`, `adda/`; never run a stale
+Linux ELF binary that an older tree copy may still carry under `adda_1.2/src/`):
 
 ```sh
 cd adda_1.4/src && make cleanseq                 # stale Linux .d files break make otherwise
@@ -1678,6 +1692,7 @@ Numbered for reference; several carry the bug-fix that neutralized them.
 28. **At $x\gtrsim10$ the full-field SH content saturates the static grid's Nyquist cap** (ntrunc 179 ≈ 180 on the 361-$\varphi$ ring): large-$x$ full-field twins are grid-limited, not expansion-limited (report §9.3).
 29. **History rewriting physically DELETES the purged paths from the working tree.** `git filter-repo` ends with `git reset --hard` on a non-bare repo (its `cleanup()` sets `reset = not GitUtils.is_repository_bare(...)`), so a path it removes from history is erased from disk — **gitignore does not protect it**, because gitignore never applies to entries in the index. Hit on 2026-11-10: purging `adda_shape_files/` wiped the 1.8 GB live copy (recovered from the pre-purge bundle, 1940/1940 files hash-verified — report §10.4). Rule: untrack first (`git rm -r --cached <path>` + commit) or rewrite in a **bare** clone, and always `git bundle create ../backup.bundle --all` first.
 30. **`adda_shape_files/` is not in git** (1.8 GB of external input, purged 2026-11-10, report §10): a fresh clone cannot run any habit config, gate suite or baseline until the folder is provisioned by hand (§1.2 "Shape-data provisioning"; restore recipe also in `agents.md`). Never `git add -f` it back — that reintroduces the 170 MB blob and the unpushable history.
+31. **The ADDA trees are not in git either** (untracked + purged 2026-11-10, report §11): `adda_1.4/` (1.4.0 = **production** binary, upstream tarball), `adda_1.2/` (upstream v1.2 tarball, golden-baseline lineage), `adda/` (1.5.0-alpha3 = clone of `m-brath/adda`, upstream has no such tag; validated state `8f550a7`), `adda-gui/` (`m-brath/adda-gui`). A fresh clone therefore has **no solver** — fetch + build per §3.5 before any solve, gate or baseline. Configs locate the binary via `adda_prefix + adda_binary` (env override `ADDA_BINARY`), so the folder names above are contractual. The once-documented hardcoded `…/adda/adda_1.2/src/mpi/adda_mpi` in the sub-control script is obsolete (Phase 3 made the binary config-driven) — the hazard is the missing tree, not a wrong path.
 
 # Appendix E — Baseline simulation results
 

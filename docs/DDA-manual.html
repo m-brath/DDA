@@ -182,9 +182,9 @@ particle orientations?</em> Two orientation strategies are produced:</p>
 │   ├── spherical_harmonics_for_adda.py   (spha) shtns SH expansion machinery
 │   ├── icosphere_grid.py       (ico) orientation-sampling grids
 │   └── old_configs/, *_for_testing.py, adda_sub_control_gridref.py  ← ARCHIVE, do not extend
-├── adda/                       ADDA 1.5.0-alpha3 source (built locally: adda/src/seq/adda)
-├── adda_1.4/                   ADDA 1.4.0  ← PRODUCTION BINARY (Phase-3 decision)
-├── adda_1.2/                   ADDA 1.2    (golden baselines were made with this)
+├── adda/                       ADDA 1.5.0-alpha3 (clone of m-brath/adda) ← NOT in git, §3.5
+├── adda_1.4/                   ADDA 1.4.0 ← PRODUCTION BINARY (Phase-3) ← NOT in git, §3.5
+├── adda_1.2/                   ADDA 1.2 (golden baselines made with it) ← NOT in git, §3.5
 ├── adda_shape_files/           particle geometries: &lt;habit&gt;/Dmax…_Dveq…_Mass…_Freq…GHz.adda(+.meta.mat)
 │                               ← NOT in git: external 1.8 GB input, provision a clone by hand (§1.2)
 ├── adda_aux_input/             avg_params.dat files (TRO '-orient avg' integration control)
@@ -1596,8 +1596,49 @@ matplotlib fftw pkg-config</code>; pip <code>typhon==0.10.0 shtns</code> (shtns:
 build; native wheel — rebuild with <code>pip install --no-build-isolation --no-deps shtns</code>
 while fftw+pkg-config are present). Never downgrade typhon (0.8.0 is broken on 3.12;
 <code>ty.arts.xml</code> is gone — Mueller artifacts are NetCDF4 <code>*_mueller_data.nc</code>, Phase 7).</p>
-<p><strong>ADDA build</strong> (works identically for <code>adda_1.2</code>, <code>adda_1.4</code>, <code>adda/</code>; never run the
-checked-in Linux ELF binaries under <code>adda_1.2/src/</code>):</p>
+<p><strong>Solver trees first — they are NOT in this repo.</strong> The ADDA trees are gitignored and were
+purged from the repository history on 2026-11-10 (report §11): a fresh clone contains no
+solver at all. Provision them as siblings of the repo root, keeping these folder names
+(configs resolve the binary as <code>adda_prefix + adda_binary</code>):</p>
+<table>
+<thead>
+<tr>
+<th>folder</th>
+<th>ADDA version</th>
+<th>how to obtain</th>
+<th>role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>adda_1.4/</code></td>
+<td><strong>1.4.0</strong></td>
+<td><code>curl -L -o v1.4.0.tgz https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz &amp;&amp; tar xzf v1.4.0.tgz &amp;&amp; mv adda-1.4.0 adda_1.4</code></td>
+<td><strong>production</strong> binary</td>
+</tr>
+<tr>
+<td><code>adda_1.2/</code></td>
+<td>1.2</td>
+<td>same with <code>v1.2</code></td>
+<td>golden-baseline lineage</td>
+</tr>
+<tr>
+<td><code>adda/</code></td>
+<td>1.5.0-alpha3</td>
+<td><code>git clone https://github.com/m-brath/adda.git adda</code> (upstream has no 1.5 tag — its tags stop at v1.4.0)</td>
+<td>cross-version checks</td>
+</tr>
+<tr>
+<td><code>adda-gui/</code></td>
+<td>—</td>
+<td><code>git clone https://github.com/m-brath/adda-gui.git</code></td>
+<td>reference only</td>
+</tr>
+</tbody>
+</table>
+<p>Validated checkout states (pinned in <code>agents.md</code>): <code>adda</code> = <code>8f550a7</code>, <code>adda-gui</code> = <code>af66662</code>.</p>
+<p><strong>ADDA build</strong> (works identically for <code>adda_1.2</code>, <code>adda_1.4</code>, <code>adda/</code>; never run a stale
+Linux ELF binary that an older tree copy may still carry under <code>adda_1.2/src/</code>):</p>
 <pre><code class="language-sh">cd adda_1.4/src &amp;&amp; make cleanseq                 # stale Linux .d files break make otherwise
 make seq &quot;OPTIONS=NO_FORTRAN&quot; \
   FFTW3_INC_PATH=$CONDA_PREFIX/../envs/DDA/include \
@@ -1959,6 +2000,7 @@ Missing config keys degrade to <code>'n/a'</code> (<code>getattr(ac, …, 'n/a')
 <li><strong>At <span class="arithmatex">\(x\gtrsim10\)</span> the full-field SH content saturates the static grid's Nyquist cap</strong> (ntrunc 179 ≈ 180 on the 361-<span class="arithmatex">\(\varphi\)</span> ring): large-<span class="arithmatex">\(x\)</span> full-field twins are grid-limited, not expansion-limited (report §9.3).</li>
 <li><strong>History rewriting physically DELETES the purged paths from the working tree.</strong> <code>git filter-repo</code> ends with <code>git reset --hard</code> on a non-bare repo (its <code>cleanup()</code> sets <code>reset = not GitUtils.is_repository_bare(...)</code>), so a path it removes from history is erased from disk — <strong>gitignore does not protect it</strong>, because gitignore never applies to entries in the index. Hit on 2026-11-10: purging <code>adda_shape_files/</code> wiped the 1.8 GB live copy (recovered from the pre-purge bundle, 1940/1940 files hash-verified — report §10.4). Rule: untrack first (<code>git rm -r --cached &lt;path&gt;</code> + commit) or rewrite in a <strong>bare</strong> clone, and always <code>git bundle create ../backup.bundle --all</code> first.</li>
 <li><strong><code>adda_shape_files/</code> is not in git</strong> (1.8 GB of external input, purged 2026-11-10, report §10): a fresh clone cannot run any habit config, gate suite or baseline until the folder is provisioned by hand (§1.2 "Shape-data provisioning"; restore recipe also in <code>agents.md</code>). Never <code>git add -f</code> it back — that reintroduces the 170 MB blob and the unpushable history.</li>
+<li><strong>The ADDA trees are not in git either</strong> (untracked + purged 2026-11-10, report §11): <code>adda_1.4/</code> (1.4.0 = <strong>production</strong> binary, upstream tarball), <code>adda_1.2/</code> (upstream v1.2 tarball, golden-baseline lineage), <code>adda/</code> (1.5.0-alpha3 = clone of <code>m-brath/adda</code>, upstream has no such tag; validated state <code>8f550a7</code>), <code>adda-gui/</code> (<code>m-brath/adda-gui</code>). A fresh clone therefore has <strong>no solver</strong> — fetch + build per §3.5 before any solve, gate or baseline. Configs locate the binary via <code>adda_prefix + adda_binary</code> (env override <code>ADDA_BINARY</code>), so the folder names above are contractual. The once-documented hardcoded <code>…/adda/adda_1.2/src/mpi/adda_mpi</code> in the sub-control script is obsolete (Phase 3 made the binary config-driven) — the hazard is the missing tree, not a wrong path.</li>
 </ol>
 <h1 id="appendix-e-baseline-simulation-results">Appendix E — Baseline simulation results</h1>
 <p>The frozen regression set behind §4.1: six ADDA runs mirroring the exact CLI of
