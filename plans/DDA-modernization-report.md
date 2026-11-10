@@ -1992,3 +1992,71 @@ references, the ⚠️ "a fresh clone runs nothing" provisioning table (pipeline
 (external data out of git; submodule push-before-pin + mandatory `.gitmodules`; the §10.4
 history-rewrite hazard). Docs synced: manual repo map marks both submodules and the absorbed
 archive, Appendix D entry **32**, `agents.md` layout row + new **Submodule policy** bullet.
+
+---
+
+# 13. Final repo structure — pipeline absorbed, one submodule left ✅ (2026-11-10)
+
+## 13.1 Decision
+
+The split that §12 had just repaired was itself the problem: the pipeline lived in a **second
+repository** wired in as a gitlink, so every phase meant committing in two places, the pin could
+go stale, and the GitHub rendering was fragile. The remotes of `DDA` and `adda_python_scripts`
+were therefore removed and the layout fixed as:
+
+| category | paths | status |
+|---|---|---|
+| **project code, tracked here** | `adda_python_scripts/` (pipeline, 87 files), `SSD_scripts_deprecated/` (archive), `adda_aux_input/`, `baselines/`, `analysis/`, `plans/`, `docs/` | inside the DDA repo |
+| **third-party, never in git** | `adda/`, `adda_1.2/`, `adda_1.4/`, `adda-gui/` | external (§11), fetched + built per manual §3.5 |
+| **data, never in git** | `adda_shape_files/`, `adda_results/` | external (§10) |
+| **single submodule** | `arts-sspdb-interface` (third-party ARTS SSPDB tooling, own fork, has `origin` + `upstream`) | mapped in `.gitmodules`, untouched by this change |
+
+## 13.2 Procedure (history-preserving, not a snapshot)
+
+1. `git -C adda_python_scripts bundle create ../adda_python_scripts-history-2026-11-10.bundle --all`
+   → 200 KB, `verify`: complete history, HEAD `1152d0c2`.
+2. Re-root a scratch copy so its files land under the subdirectory:
+   `git clone --bare <bundle> tmp && cd tmp && git filter-repo --path-rename :adda_python_scripts/`
+   (10 commits kept; with an empty *old* side, `--path-rename` prepends the prefix to every path).
+3. `.gitmodules`: drop the `adda_python_scripts` section — `git add .gitmodules` **first**, then
+   `git rm --cached adda_python_scripts` (git refuses the removal otherwise: *"please stage your
+   changes to .gitmodules"*), then `git config --remove-section submodule.adda_python_scripts`
+   → commit `8ee0dc2`.
+4. Move the old working copy (with its nested `.git`) to `../aps-premerge-backup-2026-11-10`,
+   `git fetch <scratch> master:aps-import`, then `git merge --allow-unrelated-histories aps-import`
+   → merge commit `02e2dd2`. The 10 commits are now ancestors of `main` with original
+   messages/dates/authors; the temp ref was dropped afterwards.
+5. Mishap recorded: the first attempt chained `git rm && … ; git add … && git commit`, and because
+   the failing `git rm` was separated from the commit by `;`, a **stray commit** (only the
+   `.gitmodules` edit, gitlink still present — i.e. a commit whose gitlink was unmapped) landed in
+   the history. Nothing was published, so it was undone with `git reset --hard b20aaa9` and the
+   sequence redone; the final history has exactly the two intended commits.
+
+## 13.3 Gates (all PASS)
+
+| check | result |
+|---|---|
+| `git ls-files adda_python_scripts \| wc -l` | 87 (= the nested repo's file count) |
+| blob-SHA tree diff: DDA tree vs pre-absorption `1152d0c2` | **NONE** — 87/87 identical blob SHAs (re-rooting changes trees/commits, never blobs) |
+| `cmp` worktree vs `../aps-premerge-backup-2026-11-10` | no mismatch on any tracked file |
+| gitlinks in the index | exactly 1 (`arts-sspdb-interface`) |
+| `git submodule status` | resolves again (it had been aborting on the unmapped paths) |
+| pipeline history visible | `git log -- adda_python_scripts` → 10 commits, oldest `2017-06-13 "first git version ;)"`, newest Phase 8 |
+| `git fsck --full --strict` | clean |
+| repo size | 43 commits, 309 tracked files, `.git` 42 MB |
+| functional | `analysis/inventory.py` → unchanged table (19648 jobs); `baselines/check_baselines.py` → sphere/Mie all `[OK]`; `acf`/`spha`/`ico` import from their new home |
+
+Archives: `../adda_python_scripts-history-2026-11-10.bundle` (its full history),
+`../aps-premerge-backup-2026-11-10/` (old working copy incl. the nested `.git`), plus the two DDA
+bundles (§10, §11) and `../SSD_scripts_deprecated-history-2026-11-10.bundle` (§12).
+
+## 13.4 Consequences
+
+- Pipeline edits are ordinary commits in the DDA repo now — one repo, one history, no pinning
+  ceremony. `adda_python_scripts/.gitignore` came along and governs that subtree.
+- `.gitmodules` documents the single remaining submodule and the invariant: *every* gitlink must
+  be mapped.
+- If `arts-sspdb-interface` should become plain files too, §13.2 is the recipe — decide early,
+  before it accumulates more local commits.
+- Republishing: `git remote add origin … && git push -u origin main`. Today's history was rewritten
+  several times, so any stale clone/fork must be discarded rather than pulled into.

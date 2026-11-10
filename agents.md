@@ -24,7 +24,7 @@ Orientation strategies:
 | `adda/` | ADDA 1.5.0-alpha3 tree — clone of `github.com/m-brath/adda` (fork of `adda-team/adda`), pinned state `8f550a7` (2026-03-30). **Not in git** (third-party; purged 2026-11-10, report §11). Has a local arm64 build `src/seq/adda`. |
 | `adda_1.2/` | ADDA v1.2 source tree, pristine upstream (`https://github.com/adda-team/adda/archive/refs/tags/v1.2.tar.gz`). **Not in git.** `src/seq/adda` is a local arm64 build; `src/mpi/adda_mpi` is a stale Linux ELF x86-64 — **do not run on this Mac, rebuild with `make seq` / `make mpi`**. |
 | `adda-gui/` | Official Java GUI for ADDA (Gradle project) — clone of `github.com/m-brath/adda-gui`, pinned state `af66662` (was `d472420`). Reference only; not used in the automation workflow. **Not in git.** |
-| `adda_python_scripts/` | The orchestration workflow (see below). Core of the project. |
+| `adda_python_scripts/` | The orchestration workflow (see below). Core of the project. Tracked **inside** this repo with its full history since 2026-11-10 (was a nested repo/submodule — report §13). |
 | `adda_shape_files/` | Particle geometry per habit: `*.adda` (dipole positions) + `*.meta.mat` (metadata: Dmax, volume-equivalent diameter, mass, min frequency, axis ratios). Naming: `Dmax<µm>_Dveq<µm>_Mass<kg>_Freq<GHz>.adda`. **NOT tracked by git** (1.8 GB of external input data, purged from history 2026-11-10 — report §10): a fresh clone must be provisioned by hand, see manual §1.2 "Shape-data provisioning". |
 | `adda_aux_input/` | ADDA `avg_params.dat` files (Euler-angle integration control for built-in `-orient avg`) for EvanSnowflake_aggregate and hexPlateAggregates2. |
 | `arts-sspdb-interface/` | Upstream MATLAB/Python interface for browsing/importing the published ARTS SSP database (zenodo 1175572), incl. RTTOV extraction. Read-only reference. |
@@ -182,6 +182,13 @@ reference patterns only.**
   (untrack-before-purge avoided the §10.4 wipe). Provenance now pinned in docs, not gitlinks:
   `adda` = `8f550a7`, `adda-gui` = `af66662`. Pre-rewrite backup:
   `../DDA-prepurge-addda-2026-11-10.bundle`.
+- **Final repo structure** (2026-11-10, report §13): the pipeline `adda_python_scripts/` is now
+  tracked **inside** the DDA repo with its full 10-commit history (2017-06-13 → Phase 8) grafted
+  in via a re-rooted bundle import + `--allow-unrelated-histories` merge — all 87 file blobs
+  byte-identical to the pre-absorption tree `1152d0c2` (blob-SHA tree diff NONE). Exactly one
+  submodule remains (`arts-sspdb-interface`); `SSD_scripts_deprecated/` is plain files (§12).
+  Repo = 43 commits, 309 tracked files, `.git` 42 MB. Archives:
+  `../adda_python_scripts-history-2026-11-10.bundle` (+ `../aps-premerge-backup-2026-11-10/`).
 
 ## The Workflow (`adda_python_scripts/`)
 
@@ -447,13 +454,22 @@ notes; do not extend — report §1.6-9).
   worktree copy (gitignore does not protect index entries) — untrack first
   (`git rm -r --cached <path>`) or rewrite in a bare clone, and always take a bundle backup
   first (report §10.4, manual Appendix D #29).
-- **Submodule policy** (repo published at `github.com/m-brath/DDA`): the pipeline is the submodule
-  `adda_python_scripts` (→ `github.com/m-brath/adda_python_scripts`); `arts-sspdb-interface` is the
-  other one. Both are mapped in `.gitmodules`, and **every** gitlink must be mapped — otherwise
-  `git submodule` / `git clone --recursive` abort with "No url found for submodule path …". Push a
-  submodule's commits to its own remote **before** committing a new pointer here, or GitHub 404s the
-  folder (a gitlink whose commit is not public is unresolvable). `SSD_scripts_deprecated/` was
-  absorbed into the umbrella as plain files on 2026-11-10 precisely because it had no remote.
+- **Repo structure policy** (final layout, 2026-11-10 — report §12/§13):
+  - **Tracked in this repo:** the pipeline (`adda_python_scripts/`, full history grafted in),
+    the deprecated archive (`SSD_scripts_deprecated/`), configs/aux input, baselines, analysis,
+    plans, docs.
+  - **Not in this repo at all:** third-party ADDA trees (`adda/`, `adda_1.2/`, `adda_1.4/`,
+    `adda-gui/` — §Compute Environment, report §11), the geometry (`adda_shape_files/`, §10),
+    run output (`adda_results/`).
+  - **Exactly one submodule:** `arts-sspdb-interface` (third-party ARTS SSPDB tooling, own fork).
+    **Every** gitlink must be mapped in `.gitmodules`, or `git submodule` /
+    `git clone --recursive` abort with "No url found for submodule path …" and GitHub 404s the
+    folder; push a submodule's commits to its own remote **before** pinning them here.
+    Never leave an unregistered nested repo inside the worktree.
+  - Converting a gitlink back into files: `git rm --cached <path>` first (plain `git add <path>`
+    on a gitlink silently does nothing). Importing a nested repo **with** history: bundle it →
+    `git filter-repo --path-rename :<dir>/` in a scratch clone → `git merge
+    --allow-unrelated-histories` (procedure + verification: report §13).
 
 ## Key References
 

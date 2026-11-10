@@ -18,26 +18,28 @@ agent/machine-readable project brief.
 
 ## ⚠️ A fresh clone runs nothing — provision it first
 
-This repository deliberately holds **only** orchestration, configs, plans, docs and the frozen
-regression baselines. Three things must be brought in by hand:
+This repository holds the **pipeline, configs, plans, docs and the frozen regression
+baselines**. Everything that is data or third-party code stays out of git and must be brought
+in by hand:
 
 | what | where it comes from | notes |
 |---|---|---|
-| **The pipeline code** | submodule `adda_python_scripts/` → [`m-brath/adda_python_scripts`](https://github.com/m-brath/adda_python_scripts) | clone with `--recursive`, or `git submodule update --init` |
 | **Particle geometry** | not in git (1.8 GB, 970 `.adda` + 970 `.meta.mat`) | manual §1.2 "Shape-data provisioning"; purged from history, report §10 |
 | **ADDA solver trees** | not in git: `adda_1.4` (production) + `adda_1.2` upstream tarballs, `adda/` = `m-brath/adda` | manual §3.5: fetch, then build (`NO_FORTRAN` + FFTW rpath on macOS) |
+| *(optional)* ARTS SSPDB reference tooling | submodule `arts-sspdb-interface/` → [`m-brath/arts-sspdb-interface`](https://github.com/m-brath/arts-sspdb-interface) | browsing/import tooling for the *published* database; not needed by the pipeline |
 
 ```sh
-git clone --recursive https://github.com/m-brath/DDA.git
-# then: provision adda_shape_files/  and  adda_1.4/ + adda_1.2/ + adda/  (see manual §1.2 / §3.5)
+git clone https://github.com/m-brath/DDA.git        # the pipeline itself is already inside
+git submodule update --init                          # optional reference tooling only
+# then: provision adda_shape_files/  and  adda_1.4/ + adda_1.2/ + adda/  (manual §1.2 / §3.5)
 ```
 
 ## Layout
 
 | path | contents |
 |---|---|
-| `adda_python_scripts/` | **submodule** — the pipeline: configs, main/sub control drivers, ADDA CLI wrapper, spherical-harmonic expansion, SSDB export |
-| `arts-sspdb-interface/` | **submodule** — upstream ARTS SSPDB browsing/import tooling (own fork, read-only reference) |
+| `adda_python_scripts/` | **the pipeline** (tracked in this repo, with its full history since 2026-11-10 — report §13): configs, main/sub control drivers, ADDA CLI wrapper, spherical-harmonic expansion, SSDB export |
+| `arts-sspdb-interface/` | the repo's only **submodule** — upstream ARTS SSPDB browsing/import tooling (own fork, read-only reference) |
 | `adda_aux_input/` | ADDA `avg_params.dat` files (TRO `-orient avg` Euler-angle integration control) |
 | `baselines/` | frozen golden ADDA outputs + regression tooling (the reference for all migrations) |
 | `analysis/` | phase analyses, gate/twin suites, benchmark results |
@@ -49,9 +51,11 @@ git clone --recursive https://github.com/m-brath/DDA.git
 
 - **External data stays out of git** (`adda_shape_files/`, `adda_results/`) and **third-party ADDA
   trees stay out of git** (report §10, §11). Never `git add -f` them.
-- **Submodules:** push the submodule's commits to its own remote *before* committing a new pointer
-  here — otherwise GitHub renders a 404 for the folder. Every gitlink must be mapped in
-  `.gitmodules`, or `git submodule`/`git clone --recursive` aborts.
+- **Submodules:** there is exactly one (`arts-sspdb-interface`). **Every** gitlink must be mapped
+  in `.gitmodules`, or `git submodule`/`git clone --recursive` aborts — and GitHub renders the
+  folder as a 404. Push submodule commits to their own remote *before* committing a new pointer
+  here. Project code is never nested: `adda_python_scripts/` (pipeline) and
+  `SSD_scripts_deprecated/` (archive) are tracked directly in this repo.
 - **Never rewrite history on a non-bare checkout while the path being purged is still tracked** —
   `git filter-repo` ends with `git reset --hard` and deletes the working-tree copy (gitignore does
   not protect index entries). Untrack first, or rewrite in a bare clone; always `git bundle create
