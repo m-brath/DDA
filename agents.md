@@ -160,7 +160,8 @@ reference patterns only.**
    into the pipeline (9B would add the per-cell gate + reconstruction in
    `rawdata2average`); SSDB-format hybrid = no-go for now. Plan
    `plans/forward_peak_plan.md`, scan `analysis/phase9_fwdmodel_scan.py` (+
-   `phase9_dump_grids.py` feeding the manual figures fig13-16), results
+   `phase9_dump_grids.py` feeding the manual figures fig08–fig12 — renumbered
+   2026-11-11 to document order, mapping in report §15.5), results
    `analysis/phase9_results.json`, report §9.
 - **Project manual added** (`docs/DDA-manual.md`, 2026-11-06): the maintainer-facing
   single reference — physics theory, pipeline architecture/call graphs, config contract

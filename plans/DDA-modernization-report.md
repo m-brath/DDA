@@ -2196,3 +2196,76 @@ duplicates). Removed; rebuild is **57 pages** (one float page fewer), every `fig
 included exactly once (log scan of `File:` lines + gs page renders p.11–14/24/53). Gates
 unchanged: Missing-character 0, TeX errors 0, overfull {6.69, 2.24, 0.62} pt; HTML rebuilt
 in sync; 16/16 figures colour-verified via direct PNG reads and gs renders.
+
+## 15.5 Figure renumbering, float/caption rules, §1.9 revision (2026-11-11)
+
+User review of the PDF demanded four fixes; all implemented:
+
+**1. Figure numbering = document order.** Old numbering had grown out of order (Fig. 1
+appeared after Fig. 2 etc.). Renumbered + renamed every figure file (old→new):
+fig04_adda_cost→**fig01**, fig03_resolution_scheme→**fig02**, fig02_size_parameter→
+**fig03**, fig01_dielectric→**fig04**, fig08_orientation_geometry→**fig05**,
+fig06_sym_closure→fig06 (unchanged), fig05_solve_reduction→**fig07**, fig13_forward_peak→
+**fig08**, fig14_eikonal_model→**fig09**, (new)→**fig10_split_concept**, fig15_delta_scaling→
+**fig11**, fig16_validity_map→**fig12**, fig07_backlog→**fig13**, fig09..fig12_baseline_*→
+**fig14..fig17_baseline_***. Earlier report sections keep the OLD names as history (they
+describe the state at their date) — this mapping is the decoder ring. All md image paths,
+caption lines, and cross-refs renumbered (`phase9_fwdmodel_scan.py` untouched — it never
+referenced manual figure numbers).
+
+**2. Figure+caption unbreakable, table captions above.** `imgcenter.lua` now (a) brackets
+every standalone image with `%IMG-BEGIN/END` sentinels and caps height 0.85→**0.74**
+\textheight, and (b) moves the bold "**Table N — …**" paragraph sitting directly above a
+pipe table INTO `blk.caption.long` → pandoc emits a real `\caption` in the longtable head
+(caption above the table, repeated on continuation pages; 20/20 tables). `build_latex.py`
+post-processes the .tex (`_weld_figure_captions`): image block + the following
+`\textbf{Fig. N...}` paragraph wrapped into ONE `minipage[t]{\textwidth}` (17/17 welded;
+caption paragraph must be matched to the BLANK LINE, not to the first `}` — nested braces
+in captions caused a "Missing }" compile error in the first attempt). Lua gotchas: the
+whole-doc filter action is `Pandoc(doc)` (not `Doc`), the table caption field in the Lua
+API is `caption.long` (NOT `caption.content` despite pandoc 3.9 docs), and `text:match
+('^Table%s')` silently fails on a pandoc `Str` whose text is exactly `Table` (token split
+at the space) — compare `text == 'Table'`. 20 table-caption paragraphs inserted into the
+md above every non-TOC table (Tables 1–20; the TOC table stays uncaptioned).
+
+**3. §1.9 revision (pedagogy pass).** §1.9.2 rewritten: extinction-meter/interference
+framing of the optical theorem, the paradox + Babinet, a one-line derivation of
+C_ext→2A (black screen at n̂=ŝ: f=ikA/2π purely imaginary → optical theorem → 2A), where
+the "vanished" power goes (Airy cone, δ-M contrast), Fourier duality + Airy math
+(z=3.8317, θ₁≈220°/x verified against Fig. 8b), and the HongPlate silhouette example
+(x=5 face: Dmax=1466 µm, t=59 µm → first ring ≈16°, matching the ≈18° dip in Fig. 11
+col 1; honest note: the exact ice-sphere Mie minimum sits inside the black-disk ring).
+§1.9.5 deepened: Lippmann–Schwinger starting identity, marching/radiation recipe, the
+worked slab numbers (N=25540, d=14.81 µm, face-on ψ=0.85 rad, θ_TIR=arcsin(1/n)=34.3°,
+thickness-fringe condition 1−cosθ=jλ/t=5.71 → NO radial fringes, rings come from the 2D
+silhouette FT), calibration physics (voxel-sphere |c|=0.614≈3/(m²+2); habit face-on cells
+c≈0.10−0.21−(0.65−0.89)j, a consistent −76…−84° Fabry–Pérot/depolarization phase — the
+GATE is the deviation from the sphere anchor, not |c|). §1.9.6: added an explicit
+"what exactly is measured" block (amplitude L2 norm definition, masked LS fit ⇒ the
+ratio>1 mechanism, ntrunc rule channels + full-eps scale, Cext forward-column identity +
+port check, back_model_ratio range 8.2…9.3e-3 = no consistent scale); fixed the c-dev
+paragraph to the real metric dev=|c_fit−c_cal|/|c_cal| (broken cells 5.2/6.4/4.0/2.0/1.6;
+HC x5-along dev=0.14 *passes* the c-gate and is caught only by Cext_model=0.16× +
+|g|/|f|=1.23 — the old "collapses to 0.14" wording was wrong and is replaced).
+Eq tags (1.9.x) unchanged — new derivations inserted as unnumbered displays.
+
+**4. Fig. 9 redesigned conceptually + NEW Fig. 10.** fig09_eikonal_model is now a 3-panel
+concept figure: (a) the optics recipe drawn on the real x=5 HongPlate slab (marched chords
+→ exit-screen phase Δ=k(m−1)ℓ → analytic far-field FT), (b) face-on vs grazing validity
+icons (same plate, same c; ψ≈0.7≪π vs ψ≈21≫π, TIR bounce annotated), (c) the measured
+ψ_max(β) knob through the real voxels vs the π limit (crosses near 40°–45°). NEW
+fig10_split_concept: (a) data-flow — ADDA solve unchanged, SH expansion applied to the
+residual only, consumer re-adds cF_model exactly; (b) the nested SH coefficient triangles
+ntrunc 25→6 = 351→28 = 12.5× at x=5 face-on; (c) the per-cell decision gate flowchart
+with the HC x5-along slip case annotated. Both are pure schematics (no new data), all
+numbers from phase9_results.json. Manual §1.9.6 inserts Fig. 10 before Fig. 11; Fig. 9
+caption rewritten for the new panels.
+
+**Gates.** Rebuild: **61 pages**, TeX errors 0, Missing-character 0, overfull hboxes 3
+(small); `File:` log scan: 17/17 PNGs included exactly once, in document order; weld
+count 17/17 (no warning); 20 `\caption{}` table captions; pdftotext: captions Fig. 1–17
+each once, Tables 1–20 each once; gs renders p.11/12 (fig+caption together, table below
+its caption), p.28–29 (Fig. 10 + 8-line caption fits one page, no margin overflow),
+p.53/57 (appendix table captions). make_figures.py renumbered throughout + the two new/
+redesigned figures (baseline mirror map fig1..fig4→fig14..fig17); full regeneration
+clean; HTML rebuilt in sync; baselines/report/*.pdf re-rendered by the delegation.

@@ -20,7 +20,15 @@ Pipeline (no hand-maintained .tex — the Markdown stays the single source):
        (cached in figures/mermaid_png/, same content-hash keying as
        build_html.py; scale 4 ≈ 300 dpi at \textwidth) and included as images.
   2. pandoc -> LaTeX (pypandoc_binary, installed in the DDA env) with the
-     classic preamble below (docs/latex/manual-preamble.tex).
+     classic preamble below (docs/latex/manual-preamble.tex) and the
+     imgcenter.lua filter: standalone images get centered/sized and are
+     bracketed by %IMG-BEGIN/END sentinels, and the bold "Table N"
+     paragraph sitting above each table is moved into the table's own
+     caption (real \caption ABOVE the table, in the longtable head).
+  2b. post-process the generated .tex: long \texttt breaking (see
+     _make_tt_breakable) and figure/caption welding
+     (_weld_figure_captions: image + its bold "Fig. N" paragraph become
+     ONE unbreakable minipage — they can never be split by a page break).
   3. latexmk -xelatex; the PDF lands at docs/DDA-manual.pdf.
 
 Requirements: TeX Live (xelatex, latexmk; TeX Gyre Termes fonts ship with it),
@@ -360,6 +368,31 @@ def _make_tt_breakable(tex):
     return tex
 
 
+def _weld_figure_captions(tex):
+    """Figure + caption must never be split across a page break. The
+    imgcenter.lua filter wraps every standalone image in %IMG-BEGIN/END
+    sentinels; here the image block AND the bold ``\\textbf{Fig. N ...}``
+    caption paragraph that follows it are welded into one unbreakable
+    minipage (the lua filter's 0.74\\textheight height cap guarantees
+    image + caption fit one page together). Tables get the same guarantee
+    from their real \\caption in the longtable head (caption sticks to the
+    head); mermaid figure[p] floats already carry their own \\caption."""
+    pat = re.compile(
+        r'(%IMG-BEGIN\n.*?%IMG-END)\n\n'
+        r'(\\textbf\{Fig\. [0-9]+.*?\n)(?=\n)',
+        re.S)
+    tex, n = pat.subn(
+        lambda mr: ('\\begin{minipage}[t]{\\textwidth}\n\centering\n'
+                    + mr.group(1) + '\n%\n' + mr.group(2)
+                    + '\\end{minipage}\n'), tex)
+    if n != 17:
+        sys.stderr.write('WARNING: welded %d figure/caption pairs '
+                         '(expected 17)\n' % n)
+    # drop the sentinels
+    tex = tex.replace('%IMG-BEGIN\n', '').replace('\n%IMG-END', '')
+    return tex
+
+
 def build():
     raw = open(SRC, encoding='utf-8').read()
     title, subtitle, date, body = process_markdown(raw)
@@ -395,7 +428,8 @@ def build():
             '-V', 'toc-title=Contents',
         ])
     src = open(TEX, encoding='utf-8').read()
-    open(TEX, 'w', encoding='utf-8').write(_make_tt_breakable(src))
+    tex = _weld_figure_captions(_make_tt_breakable(src))
+    open(TEX, 'w', encoding='utf-8').write(tex)
     print('wrote', os.path.relpath(TEX, os.path.dirname(HERE)))
 
     # figures/ live relative to docs/, compile there

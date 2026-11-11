@@ -6,26 +6,33 @@ Run from the repo root inside the DDA conda env:
     mamba activate DDA
     python docs/make_figures.py
 
-Every figure is computed from real code / real measurement files in this repo:
-  fig01_dielectric        acf.eps_ice_matzler06  (Mätzler 2006, implemented in acf)
-  fig02_size_parameter    sizes from adda_shape_files/HongPlate_Id9/*.meta.mat
-  fig03_resolution_scheme fmin classes + N_dipoles from the same meta files
-  fig04_adda_cost         analysis/phase4b_bench_results.json
-  fig05_solve_reduction   measured solve counts, report Phase 4 §4.8
+Every figure is computed from real code / real measurement files in this repo.
+NUMBERING follows document order of the manual (renumbered 2026-11-11, report
+§15.5 — the old figNN names live on in earlier report sections as history):
+  fig01_adda_cost         analysis/phase4b_bench_results.json
+  fig02_resolution_scheme fmin classes + N_dipoles from adda_shape_files/HongPlate_Id9/*.meta.mat
+  fig03_size_parameter    sizes from the same meta files
+  fig04_dielectric        acf.eps_ice_matzler06  (Mätzler 2006, implemented in acf)
+  fig05_orientation_geometry  schematic (3D): Euler/ARO geometry + k-attached scattering grid
   fig06_sym_closure       measured voxel-mirror closure, report Phase 4 §4.6
-  fig07_backlog           analysis/phase5_backlog_inventory.txt
-  fig08_orientation_geometry  schematic (3D): Euler/ARO geometry + k-attached scattering grid
-  fig09..fig12            baseline results (delegated to baselines/plot_baseline_figs.py,
-                          data: baselines/adda_1.2/, mirrored into docs/figures for Appendix E)
-  fig13_forward_peak      exact-Mie peak evolution + measured SH-ntrunc demand vs x
+  fig07_solve_reduction   measured solve counts, report Phase 4 §4.8
+  fig08_forward_peak      exact-Mie peak evolution + measured SH-ntrunc demand vs x
                           (data: analysis/phase9_results.json, mie via phase9 scan port)
-  fig14_eikonal_model     eikonal screen-model schematic + chord map of a real
-                          HongPlate voxel shape
-  fig15_delta_scaling     full/model/residual angular grids + ntrunc bars for three
+  fig09_eikonal_model     CONCEPTUAL model figure: (a) optics recipe on the real
+                          x=5 HongPlate slab, (b) face-on vs grazing validity icons
+                          (psi vs psi=pi, TIR critical angle), (c) measured psi(beta)
+                          marched through the real voxels
+  fig10_split_concept     CONCEPTUAL split figure: (a) store-the-residual data-flow,
+                          (b) SH coefficient triangles 25->6 at x=5 face-on (12.5x),
+                          (c) the per-cell decision gate
+  fig11_delta_scaling     full/model/residual angular grids + ntrunc bars for three
                           real scan cells (data: analysis/phase9_grids_*.npz, produced
                           by analysis/phase9_dump_grids.py — ADDA re-solve, cached)
-  fig16_validity_map      per-cell model-validity map from the Phase-9A scan
+  fig12_validity_map      per-cell model-validity map from the Phase-9A scan
                           (data: analysis/phase9_results.json)
+  fig13_backlog           analysis/phase5_backlog_inventory.txt
+  fig14..fig17            baseline results (delegated to baselines/plot_baseline_figs.py,
+                          data: baselines/adda_1.2/, mirrored into docs/figures for Appendix E)
 
 Outputs: docs/figures/figNN_*.png (300 dpi) — referenced by the manual.
 """
@@ -100,7 +107,7 @@ def savefig(fig, name, tight=True):
     print('wrote', os.path.relpath(path, REPO))
 
 
-# ---------------------------------------------------------------- Fig 01 ---
+# ------------------------------------------------------- Fig 04 (dielectric) ---
 def fig_dielectric():
     f = np.logspace(7, 12, 1500)                      # 0.01 GHz .. 1 THz (acf valid range)
     Ts = [190.0, 230.0, 270.0]
@@ -122,10 +129,10 @@ def fig_dielectric():
              fontsize=7.5, ha='left')
     ax1.set_title("Mätzler (2006) ice permittivity — acf.eps_ice_matzler06")
     ax2.set_title(r"loss: $\varepsilon''=\alpha(T)/f + \beta(T)\,f$")
-    savefig(fig, 'fig01_dielectric.png')
+    savefig(fig, 'fig04_dielectric.png')
 
 
-# ---------------------------------------------------------------- Fig 02 ---
+# -------------------------------------------------- Fig 03 (size parameter) ---
 def _meta_table(habit='HongPlate_Id9'):
     files = sorted(__import__('glob').glob(
         os.path.join(REPO, 'adda_shape_files', habit, '*.meta.mat')))
@@ -157,10 +164,10 @@ def fig_size_parameter():
     ax.set_ylabel(r'size parameter $x=\pi D_{veq}/\lambda$')
     ax.set_title(r'HongPlate_Id9 size grid (51 sizes, 10–2596 µm): $x=\pi D_{veq} f/c_0$')
     ax.legend()
-    savefig(fig, 'fig02_size_parameter.png')
+    savefig(fig, 'fig03_size_parameter.png')
 
 
-# ---------------------------------------------------------------- Fig 03 ---
+# ---------------------------------------------- Fig 02 (resolution scheme) ---
 def fig_resolution_scheme():
     rows = _meta_table()
     classes = np.unique(rows[:, 1])
@@ -214,10 +221,10 @@ def fig_resolution_scheme():
     ax2.set_ylabel('N_dipoles (fixed per shape file)')
     ax2.set_title('HongPlate_Id9 file sets: N vs class\n(small sizes degenerate, large ~fmin³)')
     ax2.legend(fontsize=8)
-    savefig(fig, 'fig03_resolution_scheme.png')
+    savefig(fig, 'fig02_resolution_scheme.png')
 
 
-# ---------------------------------------------------------------- Fig 04 ---
+# ------------------------------------------------------- Fig 01 (adda cost) ---
 def fig_adda_cost():
     with open(os.path.join(REPO, 'analysis', 'phase4b_bench_results.json')) as fh:
         bench = json.load(fh)
@@ -258,10 +265,10 @@ def fig_adda_cost():
                    r'\;/C_\mathrm{ext}(\mathrm{dpl}=7)$')
     ax2.set_title('discretization error dominates solver error ($x$=5)')
     ax2.legend(loc='lower right')
-    savefig(fig, 'fig04_adda_cost.png')
+    savefig(fig, 'fig01_adda_cost.png')
 
 
-# ---------------------------------------------------------------- Fig 05 ---
+# ------------------------------------------------ Fig 07 (solve reduction) ---
 def fig_solve_reduction():
     fig, ax = plt.subplots(figsize=(7.6, 3.9))
     levels = ['L0: 12', 'L1: 42', 'L2: 162', 'L3: 642', 'L4: 2562']
@@ -295,10 +302,10 @@ def fig_solve_reduction():
                  'actually solved\n(rest are exact mirror fill-ins; '
                  'measured at the production refinement level, report §4.8)')
     ax.legend(fontsize=7.5, loc='upper left')
-    savefig(fig, 'fig05_solve_reduction.png')
+    savefig(fig, 'fig07_solve_reduction.png')
 
 
-# ---------------------------------------------------------------- Fig 06 ---
+# -------------------------------------------------- Fig 06 (sym closure) ---
 def fig_sym_closure():
     from matplotlib.patches import Rectangle
     from matplotlib.lines import Line2D
@@ -358,7 +365,7 @@ def fig_sym_closure():
     savefig(fig, 'fig06_sym_closure.png', tight=False)
 
 
-# ---------------------------------------------------------------- Fig 07 ---
+# -------------------------------------------------------- Fig 13 (backlog) ---
 def fig_backlog():
     txt = open(os.path.join(REPO, 'analysis', 'phase5_backlog_inventory.txt')).read()
     habits, jobs, cpu, cpu_asym = [], [], [], []
@@ -404,10 +411,10 @@ def fig_backlog():
     ax2.invert_yaxis()
     ax2.legend(fontsize=7.5, loc='upper center',
                bbox_to_anchor=(0.5, -0.18), ncol=2)
-    savefig(fig, 'fig07_backlog.png')
+    savefig(fig, 'fig13_backlog.png')
 
 
-# --------------------------------------------------------------- Fig 08 ---
+# ------------------------------------------- Fig 05 (orientation geometry) ---
 def _wireframe_sphere(ax, radius=1.0, nlat=3, nlon=8, color='0.7', lw=0.55,
                       alpha=0.6, exclude_lat=None):
     """Light lat/lon wireframe of a unit sphere (matplotlib 3D)."""
@@ -556,10 +563,10 @@ def fig_orientation_geometry():
     ax2.set_xlim(-lim, lim); ax2.set_ylim(-lim, lim); ax2.set_zlim(-lim, lim)
 
     fig.subplots_adjust(wspace=-0.25)
-    savefig(fig, 'fig08_orientation_geometry.png')
+    savefig(fig, 'fig05_orientation_geometry.png')
 
 
-# ------------------------------------------------- Fig 13-16 (Phase 9) ---
+# ------------------------------------------- Figs 08–12 (Phase 9) ---
 def _p9():
     """import the Phase-9A scan module (validated Mie port + shape parser)."""
     sys.path.insert(0, REPO)
@@ -634,7 +641,7 @@ def fig_forward_peak():
     ax3.set_title('(c) measured SH cost vs $x$:\n'
                   'filled = full field, open = model residual')
     ax3.legend(fontsize=6.6, loc='lower right')
-    savefig(fig, 'fig13_forward_peak.png')
+    savefig(fig, 'fig08_forward_peak.png')
 
 
 def _chord_max(grid, d, shat, ds_frac=0.25):
@@ -673,8 +680,10 @@ def _chord_max(grid, d, shat, ds_frac=0.25):
 
 
 def fig_eikonal_model():
-    """Schematic of the eikonal screen model + phase thickness vs incidence
-    tilt marched through the REAL HongPlate voxels (validity knob)."""
+    """CONCEPTUAL model figure (redesigned 2026-11-11): (a) the optics recipe
+    drawn on the real x=5 HongPlate slab, (b) face-on vs grazing validity icons
+    (single-pass psi vs TIR multi-pass), (c) the measured psi(beta) knob
+    marched through the real voxels."""
     import glob as _glob
     from matplotlib.patches import Rectangle
     p9 = _p9()
@@ -691,85 +700,159 @@ def fig_eikonal_model():
     grid[u[:, 0], u[:, 1], u[:, 2]] = True
     Dmax = box[0] * d
     t = box[2] * d
-    fig = plt.figure(figsize=(11.8, 4.4))
-    gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.0], wspace=0.24)
+    m_ice = np.sqrt(acf.eps_ice_matzler06(887e9, 230.0))
+    k = 2 * np.pi / (p9.C0 / 887e9 * 1e6)
+    thc = np.degrees(np.arcsin(1.0 / m_ice.real))     # TIR critical angle
+    psi_slab = abs(m_ice - 1) * k * t                # face-on slab-chord knob
 
-    # ---------- (a) schematic on the slab defined by the real shape
-    ax = fig.add_subplot(gs[0])
+    fig = plt.figure(figsize=(11.8, 6.2))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.25, 1.0], height_ratios=[1.0, 0.82],
+                          hspace=0.32, wspace=0.20)
+
+    # ---------- (a) the optics recipe on the real slab ----------------------
+    ax = fig.add_subplot(gs[0, 0])
     ax.set_aspect('equal')
     ax.add_patch(Rectangle((-Dmax / 2, -t / 2), Dmax, t, fc='#dfe7ee',
                            ec='0.3', alpha=1.0, hatch='++', lw=1.2))
-    # incident plane wave from below (face-on)
     for xc in np.linspace(-0.42, 0.42, 7) * Dmax:
         ax.annotate('', xy=(xc, -t / 2 - 4), xytext=(xc, -t / 2 - 130),
                     arrowprops=dict(arrowstyle='-|>', color='k', lw=1.2))
     ax.text(0, -t / 2 - 158, r'incident plane wave $e^{iks}$',
             color='k', fontsize=8.5, ha='center')
-    # highlighted voxel-marched ray + chord
-    xr = 0.16 * Dmax
-    ax.plot([xr, xr], [-t / 2 - 130, t / 2 + 140], color=BLUE, lw=1.0, ls='--')
-    ax.annotate('', xy=(xr, t / 2 + 140), xytext=(xr, t / 2 + 20),
-                arrowprops=dict(arrowstyle='-|>', color=BLUE, lw=1.0))
-    ax.plot([xr, xr], [-t / 2, t / 2], color=BLUE, lw=4,
-            solid_capstyle='round')
-    ax.annotate('chord $\\ell(\\rho)$ — marched through\nthe exact voxels',
-                xy=(xr, 0), xytext=(xr + 0.10 * Dmax, 0.16 * Dmax),
+    # two highlighted marched rays with different chords -> phase modulation
+    for xr, lwch in ((0.16 * Dmax, 4.5), (-0.34 * Dmax, 1.6)):
+        ax.plot([xr, xr], [-t / 2 - 130, t / 2 + 140], color=BLUE, lw=1.0, ls='--')
+        ax.annotate('', xy=(xr, t / 2 + 140), xytext=(xr, t / 2 + 20),
+                    arrowprops=dict(arrowstyle='-|>', color=BLUE, lw=1.0))
+        ax.plot([xr, xr], [-t / 2, t / 2], color=BLUE, lw=lwch,
+                solid_capstyle='round')
+    ax.annotate('chords $\\ell(\\rho)$: ray-marched through\nthe exact voxels '
+                '(the only numerical step)',
+                xy=(0.16 * Dmax, 0), xytext=(0.205 * Dmax, 0.115 * Dmax),
                 fontsize=8, color='k',
                 arrowprops=dict(arrowstyle='->', color='k', lw=0.8))
-    # exit phase screen + diffracted fan
-    ax.plot([-Dmax / 2, Dmax / 2], [t / 2 + 100] * 2, color='0.3',
-            lw=1.4, ls=':')
-    ax.text(Dmax / 2, t / 2 + 112, r'screen $\rho$', fontsize=8,
-            color='0.3', ha='right')
+    # exit phase screen: modulated phase drawn as a wavy line
+    ys = t / 2 + 100
+    xx = np.linspace(-Dmax / 2, Dmax / 2, 400)
+    ax.plot(xx, ys + 16 * np.sin(2 * np.pi * xx / (0.16 * Dmax) + np.pi / 2),
+            color=TEAL, lw=1.4)
+    ax.text(-Dmax / 2, ys + 34,
+            r'exit screen $e^{i\Delta(\rho)}$,'
+            r' $\Delta=k(m-1)\,\ell(\rho)$',
+            fontsize=8.5, color=TEAL, ha='left')
     for ang in (-25, 0, 25):
         aa = np.deg2rad(90 - ang)
         L = 0.15 * Dmax
-        ax.annotate('', xy=(L * np.cos(aa), t / 2 + 100 + L * np.sin(aa)),
-                    xytext=(0, t / 2 + 100),
-                    arrowprops=dict(arrowstyle='-|>', color='0.3',
-                                    lw=1.1))
-    ax.text(0.11 * Dmax, t / 2 + 0.22 * Dmax,
-            r'$\propto e^{-ik\,\hat{n}\cdot\rho}$', color='0.3',
-            fontsize=8.5)
-    # dimension arrows
+        ax.annotate('', xy=(L * np.cos(aa), ys + L * np.sin(aa)),
+                    xytext=(0, ys),
+                    arrowprops=dict(arrowstyle='-|>', color='0.3', lw=1.1))
+    ax.text(0.06 * Dmax, ys + 0.19 * Dmax,
+            r'far field $=\frac{k^{3}}{4\pi}\iint G\,e^{-ik\hat{n}\cdot\rho}\,d^{2}\rho$'
+            ' — analytic', color='0.3', fontsize=8.5)
     ax.annotate('', xy=(-Dmax / 2, t / 2 + 30), xytext=(Dmax / 2, t / 2 + 30),
                 arrowprops=dict(arrowstyle='<->', color='0.3', lw=0.9))
     ax.text(0, t / 2 + 42, '$D_{max}$ = %.0f µm' % Dmax, fontsize=8,
             ha='center', color='0.3')
     ax.text(-Dmax / 2 - 12, 0, 't = %.0f µm' % t, fontsize=8, color='0.3',
             ha='right', va='center', rotation=90)
-    ax.text(0, -t / 2 - 260,
-            '$\\varphi(s)=e^{ik[s+(m-1)\\,\\ell(\\rho)]}$'
-            '  (single-pass eikonal)      '
-            '$G(\\rho)=\\int(m^{2}-1)\\,\\varphi\\,ds$\n'
-            '$S_{model}=\\frac{k^{3}}{4\\pi}\\iint G(\\rho)\\,'
-            'e^{-ik\\hat{n}\\cdot\\rho}\\,d^{2}\\rho$'
-            '   × one calibrated constant c',
+    ax.text(0, -t / 2 - 265,
+            'the ONLY numerical step is the ray-march — geometry enters '
+            'voxel-exactly from the shipped .adda file,\n'
+            'so the model exists for ANY habit at ANY orientation; '
+            'one global complex constant c is fitted per (T, f, size)',
             fontsize=8.5, ha='center',
             bbox=dict(fc='w', ec='0.6', alpha=0.92))
     ax.set_xlim(-0.62 * Dmax, 0.62 * Dmax)
-    ax.set_ylim(-t / 2 - 315, t / 2 + 0.30 * Dmax)
+    ax.set_ylim(-t / 2 - 305, t / 2 + 0.315 * Dmax)
     ax.set_xticks([]); ax.set_yticks([])
     for sp_ in ax.spines.values():
         sp_.set_visible(False)
-    ax.set_title('(a) the general-case model: ray-march the exact voxel '
-                 'geometry,\nthen radiate analytically from the exit phase '
-                 'screen', fontsize=9.5)
+    ax.set_title('(a) the recipe: march every ray through the exact voxels, '
+                 'then radiate analytically from the exit phase screen',
+                 fontsize=9.5)
 
-    # ---------- (b) phase thickness vs incidence tilt (real voxel march)
-    ax2 = fig.add_subplot(gs[1])
-    m_ice = np.sqrt(acf.eps_ice_matzler06(887e9, 230.0))
-    k = 2 * np.pi / (p9.C0 / 887e9 * 1e6)
+    # ---------- (b) validity icons: face-on OK, grazing broken --------------
+    axb = fig.add_subplot(gs[0, 1])
+    axb.set_xlim(-1.48, 1.48); axb.set_ylim(-2.30, 1.32)
+    axb.set_aspect('equal'); axb.set_xticks([]); axb.set_yticks([])
+    for sp_ in axb.spines.values():
+        sp_.set_visible(False)
+    hh = 0.16
+    for cen, cen_txt, tilt, tc, txt in (
+            (-0.75, -0.90, np.deg2rad(8), GREEN,
+             '$\\checkmark$' + '\n'
+             + r'$\psi\approx 0.7\ll\pi$' + '\n'
+             + 'face-on' + '\n'
+             + 'model WINS'),
+            (0.75, 0.90, np.deg2rad(78), RED,
+             '$\\times$' + '\n'
+             + r'$\psi\approx 21\gg\pi$' + '\n'
+             + 'edge-on' + '\n'
+             + 'model FAILS')):
+        # slab: thin rectangle rotated by the incidence tilt about its centre
+        axb.add_patch(Rectangle((-0.52, -hh), 1.04, 2 * hh, angle=np.degrees(tilt),
+                                rotation_point='xy', fc='#dfe7ee', ec='0.3',
+                                hatch='++', lw=1.0))
+        shat = np.array([np.sin(tilt), np.cos(tilt)])       # incidence dir
+        sn = np.array([np.cos(tilt), -np.sin(tilt)])        # in-plane normal
+        c0 = np.array([cen, 0.0])
+        for off in (-0.30, 0.0, 0.30):                      # incident rays
+            foot = c0 + off * sn - 0.62 * shat
+            tip = c0 + off * sn - 0.02 * shat
+            axb.annotate('', xy=tip, xytext=foot,
+                         arrowprops=dict(arrowstyle='-|>', color='k', lw=0.9))
+        if tilt < np.deg2rad(30):
+            # face-on: short straight chord, clean exit
+            w = hh / np.cos(tilt)
+            p_in = c0 - w * shat
+            p_out = c0 + w * shat
+            axb.plot([p_in[0], p_out[0]], [p_in[1], p_out[1]], color=BLUE,
+                     lw=3.0, solid_capstyle='round')
+            axb.annotate('', xy=c0 + 0.58 * shat, xytext=p_out,
+                         arrowprops=dict(arrowstyle='-|>', color=BLUE, lw=1.0,
+                                         linestyle='--'))
+        else:
+            # grazing: long chord + one internal TIR bounce + shallow escape
+            p_in = c0 + np.array([-0.50, -0.16])
+            pb = c0 + np.array([0.42, 0.10])
+            p_out = c0 + np.array([0.52, -0.13])
+            axb.plot([p_in[0], pb[0]], [p_in[1], pb[1]], color=BLUE, lw=3.0,
+                     solid_capstyle='round')
+            axb.plot([pb[0], p_out[0]], [pb[1], p_out[1]], color=BLUE, lw=3.0,
+                     solid_capstyle='round')
+            axb.annotate('', xy=p_out + 0.14 * np.array([1, -0.4]), xytext=p_out,
+                         arrowprops=dict(arrowstyle='-|>', color=BLUE, lw=1.0,
+                                         linestyle='--'))
+            axb.annotate(r'TIR at exit face:'
+                         + '\n' + r'multi-pass, $\varphi$ broken',
+                         xy=(pb[0], pb[1] + 0.02), xytext=(0.66, 0.26),
+                         fontsize=7.5, color=RED,
+                         arrowprops=dict(arrowstyle='->', color=RED, lw=0.8))
+        axb.text(cen_txt, -1.72, txt, fontsize=8.0, color=tc,
+                 ha='center', va='center')
+    axb.text(0.0, 0.92, 'same plate, same c — only the incidence tilt changes;\n'
+             'NO calibration constant can repair the right-hand case',
+             fontsize=8.5, ha='center', va='center',
+             bbox=dict(fc='w', ec='0.6', alpha=0.92))
+    axb.set_title('(b) the activation domain: phase thickness '
+                  r'$\psi=|(m-1)k|\,\ell$ vs the' + '\n'
+                  r'single-pass limit $\psi=\pi$ '
+                  '(ice $n$ = %.2f at 887 GHz, TIR at $\\theta>%d°$)'
+                  % (m_ice.real, int(round(thc))), fontsize=9.5)
+
+    # ---------- (c) measured psi(beta) through the real voxels --------------
+    ax2 = fig.add_subplot(gs[1, :])
     betas = np.arange(0.0, 91.0, 15.0)
     psi = np.array([abs(m_ice - 1) * k
                     * _chord_max(grid, d, np.array(
                         [np.sin(np.deg2rad(b)), 0, np.cos(np.deg2rad(b))]))
                     for b in betas])
-    ax2.plot(betas, psi, lw=1.6, color=BLUE,
-             label=r'$\psi_{max}(\beta)$ marched through the real x=5 HongPlate voxels')
+    ax2.axhspan(0, np.pi, color=GREEN, alpha=0.07)
     ax2.axhline(np.pi, color='0.3', lw=1.1, ls='--')
     ax2.text(2, np.pi + 0.5, r'$\psi=\pi$: single-pass eikonal limit',
              color='0.3', fontsize=8)
+    ax2.plot(betas, psi, lw=1.6, color=BLUE,
+             label=r'$\psi_{max}(\beta)$ marched through the real x=5 HongPlate voxels')
     for b, lab, mk, off, ls, tc in ((0, 'face-on: scan model WINS\n'
                                      '(ntrunc 25→6, 55→41)', 'o', (7, 5.5), '-',
                                      GREEN),
@@ -791,11 +874,127 @@ def fig_eikonal_model():
     ax2.set_xlim(-3, 95)
     ax2.set_ylim(0, max(psi[-1] * 1.12, np.pi * 2.2))
     ax2.legend(fontsize=7.5, loc='upper left')
-    ax2.set_title('(b) why the model has an activation domain: grazing '
-                  'incidence\nmultiplies chord (→ TIR, multi-pass) and '
-                  r'$\psi$; ice $n$ = %.2f at 887 GHz' % m_ice.real,
-                  fontsize=9.5)
-    savefig(fig, 'fig14_eikonal_model.png')
+    ax2.set_title('(c) the measured knob: $\\psi_{max}(\\beta)$ stays below $\\pi$ '
+                  'face-on (green band, where the scan model wins) and crosses '
+                  'it near $40°$–$45°$ — beyond, every scan cell fails', fontsize=9.5)
+    savefig(fig, 'fig09_eikonal_model.png')
+
+
+def fig_split_concept():
+    """CONCEPTUAL Phase-9 split figure (added 2026-11-11): (a) the data-flow —
+    ADDA still computes the full field, only the residual goes through the
+    expensive SH route, model re-added exactly at read time; (b) the SH
+    coefficient triangles bought at x=5 face-on (ntrunc 25 -> 6 = 12.5x);
+    (c) the per-cell decision gate that makes the split safe."""
+    from matplotlib.patches import FancyBboxPatch, Polygon
+
+    fig = plt.figure(figsize=(11.8, 4.0))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.30, 0.90, 1.12], wspace=0.22)
+
+    def box(ax, x, y, w, h, txt, fc='#eef2f6', ec='0.3', fs=8.0, lw=1.0):
+        ax.add_patch(FancyBboxPatch((x, y), w, h,
+                                    boxstyle='round,pad=0.012', fc=fc, ec=ec, lw=lw))
+        ax.text(x + w / 2, y + h / 2, txt, ha='center', va='center', fontsize=fs)
+
+    def arrow(ax, p0, p1, color='0.25', lw=1.1, ls='-'):
+        ax.annotate('', xy=p1, xytext=p0,
+                    arrowprops=dict(arrowstyle='-|>', color=color, lw=lw,
+                                    linestyle=ls))
+
+    # ---------- (a) data flow: what changes is the EXPANSION, not the solve --
+    ax = fig.add_subplot(gs[0])
+    ax.set_xlim(-1.6, 11.6); ax.set_ylim(0, 6.4)
+    ax.set_xticks([]); ax.set_yticks([])
+    for sp_ in ax.spines.values():
+        sp_.set_visible(False)
+    box(ax, 0.15, 4.6, 2.6, 1.1, 'ADDA solve\n(complete, unchanged)\nfull grid $f$',
+        fc='#e6ecf5', ec=BLUE, lw=1.3)
+    box(ax, 0.15, 1.5, 2.6, 1.1, 'model descriptor\nchord map $\\ell(\\rho)$\nfrom the same voxels',
+        fc='#e8f2ea', ec=GREEN, lw=1.3)
+    box(ax, 4.1, 3.0, 2.2, 1.1,
+        r'$c\,F_{model}$' + '\n(calibrated once\nper $T,f,$ size)',
+        fc='#f7f0e2', ec=OCHRE, lw=1.2)
+    box(ax, 4.1, 5.7, 2.2, 0.65,
+        r'subtract: $g=f-cF_{model}$', fc='#eef2f6')
+    box(ax, 7.65, 3.95, 2.4, 1.2,
+        'SH expansion\nof $g$ only\n' + r'$\propto n_{trunc}^{2}$' + ' — CHEAP',
+        fc='#e8f2ea', ec=GREEN, lw=1.5)
+    box(ax, 7.35, 1.35, 2.4, 1.35,
+        'consumer (ARTS/RTTOV)\nrebuilds\n' + r'$f=cF_{model}+g$' + ' exactly',
+        fc='#eef2f6')
+    arrow(ax, (2.75, 5.15), (4.1, 5.95))
+    arrow(ax, (2.75, 2.05), (4.1, 3.35))
+    arrow(ax, (5.2, 4.1), (5.2, 5.7))
+    arrow(ax, (6.3, 5.95), (7.65, 4.85))
+    arrow(ax, (6.3, 3.35), (7.65, 2.45))
+    arrow(ax, (8.85, 3.95), (8.85, 2.7), ls='--')
+    ax.text(5.0, 0.5, 'the delta is scaled honestly: the model is present on BOTH '
+            'sides, so the consumer\nreceives the identical field '
+            '(residual truncation error rides on top for free)',
+            fontsize=7.6, ha='center', bbox=dict(fc='w', ec='0.6', alpha=0.92))
+    ax.set_title('(a) store the residual; keep the model as a descriptor', fontsize=9.5)
+
+    # ---------- (b) coefficient triangles: 25 -> 6 at x=5 face-on -----------
+    axb = fig.add_subplot(gs[1])
+    axb.set_xlim(-2.6, 8.6); axb.set_ylim(-3.0, 7.2)
+    axb.set_aspect('equal'); axb.set_xticks([]); axb.set_yticks([])
+    for sp_ in axb.spines.values():
+        sp_.set_visible(False)
+
+    def tri(ox, oy, n, color, lw):
+        pts = [(ox, oy), (ox + n + 1, oy), (ox, oy + n + 1)]
+        axb.add_patch(Polygon(pts, closed=True, fill=False, ec=color, lw=lw))
+    # full field (ntrunc 25) and residual (ntrunc 6) share the origin -> nesting
+    tri(0.2, 0.0, 6, GREEN, 1.8)
+    tri(0.2, 0.0, 25, BLUE, 1.5)
+    axb.annotate('', xy=(0.35, 6.7), xytext=(0.35, 0.85),
+                 arrowprops=dict(arrowstyle='<->', color='0.3', lw=0.9))
+    axb.text(0.10, 3.7, r'$n_{trunc}=25$', rotation=90, fontsize=8, color=BLUE,
+             ha='right', va='center')
+    axb.annotate('', xy=(1.55, 0.15), xytext=(0.60, 0.15),
+                 arrowprops=dict(arrowstyle='<->', color=GREEN, lw=0.9))
+    axb.text(1.1, 0.80, r'$6$', fontsize=8, color=GREEN, ha='center')
+    axb.text(2.35, 4.4, 'today:\nfull field,\n351 coeffs\nper element',
+             fontsize=8, color=BLUE, ha='center')
+    axb.text(4.7, 1.30, 'split:\nresidual only,\n28 coeffs\nper element',
+             fontsize=8, color=GREEN, ha='center')
+    axb.text(3.0, -2.15, 'x = 5, HongPlate face-on: SH count '
+             r'$=(n+1)(n+2)/2$' + '\n351 → 28 coefficients per element = 12.5× smaller',
+             fontsize=7.6, ha='center', bbox=dict(fc='w', ec=GREEN, alpha=0.95))
+    axb.set_title('(b) what it buys: the SH triangle shrinks', fontsize=9.5)
+
+    # ---------- (c) the decision gate ---------------------------------------
+    axc = fig.add_subplot(gs[2])
+    axc.set_xlim(-2.0, 12.0); axc.set_ylim(0, 6.4)
+    axc.set_xticks([]); axc.set_yticks([])
+    for sp_ in axc.spines.values():
+        sp_.set_visible(False)
+    box(axc, 0.1, 5.3, 4.4, 0.7, 'per cell, BEFORE deciding:', fc='#eef2f6')
+    box(axc, 0.1, 3.85, 4.4, 1.05,
+        r'$C_{ext,model}$' + ' in the sane band\n(0.6–1.5×, sign > 0)\n'
+        + r'AND $\|g\|<\|f\|$',
+        fc='#f7f0e2', ec=OCHRE, lw=1.2)
+    box(axc, 0.1, 2.30, 4.4, 1.05,
+        'AND the physical bound\n' + r'$\psi_{max}\lesssim\pi$' + ' (1.9.15),\n'
+        'plus $c$-consistency (dev)', fc='#f7f0e2', ec=OCHRE, lw=1.2)
+    box(axc, 7.1, 3.85, 4.4, 1.05, 'ALL pass →\nsplit: store SH($g$) + descriptor',
+        fc='#e8f2ea', ec=GREEN, lw=1.5)
+    box(axc, 7.1, 1.35, 4.4, 1.05, 'ANY fails →\nstore plain full field (today)',
+        fc='#f7e4e1', ec=RED, lw=1.5)
+    arrow(axc, (2.3, 5.3), (2.3, 4.92))
+    arrow(axc, (2.3, 3.85), (2.3, 3.37))
+    arrow(axc, (4.5, 4.38), (7.1, 4.38))
+    arrow(axc, (4.5, 2.82), (7.1, 1.95))
+    axc.text(2.55, 5.05, 'pass', fontsize=7.5, color=GREEN)
+    axc.text(2.55, 3.55, 'pass', fontsize=7.5, color=GREEN)
+    axc.text(4.7, 4.72, 'all conditions met →', fontsize=7.2, color=GREEN)
+    axc.text(4.85, 2.50, 'any violated →', fontsize=7.2, color=RED)
+    axc.text(5.0, 0.42, 'HC x5 along-axis slips the $c$-gate (dev 0.14) but is caught '
+             'by\n$C_{ext,model}=0.16×$ — several observables, never one alone',
+             fontsize=7.6, ha='center', bbox=dict(fc='w', ec='0.6', alpha=0.92))
+    axc.set_title('(c) the per-cell decision gate', fontsize=9.5)
+
+    savefig(fig, 'fig10_split_concept.png')
 
 
 def fig_delta_scaling():
@@ -889,7 +1088,7 @@ def fig_delta_scaling():
         axb.text(n_full * 1.02, 1, str(n_full), va='center', fontsize=9)
         axb.text(n_res * 1.02, 0, str(n_res), va='center', fontsize=9)
         axb.set_title('(c) storage budget — %s' % verdict, fontsize=8.5)
-    savefig(fig, 'fig15_delta_scaling.png')
+    savefig(fig, 'fig11_delta_scaling.png')
 
 
 def fig_validity_map():
@@ -952,14 +1151,14 @@ def fig_validity_map():
     ax.set_title('Phase-9A validity map — all 15 scan cells\n'
                  'Cext band + below dashed line = the gated activation domain',
                  fontsize=10)
-    savefig(fig, 'fig16_validity_map.png')
+    savefig(fig, 'fig12_validity_map.png')
 
 
-# ---------------------------------------------------------- Fig 09–12 ---
+# --------------------------------------------------------- Fig 14–17 ---
 def fig_baseline_set():
     """Appendix E figures: regenerate the baseline report figures (data:
     frozen golden runs under baselines/adda_1.2/) and mirror them into
-    docs/figures as fig09..fig12. Rendering is delegated to the baseline
+    docs/figures as fig14..fig17. Rendering is delegated to the baseline
     tooling itself (baselines/plot_baseline_figs.py) so the appendix can
     never drift from the reference report."""
     import shutil
@@ -968,10 +1167,10 @@ def fig_baseline_set():
     subprocess.run([sys.executable, script], check=True, cwd=REPO)
     src = os.path.join(REPO, 'baselines', 'report')
     for srcname, dstname in [
-            ('fig1_crosssections.png', 'fig09_baseline_crosssections.png'),
-            ('fig2_sphere_mie.png', 'fig10_baseline_sphere_mie.png'),
-            ('fig3_scattering_maps.png', 'fig11_baseline_scattering_3d.png'),
-            ('fig4_ellipsoid_phase.png', 'fig12_baseline_ellipsoid_phase.png')]:
+            ('fig1_crosssections.png', 'fig14_baseline_crosssections.png'),
+            ('fig2_sphere_mie.png', 'fig15_baseline_sphere_mie.png'),
+            ('fig3_scattering_maps.png', 'fig16_baseline_scattering_3d.png'),
+            ('fig4_ellipsoid_phase.png', 'fig17_baseline_ellipsoid_phase.png')]:
         shutil.copyfile(os.path.join(src, srcname), os.path.join(FIGDIR, dstname))
         print('wrote docs/figures/' + dstname)
 
@@ -987,6 +1186,7 @@ if __name__ == '__main__':
     fig_orientation_geometry()
     fig_forward_peak()
     fig_eikonal_model()
+    fig_split_concept()
     fig_delta_scaling()
     fig_validity_map()
     fig_baseline_set()

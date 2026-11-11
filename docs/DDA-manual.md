@@ -27,7 +27,10 @@ and debug the pipeline safely.
  *delegating* to `baselines/plot_baseline_figs.py`, so the manual can never drift from
  the reference baseline report.)
 - Every figure has a **bold *Fig. N* caption line directly below it** stating the one
- thing it proves and how to read it. If you only skim, read the figure captions.
+ thing it proves and how to read it; the numbers follow **document order**, and the LaTeX
+ build keeps image + caption in one unbreakable box (they can never be split across a page
+ break). Every table carries a **bold *Table N — …* caption line directly above it**
+ (typeset as a real caption above the table in the PDF). If you only skim, read captions.
 - The **PDF** (`docs/DDA-manual.pdf`) is typeset with LaTeX: `python docs/build_latex.py`
  (pandoc → xelatex via latexmk; needs TeX Live + the `DDA` conda env with `pypandoc_binary`
  and a Chrome for the mermaid vector rendering). The browsable **HTML** version is built
@@ -37,6 +40,8 @@ and debug the pipeline safely.
  truth for both — never hand-edit the `.tex`.
 
 ### Pick your entry point
+
+**Table 1 — Reading map: task → where to look.** *Pick an entry point by what you need to do, not by chapter order.*
 
 | You want to… | Read |
 |---|---|
@@ -73,6 +78,8 @@ flowchart LR
 The pipeline answers one question: *for a given particle habit, size, frequency and
 temperature, what are its single-scattering properties averaged over all relevant
 particle orientations?* Two orientation strategies are produced:
+
+**Table 2 — the two orientation strategies produced by this pipeline.** *Physical situation, the orientation space each integrates over, and the natural output coordinates (vocabulary of Brath et al. 2020).*
 
 | Strategy | Physical situation | Orientation space covered | Output coordinates |
 |---|---|---|---|
@@ -126,6 +133,8 @@ DDA/
 > a fresh clone must be provisioned by hand before anything habit-related can run (§1.2).
 
 ### 0.2 Glossary
+
+**Table 3 — Glossary.** *Every term with the exact meaning it has in this manual and in the code.*
 
 | Term | Meaning in this project |
 |---|---|
@@ -206,6 +215,8 @@ What the maintainer must know about ADDA's numerics (all measured in
 `analysis/phase4b_adda_benchmark.py`, data in `analysis/phase4b_bench_results.json`,
 figure below):
 
+**Table 4 — ADDA numerics: measured benchmark facts and their consequences.** *All numbers from `analysis/phase4b_adda_benchmark.py` (Fig. 1, report §4).*
+
 | Fact | Consequence for this project |
 |---|---|
 | `-eps <n>` = iterative solver stops at residual $10^{-n}$. It controls **solver** error only. | `eps=3` production: own-solver scatter is $\le 10^{-11}$ for small jobs but $\sim 8\cdot10^{-4}$ at $x=5$ — so **identical ADDA re-runs are not bit-reproducible**; every regression gate must be noise-based, never bit-level. |
@@ -214,9 +225,9 @@ figure below):
 | Cost per solve: **$N=12\,312$ dipoles → 0.4 s, $N=48\,597$ → 9.5 s** (single core, ADDA 1.4.0, macOS). Scaling $\propto N^{2.3}$. | Backlog cost model §4.4; also why solves are embarrassingly process-level parallel (run N single-core ADDA calls per job, §3.6). |
 | Cext/Cabs from a DDA run are only as good as the shape discretization; mirrors/rotations of the *voxel set* are exact lattice operations (§1.7). | Symmetry flags must be verified on the actual voxel set, not on the nominal habit. |
 
-![ADDA cost and error budget](figures/fig04_adda_cost.png)
+![ADDA cost and error budget](figures/fig01_adda_cost.png)
 
-**Fig. 4 — one ADDA solve: cost and error budget.** *Left panel: wall time grows like
+**Fig. 1 — one ADDA solve: cost and error budget.** *Left panel: wall time grows like
 $N^{2.3}$ with dipole count — the cost-planning input. Right panel: at $x=5$, the Cext error
 from dipole resolution ($dpl_{\mathrm{eff}}$, x-axis) stays 2–3 orders of magnitude ABOVE the
 solver-noise band (red dotted line, `-eps 3`): the shape-file resolution class — not `-eps` —
@@ -294,6 +305,8 @@ Each physical size ships as several shape files tagged with `frequency_min`:
 
 Two regimes exist in practice (measured on `HongPlate_Id9`, fig. right panel):
 
+**Table 5 — measured $N_{\mathrm{dipoles}}$ across the five resolution classes** for three real HongPlate_Id9 sizes (the numeric version of Fig. 2, right panel).
+
 | particle | classes | N_dipoles across classes |
 |---|---|---|
 | small (10 $\mu$m) | 5 | **identical** (1015 in all five — degenerate copies: even the coarsest lattice already exceeds the needed dpl) |
@@ -303,13 +316,13 @@ Two regimes exist in practice (measured on `HongPlate_Id9`, fig. right panel):
 Also note: **class availability can be per-size incomplete** (e.g. HexPlaAgg 197 $\mu$m has
 only the 671 and 887 classes), so never assume five files per size.
 
-![Resolution scheme](figures/fig03_resolution_scheme.png)
+![Resolution scheme](figures/fig02_resolution_scheme.png)
 
-**Fig. 3 — Which shape file computes a given (size, f).** *Left: a requested frequency falls
+**Fig. 2 — Which shape file computes a given (size, f).** *Left: a requested frequency falls
 in one coloured block (one per `fmin` class); that block's `fmin` class file does the run (block
 label sits at its right edge). The two edge cases are annotated. Right: measured N_dipoles per class for three
 real HongPlate sizes — small particles are degenerate (one lattice already suffices), large
-ones grow $\\propto f_{\\min}^3$.*
+ones grow $\propto f_{\min}^3$.*
 
 ### The selection rule (as implemented in `adda_main_control.py`)
 
@@ -329,12 +342,12 @@ size prints “wrong particle realisation” and skips. Consequences, precisely:
  HongPlate's 8925 (size,f) combos; the *majority* of combos are killed by resolution
  bookkeeping, not by x — 7701 by the fmin rule; report §1.7).
 
-![Size parameter of the HongPlate size grid](figures/fig02_size_parameter.png)
+![Size parameter of the HongPlate size grid](figures/fig03_size_parameter.png)
 
-**Fig. 2 — What the x-cap actually removes.** *Each line is one particle size
-($x=\\pi D_{veq}f/c_0\\propto Df$, straight in log-log). Everything above the dashed
+**Fig. 3 — What the x-cap actually removes.** *Each line is one particle size
+($x=\pi D_{veq}f/c_0\propto Df$, straight in log-log). Everything above the dashed
 $x=10$ line is skipped: for HongPlate that is 146 of 8925 (size, f) combinations —
-far fewer than the 7701 killed by the resolution rule of Fig. 3.*
+far fewer than the 7701 killed by the resolution rule of Fig. 2.*
 
 ## 1.3 Dielectric function of ice (Matzler 2006)
 
@@ -355,9 +368,9 @@ the imaginary part at
 190 K vs 270 K differs by orders of magnitude — hence the three production temperatures
 {190, 230, 270} K are *not* a formality; each (T, f, size) is a separate ADDA job.
 
-![Matzler 2006 ice permittivity](figures/fig01_dielectric.png)
+![Matzler 2006 ice permittivity](figures/fig04_dielectric.png)
 
-**Fig. 1 — Mätzler ice permittivity across the whole valid range.** *Blue shaded band: the
+**Fig. 4 — Mätzler ice permittivity across the whole valid range.** *Blue shaded band: the
 production channel set (35 frequencies, 1–886 GHz). Reading: the real part (left) barely
 moves (≈3.11–3.19, only with T); the imaginary part (right) spans ~4 orders of magnitude
 in f and T — the loss tangent at mm/sub-mm wavelengths is what makes cloud ice a
@@ -417,9 +430,9 @@ The two output flags `-scat_matr both` request amplitude + Mueller; `-store_scat
 coordinate systems — the lab-frame incidence/tilt angles and the propagation-attached
 scattering grid — is shown below:
 
-![Orientation and scattering geometry](figures/fig08_orientation_geometry.png)
+![Orientation and scattering geometry](figures/fig05_orientation_geometry.png)
 
-**Fig. 8 — the two coordinate systems you must not confuse.** *(a) lab frame: the incidence
+**Fig. 5 — the two coordinate systems you must not confuse.** *(a) lab frame: the incidence
 direction $\hat k$ (blue; $\theta_{\mathrm{inc}}$ from lab-$z$, azimuth
 fixed) and the particle symmetry axis (red dashed; tilt $\beta$); ARO averages the azimuth/spin Euler
 angles $\alpha,\gamma$ at fixed $\beta$. (b) every solve's $181\times361$ amplitude/Mueller grid
@@ -449,6 +462,8 @@ $$
 > plate-aggregate ARO database itself builds on the shape and frequency/temperature setup of
 > **Eriksson et al. (2018, ESSD 10, 1301–1326)**, which is also where the habit IDs used in this
 > repo (`HongPlate_Id9`, `HongColumn_Id7`, …) originate.
+
+**Table 6 — ARO vs TRO side by side.** *Definition, how the orientation average is performed, and the products each strategy yields (§1.5).*
 
 | | ARO | TRO |
 |---|---|---|
@@ -526,6 +541,8 @@ at least 3 passes ($L=0,1,2$), at most `limit_sph` $(=4)$.
 
 Note the two *different* accuracy controls and what each drives:
 
+**Table 7 — the two tolerance knobs and what each drives.** *Never confuse them: one is solver noise, the other is expansion accuracy (§1.5.4).*
+
 | knob | drives | tolerance |
 |---|---|---|
 | `delta` | icosphere **orientation** refinement (# ADDA solves) | 0.01 on averaged extinction |
@@ -533,6 +550,8 @@ Note the two *different* accuracy controls and what each drives:
 | `-eps` | ADDA internal solver residual | $10^{-3}$ (noise floor, §1.1) |
 
 ### 1.5.5 TRO: two strategies, one decision
+
+**Table 8 — the two TRO orientation-averaging strategies.** *Production decision: ADDA's built-in `-orient avg` (report §5.2).*
 
 | strategy | mechanism | yields | status |
 |---|---|---|---|
@@ -544,6 +563,8 @@ Hard constraint discovered in Phase 3: **ADDA 1.4/1.5 reject `-orient avg` combi
 scattering grids (the integrated mueller is a separate product). The avg file (zyz,
 per-angle Romberg control `Jmin/Jmax/eps/equiv/periodic`) for the production habit —
 `adda_aux_input/HongPlate_Id9_TOR_sizegrid/avg_params.dat`:
+
+**Table 9 — production TRO averaging input** (`adda_aux_input/HongPlate_Id9_TOR_sizegrid/avg_params.dat`): zyz Euler ranges and Romberg control per angle.
 
 | Euler angle | range | $J_{\min}/J_{\max}$ | tol. | equiv | periodic | note |
 |---|---|---|---|---|---|---|
@@ -624,6 +645,8 @@ an exact index/sign transform — the ADDA solve is skipped and the vertex is *f
 **Verified transform** (`acf.MIRROR_*`, `adda_control_functions.py:1252–1289`; derived
 empirically, `analysis/phase4_grid_symmetry.py`, residual $\le3\cdot 10^{-11}$ at `-eps 3`):
 
+**Table 10 — mirror machinery:** for each mirror plane, the scattering-grid remap and the Mueller-element sign rule (implemented in `acf.MIRROR_*`, verified to $\le 3\cdot 10^{-11}$; §1.7).
+
 | mirror (plane) | axis flipped | scattering-grid remap | Mueller element signs |
 |---|---|---|---|
 | XY ($z\to-z$) | $z$ | $\varphi\mapsto 180^\circ-\varphi$ | for an odd number of mirrors: element-wise sign by $\mathbf{d}\mathbf{d}^{\top}$ with $\mathbf{d}=(1,1,-1,-1)$ (outer product on the Stokes row/col pairs) |
@@ -668,15 +691,17 @@ Production flags (report §4.7): **HongPlate_Id9 + TOR grid: XY+XZ=true, YZ=fals
 **HongColumn_Id7: YZ=true**; LiuSector/Icon/HexPlaAgg: none (aggregate/snowflake shapes
 break all mirrors). Measured effect (§4.8):
 
+**Table 11 — measured effect of the mirror flags** at the production refinement level (report §4.8; Fig. 7).
+
 | habit | solves | wall |
 |---|---|---|
 | ellipsoid gate (3 mirrors) | 162 $\to$ **27** (+135 fills) | 3.0$\times$ |
 | HongPlate_Id9 (XY+XZ) | 642 $\to$ **177** (+465 fills) | 1.73$\times$ |
 | HongColumn_Id7 (YZ) | 642 $\to$ **337** (+305 fills) | 1.39$\times$ |
 
-![Solve reduction](figures/fig05_solve_reduction.png)
+![Solve reduction](figures/fig07_solve_reduction.png)
 
-**Fig. 5 — what mirror fill-in buys (measured).** *Grey bars: every icosphere vertex solved
+**Fig. 7 — what mirror fill-in buys (measured).** *Grey bars: every icosphere vertex solved
 (no flags). Hatched bars: actual ADDA solves with the habit's flags at that level — the rest
 of the vertices are exact mirror fill-ins (still SH-expanded + cached, hence the wall-time
 gain in the legend is smaller than the solve-count ratio).*
@@ -781,21 +806,34 @@ Two limiting regimes of $f(\hat n)$:
 - **Geometric regime** ($x\gg1$): the pattern is dominated by a narrow **diffraction peak**
  around $\hat n=\hat s$. Production runs live at $x\le10$, i.e. between the regimes —
  where the peak is real but only moderately narrow, and *exactly* what sets the angular
- sampling cost (Fig. 13a shows the transition for exact-Mie spheres: no spike at $x=1$,
+ sampling cost (Fig. 8a shows the transition for exact-Mie spheres: no spike at $x=1$,
  a 4-decade spike at $x=10$).
 
 ### 1.9.2 The extinction paradox and the diffraction peak (Babinet)
 
-Classical result (van de Hulst; B&H): for $x\to\infty$ the extinction cross section of *any*
-particle tends to **twice its geometric projected area $G$**: $C_{\mathrm{ext}}\to 2G$. Pure
-ray tracing through the particle removes only $G$ — the geometric shadow — so where does the
-other half come from? Babinet's principle answers: the shadow behind the particle must be
-dark, which requires a field *radiated by the particle silhouette* that is exactly
-$\mathbf E^0_{\text{inc}}$ out of phase there — and any field that cancels the incident wave
-at $\hat n=\hat s$ must, by conservation, reappear as coherent scattering *into* the forward
-direction. For a silhouette (aperture) $A$ with eikonal amplitude transmittance
-$e^{i\Delta(\rho)}$, $\Delta=k(m-1)\ell(\rho)$, the diffracted amplitude is, up to a sign
-convention fixed by the §1.9.5 anchor,
+**What extinction actually counts.** $C_{\mathrm{ext}}$ is defined operationally as the rate at
+which a particle removes flux from the *unobstructed* incident beam — an extinction meter looks
+straight at the source through the particle and measures the dimming of the *image*, not
+scattered light collected somewhere else. Only the scattered wave travelling *exactly along*
+the beam ($\hat n=\hat s$) overlaps the incident wave at the detector, so extinction is
+necessarily an **interference** quantity — that is all the optical theorem (1.9.3) says. Pure
+scattering loss would be $C_{\mathrm{sca}}$; the difference $C_{\mathrm{ext}}-C_{\mathrm{sca}}$
+is carried entirely by forward interference, and for large particles it is enormous.
+
+**The paradox.** Classical result (van de Hulst; B&H): for $x\to\infty$ the extinction cross
+section of *any* particle tends to **twice its geometric projected area $G$**:
+$C_{\mathrm{ext}}\to 2G$. Pure ray tracing through the particle — refraction, internal
+reflection, absorption — can remove at most the geometric shadow $G$ of the incident flux.
+The other half is *purely diffractive* and is missed by any ray picture. Babinet's principle
+answers where it comes from: the shadow behind the particle must be dark, which requires a
+field *radiated by the particle silhouette* that is exactly $-\mathbf E^0_{\text{inc}}$ there —
+and any field that cancels the incident wave at $\hat n=\hat s$ must, by conservation,
+reappear as coherent scattering *into* the forward direction. A complementary screen and an
+opaque body scatter identically *everywhere except* within the narrow forward cone, where they
+differ by the unobstructed beam — the body's forward cone is the aperture's diffraction
+pattern, with a sign fixed by that subtraction. For a silhouette (aperture) $A$ with eikonal
+amplitude transmittance $e^{i\Delta(\rho)}$, $\Delta=k(m-1)\ell(\rho)$, the diffracted
+amplitude is, up to a sign convention fixed by the §1.9.5 anchor,
 
 $$
  f_{\text{diff}}(\hat n) \;=\; \frac{ik}{2\pi}
@@ -804,13 +842,30 @@ $$
  \tag{1.9.4}
 $$
 
-Insert the black-screen limit ($1-e^{i\Delta}=1$) into the optical theorem (1.9.3):
-$f_{\text{diff}}(\hat s)=ikA/2\pi$ gives $C_{\text{ext,diff}}=(4\pi/k)(kA/2\pi)=2A$ —
-a perfectly black screen of area $A$ extinguishes $2A$: the paradox, and with it the statement
-that **the forward peak alone carries $C_{\mathrm{ext}}\to2G$**.
+**Why exactly $2A$, one line.** Insert the black-screen limit ($1-e^{i\Delta}=1$) at
+$\hat n=\hat s$: the in-plane phase factor $e^{-ik\hat s\cdot\boldsymbol\rho}=1$ there (the
+screen plane is perpendicular to $\hat s$), so $f_{\text{diff}}(\hat s)=ikA/2\pi$ — purely
+imaginary with positive imaginary part — and the optical theorem (1.9.3) gives
+$C_{\text{ext,diff}}=(4\pi/k)\,(kA/2\pi)=2A$. A perfectly black screen of area $A$
+extinguishes $2A$: half of it ($A$) is the shadow that ray optics also predicts, the other half
+is the forward-interference term, and with it the statement that
+**the forward peak alone carries $C_{\mathrm{ext}}\to2G$**.
 
-Fourier duality fixes the peak's width. An aperture of projected radius $a_\perp$ radiates
-into a cone of half-angle
+**Where that "extinguished" energy goes.** Into the diffraction peak: the coherent forward
+field re-radiates the missing power into a cone of angular width $\theta_1\propto\lambda_0/D$
+(below). As $x$ grows the cone narrows and the on-peak amplitude grows
+($f(\hat s)=ikA/2\pi\propto A/\lambda_0$) while the power stays comparable to $G$ — the
+scattered power is *compressed into a narrower and narrower cone*. Two consequences that control
+everything after §1.9.3: (i) radiative-transfer textbook practice δ-functionizes the peak
+(the δ-M trick) to make the problem ray-like again — at the price of all angular resolution
+inside the peak; (ii) our product *cannot* throw it away casually, because the forward
+amplitude column is simultaneously the ingredient of $C_{\mathrm{ext}}$ in `acf.extinction_matrix`
+(§1.4). The Phase-9 idea (§1.9.4) is the honest third way: keep the peak fully resolved but
+analytic.
+
+**Fourier duality fixes the peak's width.** An aperture of projected radius $a_\perp$ radiates
+an amplitude $\propto 2J_1(z)/z$, $z=ka_\perp\sin\theta$ — the Fourier transform of a disk —
+whose first zero is at $z=3.8317$; the cone half-angle is
 
 $$
  \sin\theta_1 \;=\; 1.22\,\frac{\lambda_0}{2a_\perp}
@@ -820,14 +875,24 @@ $$
 $$
 
 so the peak narrows like $\lambda_0/D$: for a sphere ($a_\perp=D_{veq}/2$,
-$x=\pi D_{veq}/\lambda_0$) the first minimum sits at $\theta_1\approx 220°/x$ — verified in
-Fig. 13b (the dashed rings at $44°$ for $x=5$, $22°$ for $x=10$). The sidelobes beyond the
-peak are set by the *projected silhouette*, not by $D_{veq}$ — for plate habits the silhouette
-changes strongly with orientation, which is why the peak structure is orientation-dependent.
+$x=\pi D_{veq}/\lambda_0$, $\lambda_0/D_{veq}=\pi/x$) the first minimum sits at
+$\theta_1\approx 220°/x$ — verified in
+Fig. 8b (the dashed rings at $44°$ for $x=5$, $22°$ for $x=10$). The *exact* Mie minimum of a
+partially transparent ice sphere ($n=1.77$ at 887 GHz) lies slightly inside the black-disk Airy
+ring — internal transmission corrects the disk amplitude — which is one of the details the
+eikonal model of §1.9.5 reproduces automatically, since its screen carries the silhouette *and*
+the phase. The sidelobes beyond the peak are set by the *projected silhouette*, not by
+$D_{veq}$ — for plate habits the silhouette changes strongly with orientation, which is why the
+peak structure is orientation-dependent. Concretely, the $x=5$ HongPlate ($D_{veq}=541\;\mu$m)
+is a flat hexagon of $D_{\max}=1466\;\mu$m and thickness $t=59\;\mu$m when seen face-on, so at
+887 GHz ($\lambda_0=338\;\mu$m) its first silhouette ring is near
+$\sin\theta_1\approx1.22\lambda_0/D_{\max}\approx0.28$, i.e. $\theta_1\approx16°$ — three
+times narrower than the same-volume sphere's $44°$. The first dip in Fig. 11, first column,
+sits at $\approx18°$ exactly for this reason.
 
-![Mie peak evolution + measured SH demand](figures/fig13_forward_peak.png)
+![Mie peak evolution + measured SH demand](figures/fig08_forward_peak.png)
 
-**Fig. 13 — why the diffraction peak is the cost driver.** *(a) exact-Mie $|S_1|^2$ over the
+**Fig. 8 — why the diffraction peak is the cost driver.** *(a) exact-Mie $|S_1|^2$ over the
 whole sphere for four size parameters — the spike appears only at large $x$ (colour ramp:
 pale blue $\to$ blue $\to$ red = larger $x$); (b) zoom on 0–50°: the peak width shrinks like
 $220°/x$; (c) achieved
@@ -857,7 +922,7 @@ $$
 The rigorous version of the same law for spheres is the Mie partial-wave demand —
 $n_{\max}=x+4x^{1/3}+2$ (Wiscombe; the $x^{1/3}$ term is the edge/"creeping-ray" boundary
 layer) — and it is the same law the Phase-8 grid budgets use (§1.6.1). The measured
-per-vertex ntrunc of the production pipeline follows it (Fig. 13c) and even **saturates the
+per-vertex ntrunc of the production pipeline follows it (Fig. 8c) and even **saturates the
 static grid's Nyquist cap** (ntrunc 179 ≈ 180 = the cap of the 361-point $\varphi$-ring) at
 $x=10$, tilted orientations.
 
@@ -1009,16 +1074,21 @@ dpl 70 agrees to 0.23 % ($x=1.9$) / 1.33 % ($x=3.8$) — DDA discretization leve
 Mueller grid rebuilt from the parsed amplitudes matches ADDA's own `mueller_scatgrid` to
 $\le7.4\cdot10^{-11}$ (port check).
 
-![Eikonal screen model schematic + validity knob](figures/fig14_eikonal_model.png)
+![Eikonal screen model: concept, validity knob, measured psi](figures/fig09_eikonal_model.png)
 
-**Fig. 14 — the model: what it is, and the one knob that says when it works.** *(a) schematic
-on the real x=5 HongPlate slab: march every ray through the exact voxels to get the chord
-$\ell(\rho)$ (blue), radiate analytically from the exit screen; (b) the phase thickness
-$\psi_{max}$ (blue curve) marched through the real voxels vs incidence tilt — green
-annotation = the scan model WINS, red = it already fails; below the dashed
-$\psi=\pi$ line the single-pass eikonal picture is plausible, far above it (edge-on) the
-model is guaranteed to fail. Ice refractive index at 887 GHz makes even a 541 µm plate
-"optically thick" edge-on.*
+**Fig. 9 — the model as a concept: what it computes, and the one knob that says when it is
+allowed to.** *(a) the whole recipe in one picture: every incident ray is marched through the
+exact voxel set to get its chord $\ell(\rho)$ (the only numerical step), the exit screen gets
+a phase $\Delta=k(m-1)\ell$ and amplitude $e^{-k\,\mathrm{Im}\,m\,\ell}$, and the far field
+is the analytic Fourier transform (1.9.14) of that screen — no solver, no grid, valid at any
+orientation for the price of one ray-march; (b) the validity test as two icons: face-on the
+single-pass phase thickness $\psi\lesssim\pi$ stays single-valued (green), at grazing
+incidence $\psi\gg\pi$ and total internal reflection (ice $n=1.77$: critical angle
+$34.3°$) multi-pass fields take over — no calibration constant can repair that (red);
+(c) the measured knob: $\psi_{max}$ marched through the real $x=5$ HongPlate voxels at
+887 GHz vs incidence tilt, against the $\psi=\pi$ limit — green band = the scan where the
+model wins, red = where it already fails. At 887 GHz even a 59 µm-thick plate is
+"optically thick" edge-on ($\psi\approx21$).*
 
 **Validity conditions (textbook: van de Hulst / B&H, "diffraction approximation").** The
 single-pass eikonal (1.9.13) is justified only if
@@ -1040,7 +1110,7 @@ single-pass eikonal (1.9.13) is justified only if
 - (c) the silhouette is well resolved — satisfied automatically (voxel-exact marching).
 
 $\psi_{max}$ is computed for free by the same ray-march. Measured on the real $x=5$ HongPlate
-voxels at 887 GHz (Fig. 14b): $\psi_{max}\approx0.7$ rad face-on, $\approx2$ rad at $60°$,
+voxels at 887 GHz (Fig. 9c): $\psi_{max}\approx0.7$ rad face-on, $\approx2$ rad at $60°$,
 $\approx21$ rad edge-on — versus the $\pi$ single-pass limit: valid face-on, hopeless edge-on.
 
 ### 1.9.6 Measured: the winning domain and the failure domain (15-cell scan)
@@ -1057,9 +1127,50 @@ expansion rule (`expand_mueller_2_spharmonics`, `eps_sphexp=0.005`) under both t
 and the full-eps criterion (1.9.11); sanity-check $C_{ext,\text{model}}/C_{ext,\text{ADDA}}$.
 Full table: report §9.2 / `analysis/phase9_fwdmodel_table.txt`.
 
-![Full vs model vs residual on three real cells](figures/fig15_delta_scaling.png)
+**What exactly is measured (all from `phase9_fwdmodel_scan.py`, so every number above is
+checkable):**
 
-**Fig. 15 — the three verdicts, per real production cell (row = cell).** *Column 1: does the
+- $\lVert\cdot\rVert$ is the **amplitude L2 norm over the whole sphere**:
+ $\lVert f\rVert=\sqrt{\sum_{181\times361}\,(|s_1|^2+|s_2|^2+|s_3|^2+|s_4|^2)}$ on the
+ production grid. $\lVert g\rVert/\lVert f\rVert>1$ is possible because $c$ is
+ LS-fitted over the *full* sphere — the LS optimum guarantees
+ $\lVert f-cF_{\text{model}}\rVert\le\lVert f\rVert$ *only for the s1 channel that was
+ fitted*; the ratio is then evaluated on all four channels, and a model that *adds*
+ field the DDA does not have (edge-on) can still lose overall.
+- The fit that produces $c_{\text{fit}}$ and $u_0$ masks out numerically dead points
+ ($|S_{\text{model}}|\le1\%$ of its max — the model's deep zeros carry no information and
+ would poison any fit), solves $c$ in closed form for fixed $u_0$, and refines $u_0$
+ (lattice units) by a coarse-to-fine local grid search, $0.5\to\approx0.016$.
+- The ntrunc rule (1.9.11) is evaluated on the Mueller channels ($M_{11}$, $M_{12}$,
+ $M_{34}$) with $\varepsilon_m=\texttt{eps\_sphexp}\times\mathrm{RMS}(M_{11}^{\text{full}})$
+ — i.e. the full-eps tolerance scale applied to the residual (own-eps = same formula
+ with the residual's own RMS; the $x=1$ face example below shows why that is wrong).
+- $C_{ext,\text{model}}$ uses the **same identity the production pipeline uses**: the
+ forward column of the amplitude grid via the optical theorem (1.9.3); its agreement
+ with ADDA's own $C_{ext}$ at the anchors (0.23 %/1.33 %) plus the port check
+ ($\le7.4\cdot10^{-11}$) mean the $C_{ext,\text{model}}/C_{ext,\text{ADDA}}$ column is a
+ physics statement, not a parsing artifact.
+- `back_model_ratio` $=|F_{\text{model}}|/|f|$ at $\theta=180°$: ranges
+ $8.2\times$–$9.3\cdot10^{-3}$ across cells with no consistent scale — the model is
+ simply *absent* at exact backscatter (see below).
+
+![The split concept: schematic, coefficient budget, decision gate](figures/fig10_split_concept.png)
+
+**Fig. 10 — the Phase-9 idea as a concept, before any data.** *(a) what is stored changes,
+what is measured does not: ADDA still computes the full grid; the expensive SH expansion
+(§1.9.3: coefficient count $\propto n_{\text{trunc}}^2$) is applied only to the residual
+$g=f-cF_{\text{model}}$, and $cF_{\text{model}}$ is re-added exactly at read time from its
+descriptor (chord map + $c$) — the consumer sees the identical field, the delta is scaled
+honestly because the model is algebraically present on both sides; (b) what it buys at
+$x=5$, face-on: the SH coefficient triangle shrinks from $n_{\text{trunc}}=25$
+(351 coefficients per Mueller element) to $6$ ($28$) — $12.5\times$ — because the residual
+has no narrow peak to resolve; (c) the decision that makes it safe: the per-cell gate of
+§1.9.6 — $C_{ext,\text{model}}$ sanity band AND $\lVert g\rVert<\lVert f\rVert$ AND the
+$\psi$ bound — split only where all three pass, store the plain field everywhere else.*
+
+![Full vs model vs residual on three real cells](figures/fig11_delta_scaling.png)
+
+**Fig. 11 — the three verdicts, per real production cell (row = cell).** *Column 1: does the
 calibrated model reproduce the forward peak (blue solid = ADDA, red dashed = calibrated model)?
 Column 2: whole sphere — blue solid = full $|f|$, red dashed = residual $|g|$; where the dashed
 curve rises above the solid one (edge-on row), the split makes storage WORSE. Column 3: the SH
@@ -1069,7 +1180,7 @@ the $|g|/|f|$ gate; the panel title carries the verdict with the coefficient-cou
 ($n_{\text{trunc}}\to$ SH terms $=(n+1)(n+2)/2$). The historic own-eps rule is *not* plotted
 — it is not decision-relevant (worked example in the metric rules below).*
 
-Three archetypes emerge (Fig. 15):
+Three archetypes emerge (Fig. 11):
 
 - **WIN — HongPlate face-on at every $x$.** The model captures the peak shape *including the
  Airy zeros*: residual fraction $|g|/|f|=0.03$–$0.31$, $C_{ext,\text{model}}/C_{ext}=1.05$–$1.15$.
@@ -1079,7 +1190,7 @@ Three archetypes emerge (Fig. 15):
  ($x=10$). Even the $60°$-tilted $x=10$ cell wins big: $179\to81$ — and the 179 there is the
  *grid-Nyquist-saturated* value (see the second rule below).
 - **MARGINAL — small-angle deviations, tilted columns.** Intermediate cells (e.g. HongPlate
- $x=2$–$10$ at $60°$) shrink but less; the physics: $\psi$ grows with tilt (Fig. 14b) and
+ $x=2$–$10$ at $60°$) shrink but less; the physics: $\psi$ grows with tilt (Fig. 9c) and
  the single-pass picture frays.
 - **HARMFUL — grazing incidence.** Plate edge-on at $x=5$: $|g|/|f|=1.73$ — the residual is
  LARGER than the field (possible because $c$ is fitted over the full sphere; the model
@@ -1087,12 +1198,13 @@ Three archetypes emerge (Fig. 15):
  the unambiguous signature of a broken model (§1.9.5 condition (b): $\psi\approx21\gg\pi$,
  internal TIR + multi-pass interference ignored). The $60°$-tilted $x=5$ cell fails the same
  way ($|g|/|f|=1.21$, $C_{ext,\text{model}}=-0.29\times$), and so does the column along-beam
- cell at $x\approx4.9$ ($\psi\approx8.6$ rad, $C_{ext,\text{model}}=0.16\times$, fitted $|c|$
- collapses to $\approx0.14$ of the global value).
+ cell at $x\approx4.9$ ($\psi\approx8.6$ rad, $C_{ext,\text{model}}=0.16\times$ — the model
+ keeps only $16\%$ of the extinction, and note its $c$ fit *looks* fine: this is why the
+ gate needs several observables, see below).
 
-![Validity map, all 15 scan cells](figures/fig16_validity_map.png)
+![Validity map, all 15 scan cells](figures/fig12_validity_map.png)
 
-**Fig. 16 — the gated activation domain for all 15 scan cells at a glance.** *A cell is
+**Fig. 12 — the gated activation domain for all 15 scan cells at a glance.** *A cell is
 usable only if it sits in the blue shaded $C_{ext,\text{model}}$ band (sane, 0.6–1.5×) AND below
 the dashed line (residual smaller than the field). Marker shape = incidence orientation
 (legend bottom-left); marker fill = the storage verdict: open = the model+residual split
@@ -1100,10 +1212,20 @@ needs FEWER SH coefficients than today, filled red = it needs MORE (harmful). Ev
 cell is open and low, every tilted/edge-on cell drifts up and right — hence "gated", not
 blanket.*
 
-Crucially, **validity is measurable without the full field**, i.e. cheaply per solve: the
-fitted calibration magnitude $\lvert c_{\text{fit}}/c_{\text{global}}\rvert$ deviates strongly
-exactly in the broken cells (dev $>1.4$: $x=2$ edge 5.2, $x=5$ edge 6.4, $x=10$ edge 4.0,
-HC $x=5$ along 0.14), and $C_{ext,\text{model}}\le0$ or $<0.5\times$ flags them independently.
+Crucially, **validity is measurable without the full field**, i.e. cheaply per solve. The
+diagnostic is the calibration-consistency deviation
+$\mathrm{dev}=|c_{\text{fit}}-c_{\mathrm{cal}}|/|c_{\mathrm{cal}}|$ against the sphere-anchored
+global constant $c_{\mathrm{cal}}=1.005-0.006j$ (§1.9.5): the broken cells are exactly the
+ones where the *complex* $c$ drifts far from the anchor —
+dev $>1.4$: $x=2$ edge **5.2**, $x=5$ edge **6.4** ($c$ itself flips to $-4.2+3.7j$),
+$x=10$ edge **4.0**, HC $x=5$ t60 **2.0**, HC $x=2$ t60 **1.6**. The healthy face-on plate
+cells sit at dev $\approx1.0$–$1.3$ (their $c$ is mostly *imaginary* — a $-76\dots{-84}°$
+phase shift, the Fabry–Pérot/depolarization correction of a resonant slab — but *consistent*
+across $x$). The one trap: the HC $x=5$ along-axis cell has dev $=0.14$, *closer* to the
+anchor than the anchor itself — $c$ alone cannot flag every broken cell (its $|g|/|f|=1.23$
+and $C_{ext,\text{model}}=0.16\times$ do). Hence the gate must combine observables:
+$C_{ext,\text{model}}\le0$ or $<0.5\times$ flags that cell independently, and the
+$\psi$ bound (1.9.15) flags all the grazing ones before any fitting.
 Under the full-eps criterion, ntrunc is reduced in **10 of the 13 cells with $x\ge2$**
 (ratios 0.24–0.96); all three losses are validity-broken cells.
 
@@ -1261,6 +1383,8 @@ data (full schema: report §7.1).
 
 ## 2.4 Module status table
 
+**Table 12 — module status table:** every script in `adda_python_scripts/`, its role, and its state. *Deprecated rows must not be extended (report §1.6).*
+
 | module | role | status |
 |---|---|---|
 | `adda_main_control.py`, `adda_sub_control_spharmonics.py` | ARO driver + per-job solver | **active** |
@@ -1284,6 +1408,8 @@ Every habit has one `adda_config_<habit>.py`; the control scripts inject it with
 `exec('from adda_config_X import *')` and read its globals. **Keep field names** when
 copying a config — the drivers `getattr`-probe them. The canonical reference is
 `adda_config_HongPlate_Id9.py`. Annotated field → consumer map:
+
+**Table 13 — config globals: meaning and consumer.** *The config contract (§3.2) — field names are a hard interface, the drivers `getattr`-probe them.*
 
 | config global | meaning | consumed by |
 |---|---|---|
@@ -1431,6 +1557,8 @@ purged from the repository history on 2026-11-10 (report §11): a fresh clone co
 solver at all. Provision them as siblings of the repo root, keeping these folder names
 (configs resolve the binary as `adda_prefix + adda_binary`):
 
+**Table 14 — ADDA trees to provision by hand** (folder, version, provenance, role). *The trees live outside this repo on purpose (report §11) — a fresh clone has no solver until they are fetched and built.*
+
 | folder | ADDA version | how to obtain | role |
 |---|---|---|---|
 | `adda_1.4/` | **1.4.0** | `curl -L -o v1.4.0.tgz https://github.com/adda-team/adda/archive/refs/tags/v1.4.0.tar.gz && tar xzf v1.4.0.tgz && mv adda-1.4.0 adda_1.4` | **production** binary |
@@ -1514,6 +1642,8 @@ casually; a new golden requires re-deriving the noise budget.
 
 ## 4.2 Equivalence suites (what was proven, and how)
 
+**Table 15 — equivalence and gate suites:** what was proven, with which command, and where the evidence lives.
+
 | gate | command / artifact | result |
 |---|---|---|
 | Phase-2 numpy-2 migration | `analysis/phase2_equiv.py` (pre/post pickles) | pipeline bit-identical on numpy 2 / py3.12 / macOS |
@@ -1521,7 +1651,7 @@ casually; a new golden requires re-deriving the noise budget.
 | mirror machinery (sym vs asym, same config otherwise) | `analysis/phase4_subcontrol_gate.log`, `phase4_aoa_gate.log` | identical within $4.5\cdot 10^{-12}$ with *closed* mirrors; a non-closed mirror (coarse YZ, closure 0.986) produces $1.5\cdot 10^{-4}$ field errors — proof the closure gate is load-bearing |
 | half-range $\beta$/$\theta$ reuse hypothesis | `phase4b_halfrange_check.py/.log` | **rejected**:$2.3\cdot 10^{-3}$…$7.2\cdot 10^{-2}$ discrepancy vs $10^{-11}$ noise |
 | TRO $\beta$-fold (0–90° avg file vs full range) | `phase5_tro_beta_gate.py/.log` | CrossSec $\le1.35\cdot 10^{-5}$ (= Romberg tol), Mueller $\le10^{-13}$ → PASS |
-| ADDA cost/accuracy | `phase4b_adda_benchmark.py`, `…_bench_results.json` | fig. 04; error budget discretization-dominated |
+| ADDA cost/accuracy | `phase4b_adda_benchmark.py`, `…_bench_results.json` | Fig. 1; error budget discretization-dominated |
 | backscatter matrix (Phase 6) | `analysis/phase6_backscatter.py`, `phase6_results.json` | Mie pole agreement + convention pin + mirror-ring rule + SSDB backMat round-trip — all PASS |
 | Mueller artifact → NetCDF4 (Phase 7) | `analysis/mueller_nc_roundtrip_check.py` (20/20), `analysis/mueller_nc_gate.py` (W/X/R/E gates) | nc round-trip **bitwise** lossless; probe run + double-reader (`nc` vs legacy `pkl`) averaged dicts, phase chain and 5-file SSDB export (125 vars) **bit-identical**; 12/12 local `.pkl` artifacts migrated + bitwise-verified |
 | analytic-grid twin (Phase 8) | `analysis/phase8_scatgrid_twin.py`, `phase8_endtoend_twin.py`, `phase8_export_twin.py` | adaptive vs static grid: all PASS (margin ≥4); full-pipeline 22×42 vs 181×361 twin: d_ext $7.6\cdot10^{-16}$, d_sph $1.9\cdot10^{-3}$; export cap keeps content bitwise, **15×** smaller beta files |
@@ -1554,14 +1684,16 @@ look at the SH truncation terms and the rescale diagnostics (§3.3), not at ADDA
 
 ## 4.4 Production backlog (as of Phase 5)
 
-![Backlog](figures/fig07_backlog.png)
+![Backlog](figures/fig13_backlog.png)
 
-**Fig. 7 — size and cost of the remaining production backlog.** *Left: jobs per habit
+**Fig. 13 — size and cost of the remaining production backlog.** *Left: jobs per habit
 (each job = one (T, f, size), already after the x-cap and the resolution rule of Figs. 2–3).
 Right: estimated single-core solve time — the gap between the hatched bar (no mirror flags)
 and the blue solid bar (production flags) is what the mirror flags (§1.7) save; habits without
 usable mirrors (Icon/Liu) show no gap. TRO is cheap
 by construction (`-orient avg` inside ADDA).*
+
+**Table 16 — backlog inventory** per habit config: job counts after x-cap + resolution rule, usable mirrors, estimated single-core cost (Fig. 13; `analysis/phase5_backlog_inventory.txt`).
 
 | config | jobs | mirrors | est. single-core solve-time |
 |---|---|---|---|
@@ -1609,6 +1741,8 @@ Full assembled command lines (verified from `acf.adda_call` / the TRO pair):
     -m … -lambda … -eq_rad …  -dir <job folder>  -eps <3>
 ```
 
+**Table 17 — annotated tokens of the production TRO ADDA command** of the §3.5 runbook line.
+
 | token | note |
 |---|---|
 | `-eq_rad` | equivalent-volume radius ( $\mu$m) — `Sizes` holds *diameter*, the sub-control halves it; N_dipoles comes from the shape file, ADDA only rescales |
@@ -1647,6 +1781,8 @@ Filename: `Freq{f:08.3f}GHz_T{T:03.0f}K.nc`, one per ( $\beta$, size, f, T), und
 root attrs `date`, `version='beta_0.9.1'` (Phase-6 additive backscatter bump; the schema
 below is otherwise the `beta_0.9` format of Brath et al. 2020); groups
 `SingleScatteringData`, `ShapeData`, `CalculationData`.
+
+**Table 18 — SSDB NetCDF dimensions** of the exported product (version `beta_0.9.1`; full schema report §7.1, code `definitions_for_netcdf.py`).
 
 | dimension | length | meaning |
 |---|---|---|
@@ -1729,6 +1865,8 @@ Cross sections from `CrossSec-X/Y`; ω = Csca/Cext with Csca from the (then-prod
 `-alldir_inp` Romberg integration — note today's ARO configs no longer request `-alldir_inp`
 (§1.4), these baselines predate that cleanup.
 
+**Table 19 — headline numbers of the frozen golden ADDA-1.2 baselines.** *Six regression runs; bit-frozen reference for §4.1 (`baselines/adda_1.2/`).*
+
 | Case | x | N dipoles | dpl (λ) | Qext (X / Y) | ω (X / Y) |
 |---|---|---|---|---|---|
 | ice sphere, 300 GHz, 230 K | 0.314 | 2 176 | 160.7 | 6.914e-3 / 6.914e-3 | 0.684 / 0.684 |
@@ -1746,6 +1884,8 @@ Hong-plate runs differ only via m(f) and the Romberg grid, Qext scaling ≈ ×3.
 **Sphere vs. independent Mie theory** (Riccati-Bessel in `check_baselines.py`,
 cross-checked against `miepython`):
 
+**Table 20 — sphere baseline vs. independent Mie theory** (Riccati–Bessel in `check_baselines.py`, cross-checked against `miepython`); all channels inside the 3 % tolerance (Fig. 15).
+
 | quantity | ADDA (auto grid) | Mie | deviation |
 |---|---|---|---|
 | Qext | 6.9144e-3 | 6.7929e-3 | +1.79 % |
@@ -1754,7 +1894,7 @@ cross-checked against `miepython`):
 
 All inside the 3 % acceptance band, and the deviation is *confirmed DDA discretization
 error*: forcing `-dpl 320/800` converges Qext 6.914e-3 → 6.852e-3 → 6.819e-3 toward the
-Mie value (fig. E-2). Cross-version: ADDA 1.2 vs 1.5.0-alpha3 identical Qext for the
+Mie value (Fig. 15). Cross-version: ADDA 1.2 vs 1.5.0-alpha3 identical Qext for the
 sphere to 12 significant digits; cross-platform: the macOS arm64 rebuild of 1.5.0-alpha3
 reproduces the Linux cluster numbers exactly.
 
@@ -1768,15 +1908,21 @@ keep it as a regression tripwire.
 
 ## E.2 Figures
 
-![Cross sections and single-scattering albedo, X vs Y incidence polarization, all six baseline cases (log scale).](figures/fig09_baseline_crosssections.png)
+![Frozen baseline cross sections and albedos.](figures/fig14_baseline_crosssections.png)
+
+**Fig. 14 — cross sections and single-scattering albedo of all six golden baseline cases, X vs Y incidence polarization (log scale).** *Solid blue = X (perpendicular) polarization, white + red hatch = Y (parallel). The flagged $\omega>1$ at $x=5$ is the documented coarse-grid artifact (Appendix E text).*
 
 *E-1. Cross sections & albedo, X vs Y incidence polarization, all six cases.*
 
-![Sphere baseline vs Mie theory: convergence of Qext with dipoles per wavelength, and deviations at the automatic grid.](figures/fig10_baseline_sphere_mie.png)
+![Sphere baseline vs Mie theory.](figures/fig15_baseline_sphere_mie.png)
+
+**Fig. 15 — analytic validation of the sphere baseline: convergence of $Q_{\mathrm{ext}}$ toward exact Mie theory with dipoles per wavelength (left), and deviations at the automatic grid (right).** *All three channels sit inside the 3 % `check_baselines.py` tolerance; the residual deviation is DDA discretization error.*
 
 *E-2. Analytic validation: the sphere baseline converges toward independent Mie theory with dpl.*
 
-![S11 3D radiation surfaces for all six baseline cases.](figures/fig11_baseline_scattering_3d.png)
+![S11 3D radiation surfaces for all six baseline cases.](figures/fig16_baseline_scattering_3d.png)
+
+**Fig. 16 — 3D radiation surfaces of the scattering-grid $S_{{11}}$ for all six baseline cases.** *Radial extent $\propto S_{11}^{0.4}$ (classic radiation-diagram scaling), color = $S_{11}$ normalized to each case's own maximum; forward = up, red arrow = incident beam.*
 
 *E-3. 3-D radiation surfaces of the scattering-grid $S_{11}$ (radial extent ∝ $S_{11}^{0.4}$,
 color = $S_{11}$/max, beam axis marked; interpolated from the 10° output grid). The
@@ -1784,7 +1930,9 @@ near-Rayleigh particles (sphere, x=0.1 spheroid, both Hong plates) are essential
 isotropic shells; x=1 develops diffraction rings; x=5 shows the classic narrow forward
 spike with ringed side lobes.*
 
-![Rayleigh → resonance → forward-peak evolution of the analytic oblate spheroid as 3D radiation surfaces, plus polarization discrimination.](figures/fig12_baseline_ellipsoid_phase.png)
+![Oblate spheroid 3D surfaces + polarization discrimination.](figures/fig17_baseline_ellipsoid_phase.png)
+
+**Fig. 17 — Rayleigh $\to$ resonance $\to$ forward-peak evolution of the analytic oblate spheroid ($c/a=0.5$, 183 GHz, 253 K) as 3D radiation surfaces, plus polarization discrimination.** *Bottom panel: $|S_{12}|/S_{11}$ on the $\varphi=0°$ plane for $x=0.1/1/5$ (blue/green/red) — how strongly the spheroid cross-polarizes grows with $x$.*
 
 *E-4. Rayleigh → resonance → forward-peak evolution of the analytic oblate spheroid
 (each surface normalized to its own max), plus polarization discrimination
